@@ -16,6 +16,6 @@ public class InterceptorConfig implements WebMvcConfigurer { // JWT interceptor 
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(jwtInterceptor)
         .addPathPatterns("/**") // 모든 요청 필터링
-        .excludePathPatterns("/test"); // 허용해줄 url 필터링
+        .excludePathPatterns("/testLogin"); // 허용해줄 url 필터링
     }
 }
