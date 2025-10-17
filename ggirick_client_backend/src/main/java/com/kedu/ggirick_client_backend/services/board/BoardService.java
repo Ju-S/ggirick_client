@@ -42,7 +42,12 @@ public class BoardService {
 
     // 게시글의 최대 페이지 수 확인
     public long getTotalPage(String searchQuery) {
-        return boardDAO.getBoardCount(searchQuery) / ITEM_PER_PAGE;
+        Map<String, Object> searchParams = new HashMap<>();
+
+        searchParams.put("boardGroupId", 1);
+        searchParams.put("searchQuery", searchQuery);
+
+        return boardDAO.getBoardCount(searchParams) / ITEM_PER_PAGE;
     }
 
     // 게시글 등록

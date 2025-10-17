@@ -1,0 +1,14 @@
+/* Tiptap ProseMirror Blockquote */
+.tiptap.ProseMirror blockquote {
+  @apply relative pl-4 py-1.5 my-6 rounded-r-md bg-base-200; /* 배경, 패딩, 여백 */
+}
+
+.tiptap.ProseMirror blockquote p {
+  @apply m-0; /* 단락 내부 여백 제거 */
+}
+
+/* 왼쪽 바 (border) */
+.tiptap.ProseMirror blockquote::before {
+  @apply absolute top-0 left-0 h-full w-1 rounded-none bg-primary; /* 왼쪽 바 색상 primary */
+  content: "";
+}

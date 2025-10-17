@@ -6,10 +6,11 @@ import Pagination from "../../components/board/Pagination.jsx"
 
 export default function BoardPage() {
     const navigate = useNavigate();
-    const boardInfos = useBoardList();
 
     const [searchParams] = useSearchParams();
     const currentPage = parseInt(searchParams.get("currentPage")) || 1;
+
+    const boardInfos = useBoardList(currentPage);
 
     return (
         <div className="ag-theme-quartz w-full h-100">
@@ -20,9 +21,7 @@ export default function BoardPage() {
                             pagePerNav={boardInfos.pagePerNav}/>
             </>
             }
-
-            <Button onClick={() => navigate("/board/1")}>게시판 아이템으로</Button>
-            <Button onClick={() => navigate("/board/posting")}>게시글 쓰기</Button>
+            <button className="btn btn-primary" onClick={() => navigate("/board/posting")}>게시글 쓰기</button>
         </div>
     )
 

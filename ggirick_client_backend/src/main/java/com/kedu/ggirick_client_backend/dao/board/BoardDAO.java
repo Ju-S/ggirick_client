@@ -26,8 +26,8 @@ public class BoardDAO {
     }
 
     // 게시물 총 갯수 return
-    public long getBoardCount(String searchQuery) {
-        return mybatis.selectOne("Board.getBoardCount", searchQuery);
+    public long getBoardCount(Map<String, Object> searchParams) {
+        return mybatis.selectOne("Board.getBoardCount", searchParams);
     }
 
     // 게시글 등록

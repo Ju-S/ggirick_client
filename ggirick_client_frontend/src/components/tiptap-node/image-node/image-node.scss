@@ -1,0 +1,29 @@
+.tiptap.ProseMirror {
+  /* 이미지 기본 스타일 */
+  img {
+    @apply block max-w-full h-auto;
+  }
+
+  /* 일반 이미지 (이모지 제외) */
+  > img:not([data-type="emoji"] img) {
+    @apply my-8 rounded outline outline-2 outline-transparent;
+  }
+
+  /* 선택된 이미지 */
+  img.ProseMirror-selectednode {
+    @apply outline outline-2 outline-primary;
+  }
+
+  /* Thread 이미지 */
+  .tiptap-thread:has(> img) {
+    @apply my-8;
+
+    img {
+      @apply rounded outline outline-2 outline-transparent;
+    }
+  }
+
+  .tiptap-thread img {
+    @apply m-0;
+  }
+}

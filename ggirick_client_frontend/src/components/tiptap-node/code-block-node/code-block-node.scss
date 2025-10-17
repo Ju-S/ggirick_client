@@ -1,0 +1,24 @@
+/* =====================
+   INLINE CODE
+   ===================== */
+.tiptap.ProseMirror code {
+  @apply font-mono text-sm leading-relaxed rounded px-1.5 py-0.5 border;
+  background-color: theme('colors.gray.100');       /* light mode 배경 */
+  color: theme('colors.gray.700');                 /* light mode 글자 */
+  border-color: theme('colors.gray.200');          /* light mode 테두리 */
+}
+
+/* =====================
+   CODE BLOCKS (PRE > CODE)
+   ===================== */
+.tiptap.ProseMirror pre {
+  @apply rounded-lg p-4 mb-6 border font-mono text-base leading-relaxed overflow-x-auto;
+  background-color: theme('colors.gray.50');       /* light mode 배경 */
+  color: theme('colors.gray.800');                /* light mode 글자 */
+  border-color: theme('colors.gray.200');         /* light mode 테두리 */
+}
+
+.tiptap.ProseMirror pre code {
+  @apply bg-transparent border-0 rounded-none;
+  color: inherit;                                 /* 부모 색상 상속 */
+}

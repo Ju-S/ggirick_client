@@ -1,0 +1,110 @@
+/* editor-tailwind-daisyui.scss */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ---------------------------------------
+   Editor Wrapper
+--------------------------------------- */
+.simple-editor-wrapper {
+  @apply w-full rounded-lg border bg-base-100 shadow-sm;
+  border-color: theme('colors.neutral');
+}
+
+.simple-editor-content {
+  @apply prose max-w-none p-6 rounded-lg overflow-y-auto focus:outline-none focus:ring-0;
+  min-height: 200px;
+  max-height: 500px;
+}
+
+/* ---------------------------------------
+   Toolbar
+--------------------------------------- */
+.tiptap-toolbar {
+  @apply flex flex-wrap gap-2 border-b p-2 rounded-t-lg bg-base-200 border-neutral;
+}
+
+.tiptap-toolbar button {
+  @apply btn btn-sm bg-base-100 border-neutral text-base-content;
+}
+.tiptap-toolbar button:hover {
+  @apply bg-primary text-primary-content;
+}
+
+/* Tooltip */
+[data-tip] {
+  @apply tooltip tooltip-bottom;
+}
+
+/* ---------------------------------------
+   ProseMirror content
+--------------------------------------- */
+.ProseMirror {
+  @apply bg-base-100 text-base-content p-4 rounded-lg shadow-inner leading-relaxed;
+  min-height: 200px;
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Paragraph */
+.ProseMirror p {
+  @apply mb-3;
+}
+/* Inline code */
+.ProseMirror code {
+  @apply bg-base-200 text-base-content px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+/* Code block */
+.ProseMirror pre {
+  @apply bg-base-300 text-base-content p-3 rounded-lg overflow-x-auto font-mono text-sm mb-3;
+}
+
+/* Headers */
+.ProseMirror h1 {
+  @apply text-3xl font-bold border-b border-base-300 pb-2 mb-3;
+}
+.ProseMirror h2 {
+  @apply text-2xl font-semibold border-b border-base-300 pb-1 mb-2;
+}
+.ProseMirror h3 {
+  @apply text-xl font-semibold mb-2;
+}
+
+/* Lists */
+.ProseMirror ul {
+  @apply list-disc list-inside mb-3 pl-4;
+}
+.ProseMirror ol {
+  @apply list-decimal list-inside mb-3 pl-4;
+}
+.ProseMirror li {
+  @apply mb-1;
+}
+
+/* Links */
+.ProseMirror a {
+  @apply text-primary hover:underline;
+}
+
+/* ---------------------------------------
+   Highlights (DaisyUI colors)
+--------------------------------------- */
+.has-highlight-yellow {
+  @apply bg-warning text-warning-content;
+}
+.has-highlight-green {
+  @apply bg-success text-success-content;
+}
+.has-highlight-blue {
+  @apply bg-info text-info-content;
+}
+.has-highlight-purple {
+  @apply bg-accent text-accent-content;
+}
+.has-highlight-red {
+  @apply bg-error text-error-content;
+}
+.has-highlight-gray {
+  @apply bg-neutral text-neutral-content;
+}

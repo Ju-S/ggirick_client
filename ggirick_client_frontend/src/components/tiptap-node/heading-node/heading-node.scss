@@ -1,0 +1,41 @@
+/* =====================
+   HEADINGS
+   ===================== */
+.tiptap.ProseMirror h1,
+.tiptap.ProseMirror h2,
+.tiptap.ProseMirror h3,
+.tiptap.ProseMirror h4 {
+  @apply relative text-base-content; /* 글자 색상 */
+  font-style: inherit;
+}
+
+.tiptap.ProseMirror h1:first-child,
+.tiptap.ProseMirror h2:first-child,
+.tiptap.ProseMirror h3:first-child,
+.tiptap.ProseMirror h4:first-child {
+  margin-top: 0;
+}
+
+.tiptap.ProseMirror h1 {
+  @apply font-bold;
+  font-size: 1.5em;
+  margin-top: 3rem;
+}
+
+.tiptap.ProseMirror h2 {
+  @apply font-bold;
+  font-size: 1.25em;
+  margin-top: 2.5rem;
+}
+
+.tiptap.ProseMirror h3 {
+  @apply font-semibold;
+  font-size: 1.125em;
+  margin-top: 2rem;
+}
+
+.tiptap.ProseMirror h4 {
+  @apply font-semibold;
+  font-size: 1em;
+  margin-top: 2rem;
+}

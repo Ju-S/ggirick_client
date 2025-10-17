@@ -26,7 +26,7 @@ export default function BoardDetailPage() {
                 </div>
             )}
 
-            <Button onClick={() => navigate("/board")}>게시판리스트로</Button>
+            <button className="btn btn-primary" onClick={() => navigate("/board")}>게시판리스트로</button>
         </div>
     );
 }
