@@ -1,5 +1,6 @@
 package com.kedu.ggirick_client_backend.utils;
 
+import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -24,10 +25,10 @@ public class JWTUtil {
         this.jwt = JWT.require(algorithm).build();
     }
 
-    public String createToken(String id) {
+    public String createToken(UserTokenDTO userInfo) {
         return JWT.create()
-                // .withSubject(id)
-                // .withClaim("name", "Tom")
+                 .withSubject(userInfo.getId())
+                 .withClaim("authority", userInfo.getAuthority())
                 .withIssuedAt(new Date())
                 .withExpiresAt(new Date(System.currentTimeMillis() + exp))
                 .sign(algorithm);
