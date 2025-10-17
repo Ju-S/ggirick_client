@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 주소록 mapper -->
+<mapper namespace="Address">
+    <insert id="addAddress" parameterType="com.kedu.ggirick_client_backend.dto.address.AddressDTO">
+        <selectKey order="BEFORE" keyProperty="id" resultType="int">
+            select address_seq.nextval from dual
+        </selectKey>
+        insert into address values(#{id},#{name},#{companyName},#{department},#{rank},#{email},
+        #{phone},#{address},#{groupId})
+    </insert>
+
+    <!-- 주소록 대그룹 getList -->
+    <select id="AddressGroupTypeSelectAll" resultType="com.kedu.ggirick_client_backend.dto.address.AddressGroupTypeDTO">
+        select name,description from address_group_type
+    </select>
+
+
+    <!-- 주소록 소그룹 getList -->
+    <select id="AddressGroupSelectAll" parameterType="com.kedu.ggirick_client_backend.dto.UserTokenDTO"
+            resultType="com.kedu.ggirick_client_backend.dto.address.AddressGroupDTO">
+        select * from address_group where owner=#{id}
+    </select>
+
+
+</mapper>
+
+
+
+
+
+

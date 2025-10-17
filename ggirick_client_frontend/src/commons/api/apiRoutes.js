@@ -24,7 +24,22 @@ const apiRoutes = {
             url: `/member/checkDuplicateId?id=${memberId}`,
             method: "GET"
         }),
+
+
     },
+
+    address:{
+
+      getGroupType:{
+        url:"/address/group-type",
+        method:"GET"
+      },
+
+      getSubGroup:{
+        url:"/address/group",
+        method:"GET"
+      }
+    }
 };
 
 export default apiRoutes;

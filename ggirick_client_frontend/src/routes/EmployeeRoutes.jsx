@@ -1,4 +1,6 @@
 import {Route, Routes} from "react-router-dom";
+import AddressPage from "../pages/address/AddressPage.jsx";
+import "flowbite/dist/flowbite.css";
 
 export default function EmployeeRoutes() {
     return (
@@ -34,7 +36,7 @@ export default function EmployeeRoutes() {
             ></Route>
             <Route
                 path="/address"
-                element={<>address</>}
+                element={<AddressPage/>}
             ></Route>
             <Route
                 path="/chat"
