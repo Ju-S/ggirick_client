@@ -1,12 +1,14 @@
-package com.kedu.ggirick_client_backend.controllers;
+package com.kedu.ggirick_client_backend.controllers.board;
 
-import com.kedu.ggirick_client_backend.config.BoardConfig;
+import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
+import com.kedu.ggirick_client_backend.dto.board.BoardCommentDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardDTO;
+import com.kedu.ggirick_client_backend.services.board.BoardCommentService;
 import com.kedu.ggirick_client_backend.services.board.BoardService;
-import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -22,6 +24,7 @@ import static com.kedu.ggirick_client_backend.config.BoardConfig.PAGE_PER_NAV;
 public class BoardController {
 
     private final BoardService boardService;
+    private final BoardCommentService boardCommentService;
 
     // 게시글 목록 조회
     @GetMapping
@@ -42,14 +45,17 @@ public class BoardController {
 
     // 단일 게시글 조회
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getById(@PathVariable long id) {
+    public ResponseEntity<Map<String, Object>> getById(@PathVariable int id) {
         Map<String, Object> response = new HashMap<>();
 
         BoardDTO selectedItem = boardService.getById(id);
-//        List<ReplyDTO> replyList = replyService.getList(id);
+
+        List<BoardCommentDTO> commentList = boardCommentService.getList(id);
 
         response.put("boardDetail", selectedItem);
-//        response.put("replyList", replyList);
+        response.put("commentList", commentList);
+
+        boardService.increaseViewCount(id);
 
         return ResponseEntity.ok(response);
     }
@@ -57,27 +63,20 @@ public class BoardController {
     // 게시글 등록
     @PostMapping
     public ResponseEntity<Void> posting(@RequestBody BoardDTO dto,
-                                        HttpSession session) {
-        String loginId = (String) session.getAttribute("loginId");
-
-        if (loginId != null) {
-            dto.setWriter(loginId);
-            boardService.posting(dto);
-        }
+                                        @AuthenticationPrincipal UserTokenDTO userInfo) {
+        dto.setWriter(userInfo.getId());
+        int boardId = boardService.posting(dto);
+        System.out.println(boardId);
 
         return ResponseEntity.ok().build();
     }
 
     // 게시글 삭제
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteById(@PathVariable long id,
-                                           HttpSession session) {
-        String loginId = (String) session.getAttribute("loginId");
-
-        if (loginId != null) {
-            if (boardService.getById(id).getWriter().equals(loginId)) {
-                boardService.deleteById(id);
-            }
+    public ResponseEntity<Void> deleteById(@PathVariable int id,
+                                           @AuthenticationPrincipal UserTokenDTO userInfo) {
+        if (boardService.getById(id).getWriter().equals(userInfo.getId())) {
+            boardService.deleteById(id);
         }
 
         return ResponseEntity.ok().build();
@@ -86,14 +85,11 @@ public class BoardController {
     // 게시글 수정
     @PutMapping("/{id}")
     public ResponseEntity<Void> updateById(@RequestBody BoardDTO dto,
-                                           @PathVariable long id,
-                                           HttpSession session) {
-        String loginId = (String) session.getAttribute("loginId");
-
-        if (loginId != null) {
-            if (boardService.getById(dto.getId()).getWriter().equals(loginId)) {
-                boardService.updateById(dto);
-            }
+                                           @PathVariable int id,
+                                           @AuthenticationPrincipal UserTokenDTO userInfo) {
+        if (boardService.getById(id).getWriter().equals(userInfo.getId())) {
+            dto.setId(id);
+            boardService.updateById(dto);
         }
 
         return ResponseEntity.ok().build();

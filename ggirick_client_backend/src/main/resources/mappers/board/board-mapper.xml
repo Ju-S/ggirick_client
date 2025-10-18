@@ -44,7 +44,7 @@
         INSERT INTO board(id, writer, title, contents, board_group_id)
         VALUES (board_seq.nextval, #{writer}, #{title}, #{contents}, #{boardGroupId})
         <selectKey resultType="int" keyProperty="id" order="AFTER">
-            select dual from board_seq.currval
+            select board_seq.currval from dual
         </selectKey>
     </insert>
 

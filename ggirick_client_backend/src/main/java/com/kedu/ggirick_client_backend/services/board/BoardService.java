@@ -35,13 +35,12 @@ public class BoardService {
     }
 
     // 선택된 게시글의 내용 select
-    public BoardDTO getById(long targetId) {
-        boardDAO.increaseViewCount(targetId);
+    public BoardDTO getById(int targetId) {
         return boardDAO.getById(targetId);
     }
 
     // 게시글의 최대 페이지 수 확인
-    public long getTotalPage(String searchQuery) {
+    public int getTotalPage(String searchQuery) {
         Map<String, Object> searchParams = new HashMap<>();
 
         searchParams.put("boardGroupId", 1);
@@ -50,18 +49,23 @@ public class BoardService {
         return boardDAO.getBoardCount(searchParams) / ITEM_PER_PAGE;
     }
 
-    // 게시글 등록
-    public void posting(BoardDTO dto) {
-        boardDAO.posting(dto);
+    // 게시글 등록(등록 후, 로그인된 아이디(작성자ID) 반환)
+    public int posting(BoardDTO dto) {
+        return boardDAO.posting(dto);
     }
 
     // 게시글 삭제
-    public void deleteById(long targetId) {
+    public void deleteById(int targetId) {
         boardDAO.deleteById(targetId);
     }
 
     // 게시글 수정
     public void updateById(BoardDTO dto) {
         boardDAO.updateById(dto);
+    }
+
+    // 게시글 조회수 증가
+    public void increaseViewCount(int targetId) {
+        boardDAO.increaseViewCount(targetId);
     }
 }

@@ -21,22 +21,23 @@ public class BoardDAO {
     }
 
     // 단일 게시글 조회
-    public BoardDTO getById(long targetId) {
+    public BoardDTO getById(int targetId) {
         return mybatis.selectOne("Board.getById", targetId);
     }
 
     // 게시물 총 갯수 return
-    public long getBoardCount(Map<String, Object> searchParams) {
+    public int getBoardCount(Map<String, Object> searchParams) {
         return mybatis.selectOne("Board.getBoardCount", searchParams);
     }
 
-    // 게시글 등록
-    public void posting(BoardDTO dto) {
+    // 게시글 등록(등록 후, 등록된 board의 ID 반환)
+    public int posting(BoardDTO dto) {
         mybatis.insert("Board.posting", dto);
+        return dto.getId();
     }
 
     // 게시글 삭제
-    public void deleteById(long targetId) {
+    public void deleteById(int targetId) {
         mybatis.delete("Board.deleteById", targetId);
     }
 
@@ -46,7 +47,7 @@ public class BoardDAO {
     }
 
     // 게시글 조회수 증가
-    public void increaseViewCount(long targetId) {
+    public void increaseViewCount(int targetId) {
         mybatis.update("Board.increaseViewCount", targetId);
     }
 }
