@@ -2,6 +2,7 @@ import {Route, Routes} from "react-router-dom";
 import BoardPage from "../pages/board/BoardPage.jsx";
 import BoardDetailPage from "../pages/board/BoardDetailPage.jsx";
 import BoardPostingPage from "../pages/board/BoardPostingPage.jsx";
+import BoardSidebar from "@/components/board/BoardSidebar.jsx";
 
 export default function BoardRoutes() {
     return (

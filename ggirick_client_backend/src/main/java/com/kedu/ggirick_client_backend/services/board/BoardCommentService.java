@@ -34,6 +34,8 @@ public class BoardCommentService {
         BoardCommentDTO originalComment = getById(targetId);
         List<BoardCommentDTO> refCommentList = boardCommentDAO.getListByRefId(targetId);
 
+        // deletedGgirickBoardComment를 base64인코딩하여 UI에 적용할 내용으로 변경.
+        // 일반 사용자가 삭제된 댓글입니다. 라고 적었을때 UI가 변경되는것을 방지.
         String deletedContents = "ZGVsZXRlZEdnaXJpY2tCb2FyZENvbW1lbnQ=";
 
         if (refCommentList.isEmpty()) {
@@ -48,8 +50,6 @@ public class BoardCommentService {
                 }
             }
         } else {
-            // deletedGgirickBoardComment를 base64인코딩하여 UI에 적용할 내용으로 변경.
-            // 일반 사용자가 삭제된 댓글입니다. 라고 적었을때 UI가 변경되는것을 방지.
             originalComment.setContents(deletedContents);
             updateById(originalComment);
         }

@@ -16,22 +16,32 @@ export default function Pagination({ currentPage, pagePerNav, totalPage }) {
     return (
         <div className="join">
             {startPage > 1 && (
-                <button className="join-item btn" onClick={() => navigate(`?currentPage=${startPage - 1}`)}>
-                    &lt;
+                <button
+                    className="join-item btn"
+                    onClick={() => navigate(`?currentPage=${startPage - 1}`)}
+                >
+                    «
                 </button>
             )}
+
             {pageNumbers.map((num) => (
                 <button
                     key={num}
-                    className={`join-item btn ${num === currentPage ? "btn-active" : ""}`}
+                    className={`join-item btn ${
+                        num === currentPage ? "btn-active" : ""
+                    }`}
                     onClick={() => navigate(`?currentPage=${num}`)}
                 >
                     {num}
                 </button>
             ))}
+
             {endPage < totalPage && (
-                <button className="join-item btn" onClick={() => navigate(`?currentPage=${endPage + 1}`)}>
-                    &gt;
+                <button
+                    className="join-item btn"
+                    onClick={() => navigate(`?currentPage=${endPage + 1}`)}
+                >
+                    »
                 </button>
             )}
         </div>

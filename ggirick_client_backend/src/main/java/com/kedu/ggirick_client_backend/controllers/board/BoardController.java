@@ -1,19 +1,28 @@
 package com.kedu.ggirick_client_backend.controllers.board;
 
+import com.google.cloud.storage.BlobId;
+import com.google.cloud.storage.BlobInfo;
+import com.google.cloud.storage.Storage;
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardCommentDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardDTO;
 import com.kedu.ggirick_client_backend.services.board.BoardCommentService;
 import com.kedu.ggirick_client_backend.services.board.BoardService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import static com.kedu.ggirick_client_backend.config.BoardConfig.ITEM_PER_PAGE;
 import static com.kedu.ggirick_client_backend.config.BoardConfig.PAGE_PER_NAV;
@@ -25,6 +34,11 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BoardCommentService boardCommentService;
+
+    private final Storage storage;
+
+    @Value("${spring.cloud.gcp.storage.bucket}")
+    private String bucketName;
 
     // 게시글 목록 조회
     @GetMapping
@@ -62,11 +76,26 @@ public class BoardController {
 
     // 게시글 등록
     @PostMapping
-    public ResponseEntity<Void> posting(@RequestBody BoardDTO dto,
-                                        @AuthenticationPrincipal UserTokenDTO userInfo) {
+    public ResponseEntity<Void> posting(@RequestPart("boardInfo") BoardDTO dto,
+                                        @RequestPart("files") List<MultipartFile> files,
+                                        @AuthenticationPrincipal UserTokenDTO userInfo) throws Exception{
         dto.setWriter(userInfo.getId());
         int boardId = boardService.posting(dto);
-        System.out.println(boardId);
+
+        for(MultipartFile file:files) {
+            if(!file.isEmpty()) {
+                String oriName = file.getOriginalFilename();
+                String sysName = UUID.randomUUID() + "_" + oriName;
+                BlobInfo blobInfo =
+                        BlobInfo.newBuilder(BlobId.of(bucketName, sysName))
+                                .setContentType(file.getContentType())
+                                .build();
+
+                try(InputStream is = file.getInputStream()){
+                    storage.createFrom(blobInfo, is);
+                }
+            }
+        }
 
         return ResponseEntity.ok().build();
     }

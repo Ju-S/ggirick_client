@@ -2,21 +2,13 @@
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="Board">
+<mapper namespace="BoardFile">
     <!-- (to, from) 페이징 게시글 목록 게시 순서대로 select (검색을 위한 필터 설정 - title, writer) -->
     <!-- board_group_id에 대한 설정까지 필요 -->
     <select id="getList" resultType="com.kedu.ggirick_client_backend.dto.board.BoardDTO">
-        SELECT * FROM (SELECT ROWNUM rm, b.id, b.writer, b.title, b.created_at, b.view_count, e.name FROM board b
-        JOIN employee e ON b.writer=e.id
-        WHERE board_group_id = #{boardGroupId}
-        <if test="searchQuery != null and searchQuery != ''">
-            AND
-            (title like '%'||#{searchQuery}||'%' OR
-            writer like '%'||#{searchQuery}||'%' OR
-            contents like '%'||#{searchQuery}||'%')
-        </if>
-        ORDER BY created_at)
-        WHERE rm BETWEEN #{from} AND #{to}
+        SELECT b.*, e.name FROM board b
+        JOIN employee e ON b.writer = e.id
+        WHERE b.id = #{id}
     </select>
 
     <!-- 선택된 게시글의 내용 select -->
@@ -27,7 +19,7 @@
     </select>
 
     <!-- 총 게시물의 갯수 조회 -->
-    <select id="getBoardCount" resultType="int">
+    <select id="getBoardCount" resultType="Long">
         SELECT count(*) FROM board
         WHERE board_group_id = #{boardGroupId}
         <if test="searchQuery != null and searchQuery != ''">

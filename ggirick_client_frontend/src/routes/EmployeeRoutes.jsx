@@ -1,10 +1,11 @@
 import {Route, Routes} from "react-router-dom";
 import BoardRoutes from "./BoardRoutes.jsx";
+import Dashboard from "@/pages/dashboard/Dashboard.jsx";
 
 export default function EmployeeRoutes() {
     return (
         <Routes>
-            <Route path="/dashboard" element={<>test</>}></Route>
+            <Route path="/" element={<Dashboard/>}></Route>
             <Route path="/board/*" element={<BoardRoutes/>}/>
             <Route
                 path="/approval"
