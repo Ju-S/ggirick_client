@@ -38,7 +38,25 @@ const apiRoutes = {
       getSubGroup:{
         url:"/address/group",
         method:"GET"
-      }
+      },
+
+      createSubGroup:(groupName)=>({
+        url:"/address/insert-group",
+        method:"POST",
+        data:{groupName},
+      }),
+
+      // 소분류 그룹 삭제
+      deleteSubGroup: (subGroupId) => ({
+        url: `/address/delete-group/${subGroupId}`,
+        method: "DELETE",
+      }),
+
+      // 소분류 클릭 시 주소록 조회
+      getAddressesBySubGroup: (subGroupId) => ({
+        url: `/address/subgroup/${subGroupId}/addresses`,
+        method: "GET",
+      }),
     }
 };
 

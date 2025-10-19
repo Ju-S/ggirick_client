@@ -14,6 +14,14 @@ public class AddressGroupDAO {
     private final SqlSession mybatis;
 
     public List<AddressGroupDTO> selectAll(UserTokenDTO userToken) {
-        return mybatis.selectList("address.addressGroupSelectAll", userToken);
+        return mybatis.selectList("Address.AddressGroupSelectAll", userToken);
+    }
+
+    public int addAddressGroup(AddressGroupDTO addressGroupDTO) {
+        return mybatis.insert("Address.addAddressGroup", addressGroupDTO);
+    }
+
+    public int deleteAddressGroup(int subGroupId) {
+        return mybatis.delete("Address.deleteAddressGroup", subGroupId);
     }
 }

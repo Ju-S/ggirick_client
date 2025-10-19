@@ -15,4 +15,6 @@ public class AddressGroupTypeDAO {
     public List<AddressGroupTypeDTO> selectAll() {
         return mybatis.selectList("Address.AddressGroupTypeSelectAll");
     }
+
+
 }

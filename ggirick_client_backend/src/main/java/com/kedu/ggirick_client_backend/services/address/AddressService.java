@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.amqp.RabbitConnectionDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class AddressService {
@@ -13,5 +15,9 @@ public class AddressService {
 
     public int addAddress(AddressDTO addressDTO) {
         return aDAO.addAddress(addressDTO);
+    }
+
+    public List<AddressDTO> getAddressesBySubGroup(int subGroupId) {
+        return aDAO.getAddressesBySubGroup(subGroupId);
     }
 }

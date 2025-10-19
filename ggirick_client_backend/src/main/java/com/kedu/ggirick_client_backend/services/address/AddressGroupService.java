@@ -17,4 +17,13 @@ public class AddressGroupService {
     public List<AddressGroupDTO> selectAll(UserTokenDTO userToken) {
         return agDAO.selectAll(userToken);
     }
+
+    public int addAddressGroup(AddressGroupDTO addressGroupDTO) {
+        return agDAO.addAddressGroup(addressGroupDTO);
+    }
+    public int deleteAddressGroup(int subGroupId) {
+        return agDAO.deleteAddressGroup(subGroupId);
+    }
+
+
 }

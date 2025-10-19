@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 @RequiredArgsConstructor
     public class AddressDAO {
@@ -12,5 +14,9 @@ import org.springframework.stereotype.Repository;
 
     public int addAddress(AddressDTO addressDTO) {
         return  mybatis.insert("Address.addAddress", addressDTO);
+    }
+
+    public List<AddressDTO> getAddressesBySubGroup(int subGroup) {
+        return mybatis.selectList("Address.getAddressesBySubGroup", subGroup);
     }
 }
