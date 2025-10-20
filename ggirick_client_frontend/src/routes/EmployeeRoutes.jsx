@@ -1,15 +1,14 @@
 import {Route, Routes} from "react-router-dom";
 import AddressPage from "../pages/address/AddressPage.jsx";
 import "flowbite/dist/flowbite.css";
+import BoardRoutes from "./BoardRoutes.jsx";
+import Dashboard from "@/pages/dashboard/Dashboard.jsx";
 
 export default function EmployeeRoutes() {
     return (
         <Routes>
-            <Route path="/" element={<>dashboard</>}></Route>
-            <Route
-                path="/board"
-                element={<>board</>}
-            ></Route>
+            <Route path="/" element={<Dashboard/>}></Route>
+            <Route path="/board/*" element={<BoardRoutes/>}/>
             <Route
                 path="/approval"
                 element={<>approval</>}

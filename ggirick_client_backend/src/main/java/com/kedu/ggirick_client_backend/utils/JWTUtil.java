@@ -30,7 +30,7 @@ public class JWTUtil {
                  .withSubject(userInfo.getId())
                  .withClaim("authority", userInfo.getAuthority())
                 .withIssuedAt(new Date())
-                .withExpiresAt(new Date(System.currentTimeMillis() + exp * 100))
+                .withExpiresAt(new Date(System.currentTimeMillis() + exp * 1000))
                 .sign(algorithm);
     }
 

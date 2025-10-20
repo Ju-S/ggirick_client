@@ -1,5 +1,7 @@
 @import "tailwindcss";
-@plugin "flowbite-react/plugin/tailwindcss";
-@source "../.flowbite-react/class-list.json";
 
-@custom-variant dark (&:where(.dark, .dark *));
+@plugin "flowbite-react/plugin/tailwindcss";
+@plugin "daisyui" {
+    themes: light --default, dark --prefersdark, cupcake, emerald, valentine, bumblebee, corporate, synthwave, retro, cyberpunk, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk;
+}
+@source "../.flowbite-react/class-list.json";
