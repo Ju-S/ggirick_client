@@ -1,6 +1,8 @@
 import {Route, Routes} from "react-router-dom";
 import BoardRoutes from "./BoardRoutes.jsx";
 import Dashboard from "@/pages/dashboard/Dashboard.jsx";
+import ReservationPage from "@/pages/reservation/ReservationPage.jsx";
+import TaskPage from "@/pages/task/TaskPage.jsx";
 
 export default function EmployeeRoutes() {
     return (
@@ -21,11 +23,11 @@ export default function EmployeeRoutes() {
             ></Route>
             <Route
                 path="/reservation"
-                element={<>reservation</>}
+                element={<ReservationPage/>}
             ></Route>
             <Route
                 path="/task"
-                element={<>task</>}
+                element={<TaskPage/>}
             ></Route>
             <Route
                 path="/mail"
