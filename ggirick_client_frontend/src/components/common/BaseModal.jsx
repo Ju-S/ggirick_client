@@ -1,4 +1,4 @@
-// src/commons/components/BaseModal.jsx
+
 import React from 'react';
 
 export default function BaseModal({

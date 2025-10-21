@@ -2,6 +2,7 @@ package com.kedu.ggirick_client_backend.services.employee;
 
 import com.kedu.ggirick_client_backend.dao.employee.EmployeeDAO;
 import com.kedu.ggirick_client_backend.dto.employee.EmployeeDTO;
+import com.kedu.ggirick_client_backend.dto.employee.OrganizationWithDepartmentsDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -51,5 +52,6 @@ public class EmployeeService {
         dto.setPw(passwordEncoder.encode(dto.getPw()));
         return employeeDAO.updatePassword(dto);
     }
+
 
 }
