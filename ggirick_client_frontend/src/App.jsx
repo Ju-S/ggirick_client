@@ -1,5 +1,5 @@
 // App.js
-import {BrowserRouter, Routes, Route} from 'react-router-dom';
+import {BrowserRouter, Route, Routes} from 'react-router-dom';
 import {useEffect, useState} from "react";
 
 // 테마 + 공통 컴포넌트
@@ -33,7 +33,7 @@ export default function App() {
 
         if (token && authority) {
             // 세션에 로그인 정보가 있으면 상태 복원
-            login({ token, authority });
+            login({token, authority});
         } else {
             // 세션에 정보 없으면 로그아웃 상태로
             logout();
@@ -43,7 +43,7 @@ export default function App() {
     // 로그인 이후 공통 데이터 불러오고 스토어에 저장 (부서 / 직급 / 조직)
     useEffect(() => {
         //  데이터 불러오고 스토어에 저장하는 함수 정의
-        const fetchHrMetaData  = async () => {
+        const fetchHrMetaData = async () => {
             try {
                 // 비동기로 메타데이터 받아오기
                 const metaData = await getAllHrMetaAPI();
@@ -87,28 +87,26 @@ export default function App() {
 
                     {isLogin === false && (
                         <Routes>
-                            <Route path="/login" element={<LoginPage />} />
-                            <Route path="*" element={<Navigate to="/login" replace />} />
+                            <Route path="/login" element={<LoginPage/>}/>
+                            <Route path="*" element={<Navigate to="/login" replace/>}/>
                         </Routes>
                     )}
 
                     {isLogin === true && (
                         <>
                             {/* 상단 네비 */}
-                            <Nav />
+                            <Nav/>
                             <SideNav/>
                             <Routes>
                                 {/* 메인 컨텐츠 */}
-                                <div className="flex-1 overflow-hidden">
-                                    <EmployeeRoutes />
-                                </div>
-                                <Route path="*" element={<Error404Page />} />
+                                <Route path="/*" element={
+                                    <div className="flex-1 overflow-hidden">
+                                        <EmployeeRoutes/>
+                                    </div>
+                                }/>
                             </Routes>
                         </>
                     )}
-
-
-
                 </div>
             </BrowserRouter>
         </ThemeProvider>
