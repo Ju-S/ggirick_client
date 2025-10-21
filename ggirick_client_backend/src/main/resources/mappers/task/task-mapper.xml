@@ -1,0 +1,192 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="taskProject">
+    <!-- 전체 프로젝트 목록 조회 -->
+    <select id="findAllProjects" resultType="com.kedu.ggirick_client_backend.dto.task.ProjectDTO">
+        SELECT id, name, description
+        FROM task_project
+        ORDER BY created_at DESC
+    </select>
+    <!-- 내 프로젝트 조회 -->
+    <select id="findMyProjectsById"
+            parameterType="string"
+            resultType="com.kedu.ggirick_client_backend.dto.task.ProjectDTO">
+        SELECT p.id,
+               p.name,
+               p.description
+        FROM task_project p
+                 INNER JOIN task_project_member m
+                            ON p.id = m.project_id
+        WHERE m.employee_id = #{employeeId}
+        ORDER BY p.created_at DESC
+    </select>
+
+    <!-- 프로젝트 삭제-->
+    <delete id="deleteProjectsById" >
+        DELETE FROM task_project WHERE id = #{projectId}
+    </delete>
+    <!-- 프로젝트 정보 업데이트-->
+    <update id="updateProjectDynamic" parameterType="com.kedu.ggirick_client_backend.dto.task.ProjectDTO">
+        UPDATE task_project
+        <set>
+            <if test="name != null">
+                name = #{name},
+            </if>
+            <if test="description != null">
+                description = #{description},
+            </if>
+        </set>
+        WHERE id = #{id}
+    </update>
+    <!-- 프로젝트 멤버 조회 -->
+    <select id="findMembersByProjectId"
+            parameterType="long"
+            resultType="com.kedu.ggirick_client_backend.dto.task.ProjectMemberDTO">
+
+        SELECT
+            tpm.id AS id,
+            tpm.project_id AS projectId,
+            tpm.employee_id AS employeeId,
+            tpm.role_id AS roleId,
+            e.name AS name,
+            r.name AS roleName
+        FROM task_project_member tpm
+                 JOIN employee e ON tpm.employee_id = e.id
+                 LEFT JOIN task_project_role r ON tpm.role_id = r.id
+        WHERE tpm.project_id = #{projectId}
+        ORDER BY tpm.id
+    </select>
+    <!--프로젝트 멤버 존재하는지 확인 -->
+    <select id="existsMember" parameterType="map" resultType="boolean">
+        SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
+        FROM task_project_member
+        WHERE project_id = #{projectId}
+          AND employee_id = #{employeeId}
+    </select>
+    <!-- 프로젝트 멤버 추가 -->
+    <insert id="insertProjectMember" parameterType="com.kedu.ggirick_client_backend.dto.task.ProjectMemberDTO">
+        MERGE INTO task_project_member m
+            USING (SELECT #{projectId} AS project_id, #{employeeId} AS employee_id, #{roleId} AS role_id FROM dual) src
+            ON (m.project_id = src.project_id AND m.employee_id = src.employee_id)
+            WHEN NOT MATCHED THEN
+                INSERT (
+                        id,
+                        project_id,
+                        employee_id,
+                        role_id,
+                        joined_at
+                    )
+                    VALUES (
+                               task_project_member_seq.NEXTVAL,
+                               src.project_id,
+                               src.employee_id,
+                               src.role_id,
+                               SYSTIMESTAMP
+                           )
+    </insert>
+
+    <!--여러 프로젝트 멤버 한번에 추가 -->
+    <insert id="insertProjectMembers" parameterType="java.util.List">
+        INSERT INTO task_project_member (
+        id,
+        project_id,
+        employee_id,
+        role_id,
+        joined_at
+        )
+        VALUES
+        <foreach collection="list" item="member" separator=",">
+            (
+            task_project_member_seq.NEXTVAL,
+            #{member.projectId},
+            #{member.employeeId},
+            #{member.roleId},
+            SYSTIMESTAMP
+            )
+        </foreach>
+    </insert>
+    <!-- 프로젝트 멤버의 권한 업데이트-->
+    <update id="updateMemberRole" parameterType="map">
+        UPDATE task_project_member
+        SET role_id = #{roleId}
+        WHERE project_id = #{projectId}
+          AND employee_id = #{employeeId}
+    </update>
+    <!-- 프로젝트 업무 조회 -->
+    <select id="findTasksByProjectId" resultType="com.kedu.ggirick_client_backend.dto.task.TaskDTO">
+        SELECT
+            id AS id,
+            project_id as projectId,
+            title AS title,
+            assignee AS assignee,
+            assigner AS assigner,
+            status AS status,
+            priority AS priority,
+            started_at as startedAt,
+            ended_at as endedAt,
+            task_data as taskData,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+        FROM task
+        WHERE project_id = #{projectId}
+        ORDER BY project_id ASC
+    </select>
+    <update id="updateTaskStatusById">
+        update task set status = #{status} where id = #{id}
+    </update>
+    <update id="updateTaskById" parameterType="com.kedu.ggirick_client_backend.dto.task.TaskDTO">
+        UPDATE task
+        SET
+            project_id = #{project_id, javaType=Long, jdbcType=NUMERIC},
+            assignee = #{assignee},
+            assigner = #{assigner},
+            title = #{title},
+            status = #{status},
+            priority = #{priority},
+            started_at = #{startedAt},
+            ended_at = #{endedAt},
+            task_data = #{task_data},
+            updated_at = SYSDATE
+        WHERE id = #{id}
+    </update>
+    <delete id="deleteTaskById">
+        delete from task where id = #{id}
+    </delete>
+    <insert id="createTask" parameterType="com.kedu.ggirick_client_backend.dto.task.TaskDTO">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT task_seq.NEXTVAL FROM dual
+        </selectKey>
+        INSERT INTO task (
+        id,
+        project_id,
+        assignee,
+        assigner,
+        title,
+        status,
+        priority,
+        started_at,
+        ended_at,
+        task_data,
+        created_at,
+        updated_at
+        )
+        VALUES (
+        #{id},
+        #{projectId, javaType=Long, jdbcType=NUMERIC},
+        #{assignee},
+        #{assigner},
+        #{title},
+        #{status},
+        #{priority},
+        #{startedAt},
+        #{endedAt},
+        #{taskData},
+        SYSDATE,
+        SYSDATE
+        )
+    </insert>
+
+</mapper>
