@@ -1,5 +1,5 @@
 import {create} from "zustand"
-import { projectListAPI } from "@/api/task/projectAPI.js";
+import {addMemberAPI, projectCreateAPI, projectListAPI, removeMemberAPI} from "@/api/task/projectAPI.js";
 import {
   deleteAPI,
   insertAPI,
@@ -10,13 +10,18 @@ import {
 const useTaskProjectStore = create((set,get) =>( {
   projects: [],
   selectedProject: null,
-  selectedProjectId:1,
+  selectedProjectId:null,
   selectedTask:null,
   activeView:"kanban",
   drawerOpen:false,
 
   isLoading: false,
   error: null,
+    isProjectModalOpen: false,
+    addMemberModalOpen: false,
+
+    setProjectModalOpen: (isOpen) => set({ isProjectModalOpen: isOpen }),
+    setAddMemberModalOpen: (isOpen) =>set({addMemberModalOpen: isOpen}),
 
   setProjects: (updater) => {
     // updater가 함수면 이전 값 기반으로 업데이트
@@ -77,19 +82,7 @@ const useTaskProjectStore = create((set,get) =>( {
       await updateAPI(taskId, updatedTask); // updateAPI는 기존 insertAPI, deleteAPI와 유사한 형태로 구현
 
       // 선택된 프로젝트 업데이트
-      const currentProject = get().selectedProject;
-      if (!currentProject || !currentProject.tasks) return false;
-
-      const updatedTasks = currentProject.tasks.map((t) =>
-        t.id === taskId ? { ...t, ...updatedTask } : t
-      );
-
-      set({
-        selectedProject: { ...currentProject, tasks: updatedTasks },
-        projects: get().projects.map((p) =>
-          p.id === currentProject.id ? { ...currentProject, tasks: updatedTasks } : p
-        ),
-      });
+        await get().fetchProjects();
     } catch (err) {
       console.error("업데이트 오류:", err);
       set({ error: "업무 업데이트에 실패했습니다." });
@@ -143,8 +136,52 @@ const useTaskProjectStore = create((set,get) =>( {
     } finally {
       get().setLoading(false);
     }
-  }
+  },
 
+    createProject: async (newProject) => {
+        get().setLoading(true);
+        try {
+            await projectCreateAPI(newProject);
+            await get().fetchProjects();
+            return true;
+        } catch (err) {
+            console.error("프로젝트 생성 실패:", err);
+            set({ error: "프로젝트 생성에 실패했습니다." });
+            return false;
+        } finally {
+            get().setLoading(false);
+        }
+    },
+    addProjectMember: async (projectId, employeeId) => {
+        get().setLoading(true);
+        try {
+            await addMemberAPI(projectId, employeeId); // 서버 API 호출
+            await get().fetchProjects(); // 프로젝트 목록 갱신
+            return true;
+        } catch (err) {
+            console.error("멤버 추가 실패", err);
+            set({ error: "멤버 추가 실패" });
+            return false;
+        } finally {
+            get().setLoading(false);
+        }
+    },
+
+// 프로젝트에서 멤버 제거
+    removeProjectMember: async (projectId, employeeId) => {
+        get().setLoading(true);
+        try {
+            await removeMemberAPI(projectId, employeeId);
+            await get().fetchProjects();
+            return true;
+        } catch (err) {
+            console.error("멤버 제거 실패", err);
+            set({ error: "멤버 제거 실패" });
+            return false;
+        } finally {
+            get().setLoading(false);
+        }
+    },
 
 }));
 

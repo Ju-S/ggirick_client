@@ -89,6 +89,10 @@ const apiRoutes = {
       url: "/project",
       method: "GET",
     },
+      insert:{
+          url:`/project`,
+          method:"POST",
+      }
   },
   task: {
     insert:{
@@ -232,6 +236,8 @@ const apiRoutes = {
          * response: OrganizationDTO
          */
         organizations: { url: `/hr-meta/organizations`, method: "GET" },
+
+        structure:{url:`/hr-meta/org-structure `,method: "GET" }
     },
 
 };

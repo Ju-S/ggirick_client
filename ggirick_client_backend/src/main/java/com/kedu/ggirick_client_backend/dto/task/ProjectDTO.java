@@ -15,6 +15,7 @@ public class ProjectDTO {
     private long id;
     private String name;
     private String description;
+    private String createdBy;
     private String range;
     private List<ProjectMemberDTO> members;
     private List<TaskDTO> tasks;

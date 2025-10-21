@@ -140,7 +140,7 @@
     <update id="updateTaskById" parameterType="com.kedu.ggirick_client_backend.dto.task.TaskDTO">
         UPDATE task
         SET
-            project_id = #{project_id, javaType=Long, jdbcType=NUMERIC},
+            project_id = #{projectId, javaType=Long, jdbcType=NUMERIC},
             assignee = #{assignee},
             assigner = #{assigner},
             title = #{title},
@@ -148,13 +148,33 @@
             priority = #{priority},
             started_at = #{startedAt},
             ended_at = #{endedAt},
-            task_data = #{task_data},
+            task_data = #{taskData},
             updated_at = SYSDATE
         WHERE id = #{id}
     </update>
     <delete id="deleteTaskById">
         delete from task where id = #{id}
     </delete>
+    <insert id="createProject" parameterType="com.kedu.ggirick_client_backend.dto.task.ProjectDTO">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT project_seq.NEXTVAL FROM dual
+        </selectKey>
+            Insert into TASK_PROJECT (
+        id,
+        name,
+        created_by,
+        created_at,
+        description
+        ) values (
+        #{id},
+        #{name},
+        #{createdBy},
+        SYSDATE,
+        #{description}
+        )
+    </insert>
+
+
     <insert id="createTask" parameterType="com.kedu.ggirick_client_backend.dto.task.TaskDTO">
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             SELECT task_seq.NEXTVAL FROM dual
