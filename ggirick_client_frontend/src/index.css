@@ -5,3 +5,46 @@
     themes: light --default, dark --prefersdark, cupcake, emerald, valentine, bumblebee, corporate, synthwave, retro, cyberpunk, halloween, garden, forest, aqua, lofi, pastel, fantasy, wireframe, black, luxury, dracula, cmyk, autumn, business, acid, lemonade, night, coffee, winter, dim, nord, sunset, caramellatte, abyss, silk;
 }
 @source "../.flowbite-react/class-list.json";
+
+
+/* 타이틀 (예: 2025년 10월) */
+.fc-toolbar-title {
+    @apply text-lg font-bold text-base-content;
+}
+
+/* 버튼 공통 스타일 */
+.fc .fc-button {
+    @apply btn btn-sm btn-outline bg-accent hover:bg-accent-content;
+
+}
+
+/* 현재 활성화된 버튼 (예: dayGridMonth 선택된 상태) */
+.fc .fc-button-active {
+    @apply bg-primary;
+}
+
+
+/* 오늘 날짜 버튼 강조 */
+.fc .fc-today-button {
+    @apply bg-accent hover:bg-accent-content ;
+}
+
+/* 헤더 배경색 */
+.fc-theme-standard .fc-toolbar.fc-header-toolbar {
+    @apply bg-base-200 rounded-lg p-2;
+}
+
+/* 요일 헤더 (월, 화, 수...) */
+.fc-theme-standard th {
+    @apply bg-base-300 text-base-content font-semibold;
+}
+
+/* 오늘 날짜 셀 */
+.fc-day-today {
+    @apply bg-primary;
+}
+
+/* 이벤트 */
+.fc-event {
+    @apply bg-primary text-primary-content border-none rounded-md px-1 py-0.5;
+}

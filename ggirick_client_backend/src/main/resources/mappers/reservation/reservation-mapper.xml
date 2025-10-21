@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="reservationMapper">
+
+    <select id="findAllResources" resultType="com.kedu.ggirick_client_backend.dto.reservation.ResourceDTO">
+        SELECT * FROM RESERVATION_RESOURCE
+    </select>
+
+    <select id="findReservationsForCalendar"
+            parameterType="map"
+            resultType="com.kedu.ggirick_client_backend.dto.reservation.CalendarEventDTO">
+        SELECT
+            r.ID AS id,
+            res.NAME AS title,                        -- 캘린더에 표시될 제목 (자원 이름)
+            r.STARTED_AT AS "start",
+            r.ENDED_AT AS "end",
+            r.RESOURCE_ID AS resourceId,
+
+            -- ✨ 추가 정보
+            r.RESERVATED_AT AS reservatedAt,
+            r.STATUS AS status,
+            r.PURPOSE AS purpose,
+            res.description As description,
+            res.NAME AS resourceName,
+            e.NAME AS employeeName
+
+        FROM RESERVATION r
+                 JOIN RESERVATION_RESOURCE res
+                      ON r.RESOURCE_ID = res.ID
+                 JOIN EMPLOYEE e                        -- 예약자 이름 가져오기
+                      ON r.EMPLOYEE_ID = e.ID
+
+        WHERE r.STARTED_AT BETWEEN #{startDate} AND #{endDate}
+        ORDER BY r.STARTED_AT
+    </select>
+
+
+
+    <select id="findMyReservations"
+            parameterType="string"
+            resultType="com.kedu.ggirick_client_backend.dto.reservation.ReservationDTO">
+        SELECT
+            r.ID AS id,
+            r.STARTED_AT AS startedAt,
+            r.ENDED_AT AS endedAt,
+            r.STATUS AS status,
+            r.PURPOSE AS purpose,
+            r.RESERVATED_AT AS reservatedAt,
+            res.NAME AS resourceName
+        FROM RESERVATION r
+                 JOIN RESERVATION_RESOURCE res
+                      ON r.RESOURCE_ID = res.ID
+        WHERE r.EMPLOYEE_ID = #{employeeId}
+        ORDER BY r.STARTED_AT DESC
+    </select>
+
+
+    <select id="findOverlappingReservations" resultType="com.kedu.ggirick_client_backend.dto.reservation.ReservationDTO">
+        SELECT * FROM RESERVATION
+        WHERE RESOURCE_ID = #{resourceId}
+        AND ((STARTED_AT BETWEEN #{start} AND #{end})
+        OR (ENDED_AT BETWEEN #{start} AND #{end}))
+        <if test="excludeId != null">
+            AND ID != #{excludeId}
+        </if>
+    </select>
+
+    <insert id="insertReservation" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT RESERVATION_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO RESERVATION (
+        ID, EMPLOYEE_ID, STARTED_AT, ENDED_AT, RESOURCE_ID, RESERVATED_AT, STATUS, PURPOSE
+        ) VALUES (
+        #{id}, #{employeeId}, #{startedAt}, #{endedAt}, #{resourceId}, #{reservatedAt}, #{status}, #{purpose}
+        )
+    </insert>
+
+    <insert id="insertResource" useGeneratedKeys="true" keyProperty="id" keyColumn="ID">
+        <selectKey  keyProperty="id" resultType="long" order="BEFORE">
+            SELECT RESOURCE_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        insert into RESERVATION_RESOURCE (
+            id, name, description, IMGURL
+        )VALUES (
+        #{id}, #{name}, #{description}, #{imgUrl}
+        )
+    </insert>
+
+    <select id="findReservationById" resultType="com.kedu.ggirick_client_backend.dto.reservation.ReservationDTO">
+        SELECT * FROM RESERVATION WHERE ID = #{id}
+    </select>
+
+    <update id="updateReservation" parameterType="com.kedu.ggirick_client_backend.dto.reservation.ReservationDTO">
+        UPDATE RESERVATION
+        SET
+            STARTED_AT = #{startedAt},
+            ENDED_AT = #{endedAt},
+            RESOURCE_ID = #{resourceId}
+        WHERE ID = #{id}
+    </update>
+    <delete id="deleteReservation">
+        delete from RESERVATION WHERE ID = #{id}
+    </delete>
+
+</mapper>
