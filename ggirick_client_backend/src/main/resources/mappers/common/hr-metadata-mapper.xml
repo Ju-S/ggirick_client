@@ -22,4 +22,66 @@
     <select id="getAllAuthorities" resultType="com.kedu.ggirick_client_backend.dto.common.AuthorityDTO">
         SELECT * FROM authority
     </select>
+
+
+    <resultMap id="OrgEmployeeResultMap" type="com.kedu.ggirick_client_backend.dto.employee.OrgEmployeeDTO">
+        <id property="id" column="emp_id"/>
+        <result property="name" column="emp_name"/>
+        <result property="email" column="emp_email"/>
+        <result property="jobName" column="job_name"/>
+        <result property="rankOrder" column="rank_order"/>
+        <result property="deptCode" column="dept_code"/>
+        <result property="deptName" column="dept_name"/>
+        <result property="orgCode" column="org_code"/>
+        <result property="orgName" column="org_name"/>
+    </resultMap>
+
+    <!-- 부서 + 직원 -->
+    <resultMap id="DepartmentWithEmployeesResultMap" type="com.kedu.ggirick_client_backend.dto.employee.DepartmentWithEmployeesDTO">
+        <id property="code" column="dept_code"/>
+        <result property="name" column="dept_name"/>
+        <collection property="employees" ofType="com.kedu.ggirick_client_backend.dto.employee.OrgEmployeeDTO" resultMap="OrgEmployeeResultMap"/>
+    </resultMap>
+
+    <!-- 조직 + 부서 + 직원 -->
+    <resultMap id="OrganizationWithDepartmentsResultMap" type="com.kedu.ggirick_client_backend.dto.employee.OrganizationWithDepartmentsDTO">
+        <id property="code" column="org_code"/>
+        <result property="name" column="org_name"/>
+        <collection property="departments" ofType="com.kedu.ggirick_client_backend.dto.employee.DepartmentWithEmployeesDTO" resultMap="DepartmentWithEmployeesResultMap"/>
+    </resultMap>
+
+    <!-- 조직 구조 조회 -->
+    <select id="findOrganizationStructure" resultMap="OrganizationWithDepartmentsResultMap">
+        SELECT
+        o.code AS org_code,
+        o.name AS org_name,
+        d.code AS dept_code,
+        d.name AS dept_name,
+        emp.emp_id,
+        emp.emp_name,
+        emp.emp_email,
+        emp.job_name,
+        emp.rank_order
+        FROM organization o
+        INNER JOIN department_organization do ON do.org_code = o.code
+        INNER JOIN department d ON d.code = do.dept_code
+        INNER JOIN (
+        SELECT
+        e.id AS emp_id,
+        e.name AS emp_name,
+        e.email AS emp_email,
+        j.name AS job_name,
+        j.rank_order,
+        ed.department_code,
+        eo.organization_code
+        FROM employee e
+        INNER JOIN employee_department ed ON e.id = ed.employee_id
+        INNER JOIN employee_organization eo ON e.id = eo.employee_id
+        LEFT JOIN employee_job ej ON e.id = ej.employee_id
+        LEFT JOIN job j ON ej.job_code = j.code
+        ) emp
+        ON emp.organization_code = o.code AND emp.department_code = d.code
+        ORDER BY o.code, d.code, emp.rank_order, emp.emp_name
+    </select>
+
 </mapper>

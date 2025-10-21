@@ -117,6 +117,33 @@ const apiRoutes = {
             url: `/project/task`,
             method: "POST",
         },
+    /**
+     * 게시글 수정 API<br>
+     * PUT /api/board/{boardId}<br>
+     * body: {BoardDTO}
+     */
+    put: { url: `/board`, method: "PUT" },
+  },
+  project: {
+    /**
+     * 자신이 속한 업무 프로젝트 리스트를 가져오는 API<br>
+     * GET /project <br>
+     * response: {List<ProjectDto>}
+     */
+    list: {
+      url: "/project",
+      method: "GET",
+    },
+      insert:{
+          url:`/project`,
+          method:"POST",
+      }
+  },
+  task: {
+    insert:{
+      url:`/project/task`,
+      method:"POST",
+    },
 
         updateStatus: (taskId) => ({
             url: `/project/task/${taskId}/status`,
@@ -253,7 +280,9 @@ const apiRoutes = {
          * GET /hr-meta/organizations<br>
          * response: OrganizationDTO
          */
-        organizations: {url: `/hr-meta/organizations`, method: "GET"},
+        organizations: { url: `/hr-meta/organizations`, method: "GET" },
+
+        structure:{url:`/hr-meta/org-structure `,method: "GET" }
     },
 
 };

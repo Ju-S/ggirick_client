@@ -26,8 +26,8 @@ public class TaskProjectController {
      *
      * */
     @PostMapping
-    public ResponseEntity<Map<String, Boolean>> createProject(@RequestBody ProjectDTO projectDTO) {
-        boolean success = projectService.createProject(projectDTO);
+    public ResponseEntity<Map<String, Boolean>> createProject(@RequestBody ProjectDTO projectDTO,@AuthenticationPrincipal UserTokenDTO userInfo) {
+        boolean success = projectService.createProject(projectDTO, userInfo.getId());
         Map<String, Boolean> response = new HashMap<>();
         response.put("result", success);
         return ResponseEntity.ok(response);

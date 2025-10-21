@@ -6,6 +6,7 @@ import com.kedu.ggirick_client_backend.dto.task.ProjectMemberDTO;
 import com.kedu.ggirick_client_backend.dto.task.TaskDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -98,8 +99,22 @@ public class TaskProjectService {
         return taskProjectDAO.updateTaskById(id, taskDTO);
     }
 
-    public boolean createProject(ProjectDTO projectDTO) {
-        return taskProjectDAO.createProject(projectDTO);
+    @Transactional
+    public boolean createProject(ProjectDTO projectDTO,String loginId) {
+       projectDTO.setCreatedBy(loginId);
+
+
+
+        boolean success = taskProjectDAO.createProject(projectDTO);
+         ProjectMemberDTO projectMemberDTO = new ProjectMemberDTO();
+
+         projectMemberDTO.setProjectId(projectDTO.getId());
+         projectMemberDTO.setEmployeeId(loginId);
+         projectMemberDTO.setRoleId(1); //프로젝트를 만든 사람이 admin
+
+
+       boolean insertSuccess =  taskProjectDAO.insertProjectMember(projectMemberDTO);
+        return success && insertSuccess;
     }
 
     public boolean deleteProject(Long id) {

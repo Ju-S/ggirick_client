@@ -4,11 +4,13 @@ import com.kedu.ggirick_client_backend.dto.common.AuthorityDTO;
 import com.kedu.ggirick_client_backend.dto.common.DepartmentDTO;
 import com.kedu.ggirick_client_backend.dto.common.JobDTO;
 import com.kedu.ggirick_client_backend.dto.common.OrganizationDTO;
+import com.kedu.ggirick_client_backend.dto.employee.OrganizationWithDepartmentsDTO;
 import com.kedu.ggirick_client_backend.services.hr.AuthorityService;
 import com.kedu.ggirick_client_backend.services.hr.DepartmentService;
 import com.kedu.ggirick_client_backend.services.hr.JobService;
 import com.kedu.ggirick_client_backend.services.hr.OrganizationService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -43,5 +45,10 @@ public class HrMetaController {
     @GetMapping("/authorities")
     public List<AuthorityDTO> getAuthorities() {
         return authorityService.getAllAuthorities();
+    }
+
+    @GetMapping("/org-structure")
+    public ResponseEntity<List<OrganizationWithDepartmentsDTO>> getOrgStructure() {
+        return ResponseEntity.ok( organizationService.getOrgStructure());
     }
 }
