@@ -6,6 +6,8 @@ import {useEffect, useState} from "react";
 import Nav from "./components/common/nav/Nav.jsx";
 import {ThemeProvider} from "./context/ThemeContext.jsx";
 import SideNav from "@/components/common/sideNav/SideNav.jsx";
+import {Navigate} from "react-router";
+import {getAllHrMetaAPI} from "@/api/common/employeeMetaAPI.js";
 
 // 스토어
 import useCommonStore from "@/store/commonStore.js";
@@ -15,7 +17,6 @@ import useAuthStore from "@/store/authStore.js";
 import EmployeeRoutes from "./routes/EmployeeRoutes.jsx";
 import AlertModal from "@/components/common/modals/AlertModal.jsx";
 import {LoginPage} from "@/pages/auth/LoginPage.jsx";
-import {Navigate} from "react-router";
 
 export default function App() {
     // 전역 상태변수
@@ -60,7 +61,7 @@ export default function App() {
 
         // 로그인 상태가 true일 때만 실행
         if (isLogin === true) {
-            fetchHrMetaData();
+           fetchHrMetaData();
         }
     }, [isLogin, setAllCommonData]);
 
