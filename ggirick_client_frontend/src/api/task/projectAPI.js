@@ -5,13 +5,21 @@ export function fetchAvailableMembersAPI(){
 
 };
 
-export function removeMemberAPI(){
-
+export function updateProjectAPI(projectId, data){
+    api({
+        ...apiRoutes.project.update(projectId),
+        data:data,
+    })
 }
 
-export function addMemberAPI(){
 
-}
+export const syncMembersAPI = (projectId, data) =>
+
+    api({
+        ...apiRoutes.project.syncMembers(projectId),
+        data: data,
+    });
+
 
 export function projectListAPI() {
   return api(apiRoutes.project.list);
@@ -23,3 +31,4 @@ export const projectCreateAPI = (data) =>
      ...apiRoutes.project.insert,
         data: data
     })
+

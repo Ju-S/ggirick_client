@@ -10,7 +10,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
     const today = new Date();
   const [range, setRange] = useState({ from: today, to: undefined });
   const [showCalendar, setShowCalendar] = useState(false);
-
+    const [error, setError] = useState("");
   const [task, setTask] = useState({
     title: "",
     projectId: "",
@@ -25,7 +25,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
 
   useEffect(() => {
     if (!open) return;
-
+      setError("");
     if (selectedTask && mode === "edit") {
       setTask({
         ...selectedTask,
@@ -85,9 +85,35 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
     return toStr ? `${fromStr} ~ ${toStr}` : `${fromStr} ~ `;
   };
 
+const validateForm = () => {
+    if (!task.title.trim() && task.title.length <1) {
+        setError("업무 제목은 빈값일 수 없습니다.");
+        return false;
+    }
+
+    if (task.projectId ==="") {
+        setError("프로젝트는 빈값일 수 없습니다.");
+        return false;
+    }
+    if (task.assignee ==="") {
+        setError("업무 할당자는 빈값일 수 없습니다.");
+        return false;
+    }
+
+    if (!taskData.detail.trim()) {
+        setError("업무 상세 내용은 빈값일 수 없습니다.");
+        return false;
+    }
+
+    return true;
+}
+
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!validateForm()) return false;
     const today = new Date();
     const formatToday = formatDate(today);
 
@@ -98,23 +124,27 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
       taskData: JSON.stringify(taskData),
     };
 
-    try {
+
+
       if (mode === "create") {
-        await createTask(finalTask);
+          const success=  await createTask(finalTask);
 
         alert("작업이 성공적으로 생성되었습니다!");
+          if (success) {
+              onClose();
+          }
 
       } else if (mode === "edit") {
 
-        await updateTask(selectedTask.id, finalTask);
+          const success= await updateTask(selectedTask.id, finalTask);
         alert("작업이 성공적으로 수정되었습니다!");
+          if (success) {
+              onClose();
+          }
 
       }
-      onClose();
-    } catch (err) {
-      console.error(err);
-      alert("작업 처리 중 오류가 발생했습니다.");
-    }
+
+
   };
 
   return (
@@ -270,7 +300,10 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
             </div>
           )}
         </div>
-
+          {/* 에러 메시지 */}
+          {error && (
+              <p className="text-red-500 text-xs mt-1">{error}</p>
+          )}
         {/* 버튼 */}
         <div className="flex justify-end gap-2 pt-3">
           <button type="button" className="btn btn-outline" onClick={onClose}>
