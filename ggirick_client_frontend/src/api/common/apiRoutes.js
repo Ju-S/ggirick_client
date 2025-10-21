@@ -38,11 +38,11 @@ const apiRoutes = {
          * GET /api/board<br>
          * response: {BoardDTO}
          */
-        list: (currentPage, searchQuery) => {
-            let url = `/board?currentPage=${currentPage}`;
+        list: (currentPage, groupId, searchFilter, searchQuery) => {
+            let url = `/board?currentPage=${currentPage}&groupId=${groupId}`;
 
-            if (!searchQuery) {
-                url += `&searchQuery=${searchQuery}`;
+            if (searchQuery) {
+                url += `&searchFilter=${searchFilter}&searchQuery=${searchQuery}`;
             }
 
             return {
@@ -67,6 +67,17 @@ const apiRoutes = {
          * body: {BoardDTO}
          */
         put: {url: `/board`, method: "PUT"},
+    },
+    boardGroup: {
+        /**
+         * 게시판 그룹 목록 API<br>
+         * GET /api/board/group<br>
+         * response: {List<BoardGroupDTO>}
+         */
+        list: () => ({
+                url: `/board/group`,
+                method: "GET"
+        }),
     },
 };
 

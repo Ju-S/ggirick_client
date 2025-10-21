@@ -6,18 +6,18 @@ import com.google.cloud.storage.Storage;
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardCommentDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardDTO;
+import com.kedu.ggirick_client_backend.dto.board.BoardFileDTO;
 import com.kedu.ggirick_client_backend.services.board.BoardCommentService;
+import com.kedu.ggirick_client_backend.services.board.BoardFileService;
 import com.kedu.ggirick_client_backend.services.board.BoardService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +34,7 @@ public class BoardController {
 
     private final BoardService boardService;
     private final BoardCommentService boardCommentService;
+    private final BoardFileService boardFileService;
 
     private final Storage storage;
 
@@ -43,16 +44,22 @@ public class BoardController {
     // 게시글 목록 조회
     @GetMapping
     public ResponseEntity<Map<String, Object>> getList(@RequestParam(defaultValue = "1") int currentPage,
+                                                       @RequestParam(defaultValue = "1") int groupId,
+                                                       @RequestParam(defaultValue = "0") int searchFilter,
                                                        @RequestParam(defaultValue = "", required = false) String searchQuery) {
         Map<String, Object> response = new HashMap<>();
 
-        List<BoardDTO> boardList = boardService.getList(currentPage, searchQuery);
-        long totalPage = boardService.getTotalPage(searchQuery);
+        List<BoardDTO> boardNotificationList = boardService.getNotificationList(groupId);
+        List<BoardDTO> boardList = boardService.getList(currentPage, groupId, searchFilter, searchQuery);
+        long totalPage = boardService.getTotalPage(groupId, searchFilter, searchQuery);
 
+        response.put("boardNotificationList", boardNotificationList);
         response.put("boardList", boardList);
         response.put("itemPerPage", ITEM_PER_PAGE);
         response.put("pagePerNav", PAGE_PER_NAV);
         response.put("totalPage", totalPage);
+
+        System.out.println(boardNotificationList);
 
         return ResponseEntity.ok(response);
     }
@@ -77,26 +84,38 @@ public class BoardController {
     // 게시글 등록
     @PostMapping
     public ResponseEntity<Void> posting(@RequestPart("boardInfo") BoardDTO dto,
-                                        @RequestPart("files") List<MultipartFile> files,
-                                        @AuthenticationPrincipal UserTokenDTO userInfo) throws Exception{
+                                        @RequestPart(value = "files", required = false) List<MultipartFile> files,
+                                        @AuthenticationPrincipal UserTokenDTO userInfo) throws Exception {
+        System.out.println(dto.isNotification());
         dto.setWriter(userInfo.getId());
         int boardId = boardService.posting(dto);
 
-        for(MultipartFile file:files) {
-            if(!file.isEmpty()) {
-                String oriName = file.getOriginalFilename();
-                String sysName = UUID.randomUUID() + "_" + oriName;
-                BlobInfo blobInfo =
-                        BlobInfo.newBuilder(BlobId.of(bucketName, sysName))
-                                .setContentType(file.getContentType())
-                                .build();
+        if (files != null) {
+            for (MultipartFile file : files) {
+                if (!file.isEmpty()) {
+                    String oriName = file.getOriginalFilename();
+                    String sysName = UUID.randomUUID() + "_" + oriName;
+                    BlobInfo blobInfo =
+                            BlobInfo.newBuilder(BlobId.of(bucketName, sysName))
+                                    .setContentType(file.getContentType())
+                                    .build();
 
-                try(InputStream is = file.getInputStream()){
-                    storage.createFrom(blobInfo, is);
+                    try (InputStream is = file.getInputStream()) {
+                        storage.createFrom(blobInfo, is);
+                        // DB저장용
+                        // 매번 storage에 접속해서 데이터를 가져오기는 시간이 오래걸릴것으로 예상하여 DB로 저장.
+                        boardFileService.insertFileInfo(
+                                BoardFileDTO
+                                        .builder()
+                                        .name(oriName)
+                                        .url(sysName)
+                                        .boardId(boardId)
+                                        .build()
+                        );
+                    }
                 }
             }
         }
-
         return ResponseEntity.ok().build();
     }
 

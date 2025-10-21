@@ -331,39 +331,39 @@ export default function Dashboard() {
                     </div>
                     <Card
                       onClick={() => navigate("")}
-                      className="h-24 w-28 rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                      className="h-24 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
                     >
                       출근<br/>
                       <span className="text-sm">08:56:24</span>
                     </Card>
                     <Card
                       onClick={() => navigate("")}
-                      className="h-24 w-28 rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                      className="h-24 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
                     >
                       퇴근<br/>
                       <span className="text-sm">00:00:00</span>
                     </Card>
                     <Card
                       onClick={() => navigate("")}
-                      className="h-12 w-28 rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                      className="h-12 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
                     >
                       업무
                     </Card>
                     <Card
                       onClick={() => navigate("")}
-                      className="h-12 w-28 rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                      className="h-12 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
                     >
                       외출
                     </Card>
                     <Card
                       onClick={() => navigate("")}
-                      className="h-12 w-28 rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                      className="h-12 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
                     >
                       회의
                     </Card>
                     <Card
                       onClick={() => navigate("")}
-                      className="h-12 w-28 rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                      className="h-12 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
                     >
                       외근
                     </Card>

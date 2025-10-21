@@ -1,5 +1,6 @@
 package com.kedu.ggirick_client_backend.dto.board;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -17,5 +18,9 @@ public class BoardDTO {
     private String contents;
     private int boardGroupId;
     private Timestamp createdAt;
+    @JsonProperty("isNotification")
+    private boolean isNotification;
     private int viewCount;
+    private int commentCount;
+    private int fileCount;
 }
