@@ -1,3 +1,5 @@
+
+
 const apiRoutes = {
     auth: {
         /**
@@ -92,7 +94,16 @@ const apiRoutes = {
       insert:{
           url:`/project`,
           method:"POST",
-      }
+      },
+      update:(projectId) => ({
+          url:`/project/${projectId}`,
+          method:"PUT"
+      }),
+
+      syncMembers :(projectId) => ( {
+          url:`/project/${projectId}/members`,
+          method:"POST",
+      })
   },
   task: {
     insert:{
@@ -112,6 +123,7 @@ const apiRoutes = {
       url: `project/task/${taskId}`,
       method: "DELETE"
     }),
+
   },
   reservation: {
     /**
@@ -158,6 +170,12 @@ const apiRoutes = {
     myReservationList: { url: "/reservations/my", method: "GET" },
   },
   resource: {
+
+      /**
+       * 예약에 쓰이는 리소스 추가 API<br>
+       * POST /reservations/resource <br>
+       * 
+       */
     insert: {
       url: "/reservations/resource",
       method: "POST",

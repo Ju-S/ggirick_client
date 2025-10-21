@@ -29,7 +29,7 @@
         DELETE FROM task_project WHERE id = #{projectId}
     </delete>
     <!-- 프로젝트 정보 업데이트-->
-    <update id="updateProjectDynamic" parameterType="com.kedu.ggirick_client_backend.dto.task.ProjectDTO">
+    <update id="updateProjectNameAndDesc" parameterType="com.kedu.ggirick_client_backend.dto.task.ProjectDTO">
         UPDATE task_project
         <set>
             <if test="name != null">
@@ -60,7 +60,7 @@
         ORDER BY tpm.id
     </select>
     <!--프로젝트 멤버 존재하는지 확인 -->
-    <select id="existsMember" parameterType="map" resultType="boolean">
+    <select id="existsMember" parameterType="map" resultType="int">
         SELECT CASE WHEN COUNT(*) > 0 THEN 1 ELSE 0 END
         FROM task_project_member
         WHERE project_id = #{projectId}
@@ -88,26 +88,12 @@
                            )
     </insert>
 
-    <!--여러 프로젝트 멤버 한번에 추가 -->
-    <insert id="insertProjectMembers" parameterType="java.util.List">
-        INSERT INTO task_project_member (
-        id,
-        project_id,
-        employee_id,
-        role_id,
-        joined_at
-        )
-        VALUES
-        <foreach collection="list" item="member" separator=",">
-            (
-            task_project_member_seq.NEXTVAL,
-            #{member.projectId},
-            #{member.employeeId},
-            #{member.roleId},
-            SYSTIMESTAMP
-            )
-        </foreach>
-    </insert>
+    <delete id="deleteProjectMember" parameterType="com.kedu.ggirick_client_backend.dto.task.ProjectMemberDTO">
+        DELETE FROM task_project_member
+        WHERE employee_id = #{employeeId}
+          AND project_id = #{projectId}
+    </delete>
+
     <!-- 프로젝트 멤버의 권한 업데이트-->
     <update id="updateMemberRole" parameterType="map">
         UPDATE task_project_member

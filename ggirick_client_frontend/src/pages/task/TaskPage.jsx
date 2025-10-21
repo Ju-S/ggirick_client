@@ -8,7 +8,7 @@ import TaskDrawer from "@/components/task/TaskDrawer.jsx";
 import FullCalenderView from "@/components/task/views/FullCalenderView.jsx";
 import ProjectCreateModal from "@/components/task/ProjectCreateModal.jsx";
 import ProjectAddMemberModal from "@/components/task/ProjectAddMemberModal.jsx";
-
+import ProjectInfoModal from "@/components/task/ProjectInfoModal.jsx";
 export default function TaskPage() {
     const {
         projects,
@@ -28,7 +28,9 @@ export default function TaskPage() {
         isProjectModalOpen,
         setProjectModalOpen,
         addMemberModalOpen,
-        setAddMemberModalOpen,
+        setAddMemberModalOpen, projectInfoModalOpen,
+        setProjectInfoModalOpen,
+        updateProject
     } = useTaskProjectStore();
 
     // 🔹 프로젝트 목록 불러오기
@@ -145,7 +147,7 @@ export default function TaskPage() {
                 <header className="bg-primary text-primary-content border-b border-base-300 shadow-sm p-6">
                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                         <div>
-                            <h1 className="text-2xl font-bold">{selectedProject.name}</h1>
+                            <h1 className="text-2xl font-bold" onClick={() => setProjectInfoModalOpen(true)}>{selectedProject.name}</h1>
                             <p className="text-sm opacity-80 mt-1">{selectedProject.description}</p>
                         </div>
 
@@ -156,6 +158,7 @@ export default function TaskPage() {
                                     fill="none"
                                     stroke="currentColor"
                                     viewBox="0 0 24 24"
+
                                 >
                                     <path
                                         strokeLinecap="round"
@@ -257,6 +260,12 @@ export default function TaskPage() {
                 open={addMemberModalOpen}
                 onClose={() => setAddMemberModalOpen(false)}
                 projectId={selectedProject.id}
+            />
+            <ProjectInfoModal
+                open={projectInfoModalOpen}
+                onClose={() => setProjectInfoModalOpen(false)}
+                project={selectedProject}
+
             />
         </>
     );

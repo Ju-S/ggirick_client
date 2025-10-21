@@ -1,5 +1,5 @@
 import {create} from "zustand"
-import {addMemberAPI, projectCreateAPI, projectListAPI, removeMemberAPI} from "@/api/task/projectAPI.js";
+import {projectCreateAPI, projectListAPI, updateProjectAPI} from "@/api/task/projectAPI.js";
 import {
   deleteAPI,
   insertAPI,
@@ -19,7 +19,8 @@ const useTaskProjectStore = create((set,get) =>( {
   error: null,
     isProjectModalOpen: false,
     addMemberModalOpen: false,
-
+    projectInfoModalOpen: false,
+    setProjectInfoModalOpen: (open) => set({ projectInfoModalOpen: open }),
     setProjectModalOpen: (isOpen) => set({ isProjectModalOpen: isOpen }),
     setAddMemberModalOpen: (isOpen) =>set({addMemberModalOpen: isOpen}),
 
@@ -166,22 +167,20 @@ const useTaskProjectStore = create((set,get) =>( {
             get().setLoading(false);
         }
     },
-
-// 프로젝트에서 멤버 제거
-    removeProjectMember: async (projectId, employeeId) => {
+    updateProject: async (projectId, data) => {
         get().setLoading(true);
-        try {
-            await removeMemberAPI(projectId, employeeId);
-            await get().fetchProjects();
-            return true;
-        } catch (err) {
-            console.error("멤버 제거 실패", err);
-            set({ error: "멤버 제거 실패" });
-            return false;
-        } finally {
-            get().setLoading(false);
-        }
-    },
+      try{
+          await updateProjectAPI(projectId, data);
+
+      }catch (err) {
+          console.error("프로젝트 설정 실패", err);
+          set({ error: "프로젝트 설정 실패" });
+          return false;
+      } finally {
+          get().setLoading(false);
+      }
+    }
+
 
 }));
 
