@@ -9,5 +9,5 @@ import lombok.*;
 @Builder
 public class UserTokenDTO {
     private String id;
-    private int authority;
+    private int authority; // grade
 }
