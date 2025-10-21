@@ -24,3 +24,7 @@ export function putAPI(boardItem) {
 export function boardGroupListAPI() {
     return api(apiRoutes.boardGroup.list());
 }
+
+export function boardFileDownloadAPI(oriname, sysname) {
+    return api({...apiRoutes.boardFile.download(oriname, sysname), responseType: "blob"});
+}

@@ -64,9 +64,11 @@
         b.created_at,
         b.view_count,
         e.name,
-        COUNT(bc.id) AS comment_count
+        COUNT(bc.id) AS comment_count,
+        COUNT(bf.id) AS file_count
         FROM board b
         JOIN employee e ON b.writer = e.id
+        LEFT JOIN board_file bf ON b.id = bf.board_id
         LEFT JOIN board_comment bc ON b.id = bc.board_id
         WHERE b.board_group_id = #{groupId} AND is_notification='Y'
         GROUP BY b.id, b.writer, b.title, b.created_at, b.view_count, e.name

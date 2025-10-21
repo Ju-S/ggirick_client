@@ -24,7 +24,7 @@ export default function BoardPostingPage() {
             [JSON.stringify({
                 title: boardInfos.title,
                 contents: boardInfos.contents,
-                boardGroupId: boardInfos.boardGroupId,
+                boardGroupId: Number(boardInfos.boardGroupId),
                 isNotification: boardInfos.isNotification
             })],
             {type: "application/json"}

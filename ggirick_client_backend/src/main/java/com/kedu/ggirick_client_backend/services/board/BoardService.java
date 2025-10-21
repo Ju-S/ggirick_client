@@ -4,6 +4,8 @@ import com.kedu.ggirick_client_backend.dao.board.BoardDAO;
 import com.kedu.ggirick_client_backend.dto.board.BoardDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +19,7 @@ import static com.kedu.ggirick_client_backend.config.BoardConfig.NOTIFICATION_PE
 public class BoardService {
 
     private final BoardDAO boardDAO;
+    private final BoardFileService boardFileService;
 
     // 페이지에 해당하는 게시글 목록 조회
     public List<BoardDTO> getList(int curPage, int groupId, int searchFilter, String searchQuery) {
@@ -72,8 +75,12 @@ public class BoardService {
     }
 
     // 게시글 등록(등록 후, 로그인된 아이디(작성자ID) 반환)
-    public int posting(BoardDTO dto) {
-        return boardDAO.posting(dto);
+    @Transactional
+    public void posting(BoardDTO dto, List<MultipartFile> files) throws Exception {
+        int boardId = boardDAO.posting(dto);
+        if(files != null) {
+            boardFileService.insertFileInfo(files, boardId);
+        }
     }
 
     // 게시글 삭제
