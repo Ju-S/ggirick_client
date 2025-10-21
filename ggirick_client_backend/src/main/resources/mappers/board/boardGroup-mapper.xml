@@ -3,10 +3,30 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="BoardGroup">
+
+    <select id="getGroupOwner" resultType="String">
+        SELECT owner_id FROM board_group WHERE id=#{groupId}
+    </select>
+
     <select id="getGroupList" resultType="com.kedu.ggirick_client_backend.dto.board.BoardGroupDTO">
         SELECT * FROM board_group bg
         JOIN board_group_employee bge ON bg.id=bge.board_group_id
         WHERE bge.employee_id=#{id}
         ORDER BY bg.id
     </select>
+
+    <!-- 그룹 구성원 목록 조회 -->
+    <select id="getGroupEmployeeList" resultType="String">
+        SELECT e.id FROM employee e
+        JOIN board_group_employee bge ON e.id=bge.employee_id
+        WHERE bge.board_group_id=#{groupId}
+    </select>
+
+    <insert id="insertGroupEmployee">
+        INSERT INTO board_group_employee(id, employee_id, board_group_id) VALUES(board_group_employee_seq.nextval, #{userId}, #{boardId})
+    </insert>
+
+    <delete id="deleteGroupEmployee">
+        DELETE FROM board_group_employee WHERE employee_id=#{userId} AND board_group_id=#{boardId}
+    </delete>
 </mapper>

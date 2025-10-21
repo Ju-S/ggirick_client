@@ -2,18 +2,22 @@ import {useNavigate} from "react-router-dom";
 import {useState} from "react";
 import AddGroupModal from "@/components/board/AddGroupModal.jsx";
 import useBoardGroupStore from "@/store/board/boardGroupStore.js";
+import OrganizationMemberPickerModal from "@/components/common/modals/OrganizationMemberModal.jsx";
+import {boardGroupMemberListAPI, putGroupMemberAPI} from "@/api/board/boardAPI.js";
 
 export default function BoardSidebar() {
     const navigate = useNavigate();
     const groupItems = useBoardGroupStore(state => state.list); // 사용자가 속한 그룹
     const [isGroupOpen, setIsGroupOpen] = useState(false); // 그룹 dropdown
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isOrgModalOpen, setIsOrgModalOpen] = useState(false);
+    const [boardGroupMembers, setBoardGroupMembers] = useState([]);
+    const [selectedGroup, setSelectedGroup] = useState(1);
 
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
     const addGroupHandler = (groupId) => {
-        alert(`그룹 추가: ${groupId}`);
         closeModal();
     };
 
@@ -57,7 +61,7 @@ export default function BoardSidebar() {
             {/* 그룹 dropdown */}
             {isGroupOpen && (
                 <div className="flex-1 overflow-y-auto bg-base-100 border-t border-base-300">
-                    {groupItems.length > 0 ? (
+                    {groupItems.length > 1 ? (
                         groupItems
                             .filter(group => group.id !== 1)
                             .map(group => (
@@ -67,6 +71,18 @@ export default function BoardSidebar() {
                                     onClick={() => navigate(`/board?groupId=${group.id}`)}
                                 >
                                     <span className="ml-3">{group.name}</span>
+                                    <button
+                                        className={`btn btn-xs btn-outline btn-primary`}
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            boardGroupMemberListAPI(group.id)
+                                                .then(resp => setBoardGroupMembers(resp.data))
+                                                .then(() => setSelectedGroup(group.id))
+                                                .then(() => setIsOrgModalOpen(true));
+                                        }}
+                                    >
+                                        +
+                                    </button>
                                 </div>
                             ))
                     ) : (
@@ -80,6 +96,18 @@ export default function BoardSidebar() {
                 isOpen={isModalOpen}
                 onClose={closeModal}
                 onSubmit={addGroupHandler}
+            />
+
+            {/* 조직도 그룹구성원 추가 모달 */}
+            <OrganizationMemberPickerModal
+                onClose={() => setIsOrgModalOpen(false)}
+                selectedMemberIds={boardGroupMembers}
+                open={isOrgModalOpen}
+                onSave={(e) => {
+                    putGroupMemberAPI(e, selectedGroup).then(() => {
+                        setIsOrgModalOpen(false);
+                    });
+                }}
             />
         </div>
     );

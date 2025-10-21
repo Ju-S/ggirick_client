@@ -17,8 +17,8 @@
         b.created_at,
         b.view_count,
         e.name,
-        COUNT(bf.id) AS file_count,
-        COUNT(bc.id) AS comment_count
+        COUNT(DISTINCT bf.id) AS file_count,
+        COUNT(DISTINCT bc.id) AS comment_count
         FROM board b
         JOIN employee e ON b.writer = e.id
         LEFT JOIN board_file bf ON b.id = bf.board_id
@@ -64,8 +64,8 @@
         b.created_at,
         b.view_count,
         e.name,
-        COUNT(bc.id) AS comment_count,
-        COUNT(bf.id) AS file_count
+        COUNT(DISTINCT bc.id) AS comment_count,
+        COUNT(DISTINCT bf.id) AS file_count
         FROM board b
         JOIN employee e ON b.writer = e.id
         LEFT JOIN board_file bf ON b.id = bf.board_id

@@ -4,14 +4,18 @@ import {useNavigate, useParams} from "react-router-dom";
 import {useBoardItem} from "@/hooks/board/useBoardItem.js";
 import {buildCommentTree} from "@/utils/board/buildCommentTree.js";
 import {Paperclip} from "lucide-react";
-import apiRoutes from "@/api/common/apiRoutes.js";
-import {boardFileDownloadAPI} from "@/api/board/boardAPI.js";
+import {boardFileDownloadAPI, insertCommentAPI} from "@/api/board/boardAPI.js";
+import {useState} from "react";
 
 export default function BoardDetailPage() {
     const {id} = useParams();
     const navigate = useNavigate();
-    const {boardDetail, commentList, fileList} = useBoardItem(id);
+    const {boardDetail, commentList, fileList, refetch} = useBoardItem(id);
     const treeComments = buildCommentTree(commentList || []);
+
+    const [comment, setComment] = useState("");
+    const [refId, setRefId] = useState(-1);
+    const [loading, setLoading] = useState(false);
 
     // 파일 다운로드 핸들러
     const handleFileClick = (file) => {
@@ -24,6 +28,31 @@ export default function BoardDetailPage() {
             link.click();
             link.remove();
         });
+    };
+
+    // 댓글 작성
+    const handleCommentSubmit = async () => {
+        if (!comment.trim()) {
+            alert("댓글 내용을 입력해주세요.");
+            return;
+        }
+
+        try {
+            setLoading(true);
+            await insertCommentAPI(id, refId, comment);
+
+            // 입력창 초기화
+            setComment("");
+            setRefId(-1);
+
+            // 최신 댓글 목록 다시 불러오기
+            if (refetch) refetch();
+        } catch (err) {
+            console.error("댓글 등록 실패:", err);
+            alert("댓글 등록에 실패했습니다.");
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
@@ -88,9 +117,17 @@ export default function BoardDetailPage() {
                     <textarea
                         className="textarea textarea-bordered w-full h-24 resize-none"
                         placeholder="댓글을 입력하세요..."
+                        value={comment}
+                        onChange={e => setComment(e.target.value)}
                     ></textarea>
                     <div className="card-actions justify-end mt-2">
-                        <button className="btn btn-primary">등록</button>
+                        <button
+                            className={`btn btn-primary ${loading ? "loading" : ""}`}
+                            onClick={handleCommentSubmit}
+                            disabled={loading}
+                        >
+                            {loading ? "등록 중..." : "등록"}
+                        </button>
                     </div>
                 </div>
             </div>
@@ -99,10 +136,10 @@ export default function BoardDetailPage() {
             <div>
                 {treeComments.length > 0 ? (
                     treeComments.map((comment) => (
-                        <CommentItem key={comment.id} comment={comment}/>
+                        <CommentItem key={comment.id} comment={comment} refetch={refetch}/>
                     ))
                 ) : (
-                    <div className="text-center text-base text-gray-500">
+                    <div className="text-center text-base text-base-content/50">
                         아직 등록된 댓글이 없습니다.
                     </div>
                 )}

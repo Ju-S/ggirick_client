@@ -8,7 +8,7 @@
         SELECT bc.*, e.name FROM board_comment bc
         JOIN employee e ON bc.writer = e.id
         WHERE board_id = #{boardId}
-        ORDER BY created_at
+        ORDER BY created_at DESC
     </select>
 
     <!-- 원댓글에 대한 대댓글 조회 -->

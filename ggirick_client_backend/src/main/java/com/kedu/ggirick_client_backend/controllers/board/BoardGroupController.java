@@ -4,11 +4,10 @@ import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardGroupDTO;
 import com.kedu.ggirick_client_backend.services.board.BoardGroupService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -32,12 +31,24 @@ public class BoardGroupController {
 
     // 게시판 그룹 수정
 
-
-    // 게시판 그룹 멤버 추가
-
+    // 게시판 그룹 멤버 조회
+    @GetMapping("/{groupId}")
+    public ResponseEntity<List<String>> getBoardGroupEmployeeList(@PathVariable int groupId) {
+        return ResponseEntity.ok(boardGroupService.getGroupEmployeeList(groupId));
+    }
 
     // 게시판 그룹 멤버 수정
-
+    @PutMapping("/{groupId}")
+    public ResponseEntity<Void> updateBoardGroupEmployee(@PathVariable int groupId,
+                                                         @RequestBody List<String> members,
+                                                         @AuthenticationPrincipal UserTokenDTO userInfo) {
+        if (boardGroupService.getGroupOwner(groupId).equals(userInfo.getId())) {
+            members.remove(userInfo.getId());
+            boardGroupService.updateGroupEmployee(members, groupId);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
     // 게시판 그룹 멤버 삭제
 

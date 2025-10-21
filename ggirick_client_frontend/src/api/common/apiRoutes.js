@@ -89,6 +89,25 @@ const apiRoutes = {
             url: `/board/group`,
             method: "GET"
         }),
+
+        /**
+         * 게시판 그룹 구성원 목록 API<br>
+         * GET /api/board/group/{groupId}<br>
+         * response: {List<String>}
+         */
+        members: (groupId) => ({
+            url: `/board/group/${groupId}`,
+            method: "GET"
+        }),
+
+        /**
+         * 게시판 그룹 구성원 수정 API<br>
+         * PUT /api/board/group/{groupId}<br>
+         */
+        put: (groupId) => ({
+            url: `/board/group/${groupId}`,
+            method: "PUT"
+        }),
     },
     boardFile: {
         /**
@@ -99,6 +118,35 @@ const apiRoutes = {
         download: (oriname, sysname) => ({
             url: `/board/file?sysname=${sysname}&oriname=${oriname}`,
             method: "GET"
+        }),
+    },
+    boardComment: {
+        /**
+         * 댓글 작성 API<br>
+         * POST /api/board<br>
+         * body: {BoardCommentDTO}
+         */
+        insert: (boardId, refId) => ({
+            url: `/board/${boardId}/comment/${refId}`,
+            method: "POST"
+        }),
+
+        /**
+         * 댓글 삭제 API<br>
+         * DELETE /api/board/{boardId}/comment/{commentId}<br>
+         */
+        delete: (boardId, commentId) => ({
+            url: `/board/${boardId}/comment/${commentId}`,
+            method: "DELETE",
+        }),
+        /**
+         * 댓글 수정 API<br>
+         * PUT /api/board/{boardId}/comment/{commentId}<br>
+         * body: {BoardCommentDTO}
+         */
+        put: (boardId, commentId) => ({
+            url: `/board/${boardId}/comment/${commentId}`,
+            method: "PUT",
         }),
     },
     project: {

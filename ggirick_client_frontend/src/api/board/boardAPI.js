@@ -25,6 +25,26 @@ export function boardGroupListAPI() {
     return api(apiRoutes.boardGroup.list());
 }
 
+export function boardGroupMemberListAPI(groupId) {
+    return api(apiRoutes.boardGroup.members(groupId));
+}
+
+export function putGroupMemberAPI(members, groupId) {
+    return api({...apiRoutes.boardGroup.put(groupId), data: members});
+}
+
 export function boardFileDownloadAPI(oriname, sysname) {
     return api({...apiRoutes.boardFile.download(oriname, sysname), responseType: "blob"});
+}
+
+export function insertCommentAPI(boardId, refId, comment) {
+    return api({...apiRoutes.boardComment.insert(boardId, refId), data: {contents: comment}});
+}
+
+export function deleteCommentAPI(boardId, refId) {
+    return api(apiRoutes.boardComment.delete(boardId, refId));
+}
+
+export function updateCommentAPI(boardId, refId, comment) {
+    return api({...apiRoutes.boardComment.put(boardId, refId), data: comment});
 }
