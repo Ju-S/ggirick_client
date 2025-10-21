@@ -31,3 +31,6 @@ export const getAllHrMetaAPI = async () => { // async : 비동기로 처리
         throw err;
     }
 };
+
+
+export const getHrMetaStructureAPI = () =>api(apiRoutes.hrMeta.structure);

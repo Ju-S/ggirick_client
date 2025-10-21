@@ -6,9 +6,9 @@ import TagsInput from "../../components/common/TagsInput.jsx";
 import useTaskProjectStore from "@/store/task/useTaskProjectStore.js";
 
 export default function TaskDrawer({ open, onClose, selectedTask, mode = "create" }) {
-  const { projects, setProjects,selectedProject, createTask, updateTask } = useTaskProjectStore();
-
-  const [range, setRange] = useState({ from: undefined, to: undefined });
+  const { projects, setProjects,selectedProject,selectedProjectId, createTask, updateTask } = useTaskProjectStore();
+    const today = new Date();
+  const [range, setRange] = useState({ from: today, to: undefined });
   const [showCalendar, setShowCalendar] = useState(false);
 
   const [task, setTask] = useState({
@@ -45,7 +45,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
     } else {
       setTask({
         title: "",
-        projectId: "",
+        projectId: selectedProjectId,
         assignee: "",
         status: "할 일",
         priority: "medium",
@@ -57,9 +57,17 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
     }
   }, [open, selectedTask, mode]);
 
-  const handleChange = (e) => setTask((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  const handleChange = (e) => setTask((prev) => (
+      { ...prev, [e.target.name]: e.target.value }));
   const handleTaskDataChange = (name, value) => setTaskData((prev) => ({ ...prev, [name]: value }));
-  const handleProjectChange = (value) => setTask((prev) => ({ ...prev, projectId: value }));
+    const handleProjectChange = (projectId) => {
+        setTask((prev) => ({
+            ...prev,
+            projectId,
+            assignee: "", // 프로젝트 바뀌면 담당자 초기화
+        }));
+
+    };
   const handleAssigneeChange = (e) => setTask((prev) => ({ ...prev, assignee: e.target.value }));
 
   const formatDate = (date) => {
@@ -97,6 +105,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
         alert("작업이 성공적으로 생성되었습니다!");
 
       } else if (mode === "edit") {
+
         await updateTask(selectedTask.id, finalTask);
         alert("작업이 성공적으로 수정되었습니다!");
 
@@ -145,22 +154,23 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
         {/* 담당자 선택 */}
         <div>
           <label className="block text-sm font-medium mb-1">담당자</label>
-          <select
-            name="assignee"
-            value={task.assignee || ""}
-            onChange={handleAssigneeChange}
-            className="select select-bordered w-full bg-base-100"
-          >
-            <option disabled value="">
-              담당자 선택
-            </option>
-            {task.projectId &&
-              projects.find((p) => p.id === task.projectId)?.members?.map((member) => (
-                <option key={member.employeeId} value={member.employeeId}>
-                  {member.name}
+            <select
+                name="assignee"
+                value={task.assignee || ""}
+                onChange={handleAssigneeChange}
+                className="select select-bordered w-full bg-base-100"
+            >
+                <option disabled value="">
+                    담당자 선택
                 </option>
-              ))}
-          </select>
+                {task.projectId &&
+                    projects.find((p) => Number(p.id) === Number(task.projectId))
+                        ?.members?.map((member) => (
+                        <option key={member.employeeId} value={member.employeeId}>
+                            {member.name}
+                        </option>
+                    ))}
+            </select>
         </div>
 
         {/* 상태 */}
@@ -244,6 +254,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
             <div className="absolute z-50 mt-2 bg-base-100 shadow-lg rounded-xl border border-base-300">
               <DayPicker
                 mode="range"
+                defaultMonth={today}
                 selected={range}
                 onSelect={(selected) => {
                   if (!selected) return; // undefined 보호
