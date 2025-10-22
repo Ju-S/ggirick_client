@@ -3,63 +3,45 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="BoardGroup">
-    <!-- (to, from) 페이징 게시글 목록 게시 순서대로 select (검색을 위한 필터 설정 - title, writer) -->
-    <!-- board_group_id에 대한 설정까지 필요 -->
-    <select id="getList" resultType="com.kedu.ggirick_client_backend.dto.board.BoardDTO">
-        SELECT * FROM (SELECT ROWNUM rm, b.id, b.writer, b.title, b.created_at, b.view_count, e.name FROM board b
-        JOIN employee e ON b.writer=e.id
-        WHERE board_group_id = #{boardGroupId}
-        <if test="searchQuery != null and searchQuery != ''">
-            AND
-            (title like '%'||#{searchQuery}||'%' OR
-            writer like '%'||#{searchQuery}||'%' OR
-            contents like '%'||#{searchQuery}||'%')
-        </if>
-        ORDER BY created_at)
-        WHERE rm BETWEEN #{from} AND #{to}
+
+    <select id="getGroupOwner" resultType="String">
+        SELECT owner_id FROM board_group WHERE id=#{groupId}
     </select>
 
-    <!-- 선택된 게시글의 내용 select -->
-    <select id="getById" resultType="com.kedu.ggirick_client_backend.dto.board.BoardDTO">
-        SELECT b.*, e.name FROM board b
-        JOIN employee e ON b.writer = e.id
-        WHERE b.id = #{id}
+    <select id="getGroupList" resultType="com.kedu.ggirick_client_backend.dto.board.BoardGroupDTO">
+        SELECT * FROM board_group bg
+        JOIN board_group_employee bge ON bg.id=bge.board_group_id
+        WHERE bge.employee_id=#{id}
+        ORDER BY bg.id
     </select>
 
-    <!-- 총 게시물의 갯수 조회 -->
-    <select id="getBoardCount" resultType="Long">
-        SELECT count(*) FROM board
-        WHERE board_group_id = #{boardGroupId}
-        <if test="searchQuery != null and searchQuery != ''">
-            AND
-            (title like '%'||#{searchQuery}||'%' OR
-            writer like '%'||#{searchQuery}||'%' OR
-            contents like '%'||#{searchQuery}||'%')
-        </if>
+    <!-- 그룹 구성원 목록 조회 -->
+    <select id="getGroupEmployeeList" resultType="String">
+        SELECT e.id FROM employee e
+        JOIN board_group_employee bge ON e.id=bge.employee_id
+        WHERE bge.board_group_id=#{groupId}
     </select>
 
-    <!-- 게시글 등록 -->
-    <!-- 파일 등록을 위한 selectKey -->
-    <insert id="posting">
-        INSERT INTO board(id, writer, title, contents, board_group_id)
-        VALUES (board_seq.nextval, #{writer}, #{title}, #{contents}, #{boardGroupId})
+    <insert id="insertGroupEmployee">
+        INSERT INTO board_group_employee(id, employee_id, board_group_id) VALUES(board_group_employee_seq.nextval, #{userId}, #{boardId})
+    </insert>
+
+    <insert id="addBoardGroup">
+        INSERT INTO board_group(id, name, description, owner_id) VALUES(board_group_seq.nextval, #{name}, #{description}, #{ownerId})
         <selectKey resultType="int" keyProperty="id" order="AFTER">
-            select board_seq.currval from dual
+            select board_group_seq.currval from dual
         </selectKey>
     </insert>
 
-    <!-- 게시글 삭제 -->
-    <delete id="deleteById">
-        DELETE FROM board WHERE id = #{id}
+    <delete id="deleteGroupEmployee">
+        DELETE FROM board_group_employee WHERE employee_id=#{userId} AND board_group_id=#{boardId}
     </delete>
 
-    <!-- 게시글 수정(제목, 내용만 수정 가능) -->
-    <update id="updateById">
-        UPDATE board SET title = #{title}, contents = #{contents} WHERE id = #{id}
-    </update>
+    <delete id="deleteBoardGroup">
+        DELETE FROM board_group WHERE id=#{groupId}
+    </delete>
 
-    <!-- 게시글 조회수 증가 -->
-    <update id="increaseViewCount">
-        UPDATE board SET view_count = view_count+1 WHERE id = #{id}
+    <update id="updateBoardGroup">
+        UPDATE board_group SET name=#{name}, description=#{description} WHERE id=#{id}
     </update>
 </mapper>

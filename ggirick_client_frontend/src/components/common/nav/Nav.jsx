@@ -65,7 +65,7 @@ export default function Nav() {
                         <div className="relative md:w-64 md:w-96">
                             <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
                                 <svg
-                                    className="h-5 w-5 text-gray-500"
+                                    className="h-5 w-5 text-base-content-500"
                                     fill="currentColor"
                                     viewBox="0 0 20 20"
                                     xmlns="http://www.w3.org/2000/svg"
@@ -81,7 +81,7 @@ export default function Nav() {
                                 type="text"
                                 name="email"
                                 id="topbar-search"
-                                className="focus:ring-primary-500 focus:border-primary-500 block w-full rounded-lg border border-gray-300 bg-gray-50 p-2.5 pl-10 text-sm text-gray-900"
+                                className="focus:ring-primary-500 focus:border-primary-500 block w-full rounded-lg border border-base-300 bg-base-200 p-2.5 pl-10 text-sm text-base-content-900"
                                 placeholder="검색어 입력.."
                             />
                         </div>
