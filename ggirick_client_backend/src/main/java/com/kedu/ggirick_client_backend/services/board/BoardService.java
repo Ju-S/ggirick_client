@@ -7,9 +7,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import static com.kedu.ggirick_client_backend.config.BoardConfig.ITEM_PER_PAGE;
 import static com.kedu.ggirick_client_backend.config.BoardConfig.NOTIFICATION_PER_PAGE;
@@ -20,6 +22,9 @@ public class BoardService {
 
     private final BoardDAO boardDAO;
     private final BoardFileService boardFileService;
+
+    // 사용자별 최근 조회 시간 저장: key = boardId + userId
+    private final ConcurrentHashMap<String, LocalDateTime> viewCache = new ConcurrentHashMap<>();
 
     // 페이지에 해당하는 게시글 목록 조회
     public List<BoardDTO> getList(int curPage, int groupId, int searchFilter, String searchQuery) {
@@ -99,7 +104,20 @@ public class BoardService {
     }
 
     // 게시글 조회수 증가
-    public void increaseViewCount(int targetId) {
-        boardDAO.increaseViewCount(targetId);
+    public void increaseViewCount(int boardId, String userId) {
+        String key = boardId + ":" + userId;
+        LocalDateTime now = LocalDateTime.now();
+
+        if (viewCache.containsKey(key)) {
+            LocalDateTime lastViewed = viewCache.get(key);
+            if (lastViewed.plusMinutes(30).isAfter(now)) {
+                // 30분 이내 재조회: 조회수 증가 안함
+                return;
+            }
+        }
+
+        // 30분 이상 경과했거나 처음 조회
+        boardDAO.increaseViewCount(boardId);
+        viewCache.put(key, now);
     }
 }

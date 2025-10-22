@@ -104,7 +104,7 @@ const apiRoutes = {
 
         /**
          * 게시판 그룹 구성원 목록 API<br>
-         * GET /api/board/group/{groupId}<br>
+         * GET /api/board/group/{groupId}/members<br>
          * response: {List<String>}
          */
         members: (groupId) => ({
@@ -114,11 +114,29 @@ const apiRoutes = {
 
         /**
          * 게시판 그룹 구성원 수정 API<br>
+         * PUT /api/board/group/{groupId}/members<br>
+         */
+        putMembers: (groupId) => ({
+            url: `/board/group/${groupId}/members`,
+            method: "PUT"
+        }),
+
+        /**
+         * 게시판 그룹 수정 API<br>
          * PUT /api/board/group/{groupId}<br>
          */
         put: (groupId) => ({
-            url: `/board/group/${groupId}/members`,
+            url: `/board/group/${groupId}`,
             method: "PUT"
+        }),
+
+        /**
+         * 게시판 그룹 삭제 API<br>
+         * DELETE /api/board/group/{groupId}<br>
+         */
+        delete: (groupId) => ({
+            url: `/board/group/${groupId}`,
+            method: "DELETE"
         }),
     },
     boardFile: {

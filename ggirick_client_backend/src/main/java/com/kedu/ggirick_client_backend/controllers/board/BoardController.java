@@ -73,7 +73,7 @@ public class BoardController {
             response.put("commentList", commentList);
             response.put("fileList", fileList);
 
-            boardService.increaseViewCount(id);
+            boardService.increaseViewCount(id, userInfo.getId());
 
             return ResponseEntity.ok(response);
         }

@@ -209,7 +209,7 @@ export default function BoardPostingPage({editMode}) {
             {/* 버튼 */}
             <div className="mt-6 flex justify-end">
                 <button type="submit" className="btn btn-primary" onClick={postingHandler}>
-                    등록
+                    {editMode ? "수정" : "등록"}
                 </button>
             </div>
         </div>

@@ -46,8 +46,10 @@ public class BoardGroupController {
     // 게시판 그룹 수정
     @PutMapping("/{groupId}")
     public ResponseEntity<Void> updateBoardGroup(@RequestBody BoardGroupDTO groupInfo,
-                                              @AuthenticationPrincipal UserTokenDTO userInfo) {
-        if (boardGroupService.getGroupOwner(groupInfo.getId()).equals(userInfo.getId())) {
+                                                 @PathVariable int groupId,
+                                                 @AuthenticationPrincipal UserTokenDTO userInfo) {
+        if (boardGroupService.getGroupOwner(groupId).equals(userInfo.getId())) {
+            groupInfo.setId(groupId);
             boardGroupService.updateBoardGroup(groupInfo);
             return ResponseEntity.ok().build();
         }

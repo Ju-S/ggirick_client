@@ -1,8 +1,8 @@
-import { useState } from "react";
-import {addBoardGroup} from "@/api/board/boardGroupAPI.js";
+import {useEffect, useState} from "react";
+import {putGroupAPI} from "@/api/board/boardGroupAPI.js";
 import useBoardGroupStore from "@/store/board/boardGroupStore.js";
 
-export default function AddGroupModal({ isOpen, onClose}) {
+export default function ModifyGroupModal({ isOpen, onClose, groupId, groupInfo}) {
     const [groupData, setGroupData] = useState({ name: "", description: "" });
     const initGroup = useBoardGroupStore((state => state.init));
 
@@ -16,19 +16,23 @@ export default function AddGroupModal({ isOpen, onClose}) {
             alert("그룹명과 설명을 입력해주세요.");
             return;
         }
-        addBoardGroup(groupData).then(() => {
-            initGroup();
+        putGroupAPI(groupId, groupData).then(() => {
             setGroupData({ name: "", description: "" });
+            initGroup();
             onClose();
         });
     };
+
+    useEffect(() => {
+        setGroupData(groupInfo);
+    }, [groupId]);
 
     if (!isOpen) return null;
 
     return (
         <div className="modal modal-open">
             <div className="modal-box">
-                <h3 className="font-bold text-lg mb-4">새 그룹 추가</h3>
+                <h3 className="font-bold text-lg mb-4">그룹 수정</h3>
 
                 <label className="block mb-2 font-semibold">그룹명</label>
                 <input
@@ -51,7 +55,7 @@ export default function AddGroupModal({ isOpen, onClose}) {
 
                 <div className="modal-action">
                     <button className="btn btn-ghost" onClick={onClose}>취소</button>
-                    <button className="btn btn-primary" onClick={handleSubmit}>추가</button>
+                    <button className="btn btn-primary" onClick={handleSubmit}>수정</button>
                 </div>
             </div>
         </div>
