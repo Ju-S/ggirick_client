@@ -17,7 +17,7 @@ export default function ProjectInfoModal({ open, onClose, project, }) {
 
     const handleSave = async () => {
         if (!project) return;
-        console.log("수저ㅓㅇ할 프로젝트 아이디: " +project.id)
+
         await updateProject(project.id,  {
             name:title,
             description
@@ -49,6 +49,9 @@ export default function ProjectInfoModal({ open, onClose, project, }) {
                         onChange={(e) => setDescription(e.target.value)}
                         className="border border-gray-300 rounded px-2 py-1 resize-none"
                     />
+                </div>
+                <div>
+                    <p>프로젝트 주인: { project.createdByEmployeeName}</p>
                 </div>
 
                 <div className="flex justify-end gap-2 mt-4">

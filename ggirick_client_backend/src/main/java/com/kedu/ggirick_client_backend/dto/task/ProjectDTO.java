@@ -16,6 +16,7 @@ public class ProjectDTO {
     private String name;
     private String description;
     private String createdBy;
+    private String createdByEmployeeName;
     private String range;
     private List<ProjectMemberDTO> members;
     private List<TaskDTO> tasks;
