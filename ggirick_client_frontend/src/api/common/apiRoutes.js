@@ -1,39 +1,39 @@
 
 
 const apiRoutes = {
-    auth: {
-        /**
-         * 로그인 API<br>
-         * POST /api/auth<br>
-         * body: { userId, passwd }<br>
-         * response: {MemberDTO}
-         */
-        login: {url: `/auth/login`, method: "POST"},
+  auth: {
+    /**
+     * 로그인 API<br>
+     * POST /api/auth<br>
+     * body: { userId, passwd }<br>
+     * response: {MemberDTO}
+     */
+    login: { url: `/auth/login`, method: "POST" },
 
-        /**
-         * 로그아웃 API<br>
-         * GET /api/auth
-         */
-        logout: {url: `/auth/logout`, method: "GET"},
+    /**
+     * 로그아웃 API<br>
+     * GET /api/auth
+     */
+    logout: { url: `/auth/logout`, method: "GET" },
 
-        /**
-         * 아이디 중복 확인 API<br>
-         * GET /employee<br>
-         * param: {empId}<br>
-         * response: true(중복)/false(중복아님)
-         */
-        checkEmployeeId: (empId) => ({
-            url: `/employee/checkDuplicateId?id=${empId}`,
-            method: "GET"
-        }),
-    },
-    board: {
-        /**
-         * 게시글 작성 API<br>
-         * POST /api/board<br>
-         * body: {BoardDTO}
-         */
-        insert: {url: `/board`, method: "POST"},
+    /**
+     * 아이디 중복 확인 API<br>
+     * GET /employee<br>
+     * param: {empId}<br>
+     * response: true(중복)/false(중복아님)
+     */
+    checkEmployeeId: (empId) => ({
+      url: `/employee/checkDuplicateId?id=${empId}`,
+      method: "GET",
+    }),
+  },
+  board: {
+    /**
+     * 게시글 작성 API<br>
+     * POST /api/board<br>
+     * body: {BoardDTO}
+     */
+    insert: { url: `/board`, method: "POST" },
 
     /**
      * 게시글 삭제 API<br>
@@ -73,13 +73,6 @@ const apiRoutes = {
       url: `/board/${boardId}`,
       method: "GET",
     }),
-
-    /**
-     * 게시글 수정 API<br>
-     * PUT /api/board/{boardId}<br>
-     * body: {BoardDTO}
-     */
-    put: { url: `/board`, method: "PUT" },
   },
   project: {
     /**
@@ -106,9 +99,9 @@ const apiRoutes = {
       })
   },
   task: {
-    insert:{
-      url:`/project/task`,
-      method:"POST",
+    insert: {
+      url: `/project/task`,
+      method: "POST",
     },
 
     updateStatus: (taskId) => ({
@@ -121,7 +114,7 @@ const apiRoutes = {
     }),
     delete: (taskId) => ({
       url: `project/task/${taskId}`,
-      method: "DELETE"
+      method: "DELETE",
     }),
 
   },
@@ -190,63 +183,63 @@ const apiRoutes = {
      */
     resourceList: { url: "/reservations/resource", method: "GET" },
   },
-    employee: {
-        /**
-         * 현재 사용자 정보 조회 API<br>
-         * GET /employee/me<br>
-         * response: {EmployeeDTO}
-         */
-        me: {url: `/employee/me`, method: "GET"},
+  employee: {
+    /**
+     * 현재 사용자 정보 조회 API<br>
+     * GET /employee/me<br>
+     * response: {EmployeeDTO}
+     */
+    me: { url: `/employee/me`, method: "GET" },
 
-        /**
-         * 사용자 정보 수정 API<br>
-         * PUT /employee<br>
-         * body: {EmployeeDTO}
-         */
-        put: {url: `/employee`, method: "PUT"},
+    /**
+     * 사용자 정보 수정 API<br>
+     * PUT /employee<br>
+     * body: {EmployeeDTO}
+     */
+    put: { url: `/employee`, method: "PUT" },
 
-        /**
-         * 비밀번호 변경 API<br>
-         * PUT /employee/password/{id}<br>
-         * body: {EmployeeDTO}<br>
-         * response: {errorMessage: string}
-         */
-        passwordChange: (empId) => ({
-            url: `/employee/password/${empId}`,
-            method: "PUT"
-        }),
+    /**
+     * 비밀번호 변경 API<br>
+     * PUT /employee/password/{id}<br>
+     * body: {EmployeeDTO}<br>
+     * response: {errorMessage: string}
+     */
+    passwordChange: (empId) => ({
+      url: `/employee/password/${empId}`,
+      method: "PUT",
+    }),
 
-        /**
-         * 직원 목록 조회 API<br>
-         * GET /employee<br>
-         * response: List<EmployeeDTO>
-         */
-        list: {url: `/employee`, method: "GET"},
+    /**
+     * 직원 목록 조회 API<br>
+     * GET /employee<br>
+     * response: List<EmployeeDTO>
+     */
+    list: { url: `/employee`, method: "GET" },
 
-        /**
-         * 직원 상세 조회 API<br>
-         * GET /employee/{id}<br>
-         * response: EmployeeDTO
-         */
-        detail: (empId) => ({
-            url: `/employee/${empId}`,
-            method: "GET"
-        })
-    },
-    hrMeta: {
-        /**
-         * 부서 목록 조회 API<br>
-         * GET /hr-meta/departments<br>
-         * response: DepartmentDTO
-         */
-        departments: { url: `/hr-meta/departments`, method: "GET" },
+    /**
+     * 직원 상세 조회 API<br>
+     * GET /employee/{id}<br>
+     * response: EmployeeDTO
+     */
+    detail: (empId) => ({
+      url: `/employee/${empId}`,
+      method: "GET",
+    }),
+  },
+  hrMeta: {
+    /**
+     * 부서 목록 조회 API<br>
+     * GET /hr-meta/departments<br>
+     * response: DepartmentDTO
+     */
+    departments: { url: `/hr-meta/departments`, method: "GET" },
 
-        /**
-         * 직급 목록 조회 API<br>
-         * GET /hr-meta/jobs<br>
-         * response: JobDTO
-         */
-        jobs: { url: `/hr-meta/jobs`, method: "GET" },
+    /**
+     * 직급 목록 조회 API<br>
+     * GET /hr-meta/jobs<br>
+     * response: JobDTO
+     */
+    jobs: { url: `/hr-meta/jobs`, method: "GET" },
 
         /**
          * 조직 목록 조회 API<br>
@@ -258,6 +251,59 @@ const apiRoutes = {
         structure:{url:`/hr-meta/org-structure `,method: "GET" }
     },
 
+  address: {
+    getGroupType: {
+      url: "/address/group-type",
+      method: "GET",
+    },
+
+    getSubGroup: {
+      url: "/address/group",
+      method: "GET",
+    },
+
+    createSubGroup: (groupName) => ({
+      url: "/address/insert-group",
+      method: "POST",
+      data: { groupName },
+    }),
+
+    // 소분류 그룹 삭제
+    deleteSubGroup: (subGroupId) => ({
+      url: `/address/delete-group/${subGroupId}`,
+      method: "DELETE",
+    }),
+
+    // 소분류 클릭 시 주소록 조회
+    getAddressesBySubGroup: (subGroupId) => ({
+      url: `/address/subgroup/${subGroupId}/addresses`,
+      method: "GET",
+    }),
+
+    // 주소록 수정
+    updateAddress: (addressId, updatedData) => ({
+      method: "put",
+      url: `/address/update-address/${addressId}`,
+    }),
+
+    // 주소록 삭제
+    deleteAddress: (addressId) => ({
+      method: "delete",
+      url: `/address/delete-address/${addressId}`,
+    }),
+
+    // 공유 주소록 클릭하면 부서 그룹 가져오기
+    getDepartments:()=>({
+      url:`/address/departments`,
+      method:"GET",
+    }),
+
+    // 공유주소록 소분류 부서 클릭 시 부서 내 직원 정보
+    getSharedAddresses:(code)=>({
+      url:`/address/shared/${code}`,
+      method:"GET",
+    })
+  },
 };
 
 export default apiRoutes;
