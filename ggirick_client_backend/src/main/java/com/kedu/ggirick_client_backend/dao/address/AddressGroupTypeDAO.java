@@ -12,6 +12,7 @@ import java.util.List;
 public class AddressGroupTypeDAO {
     private final SqlSession mybatis;
 
+    // 공유주소록인지 개인주소록인지 group-type 가져오기
     public List<AddressGroupTypeDTO> selectAll() {
         return mybatis.selectList("Address.AddressGroupTypeSelectAll");
     }

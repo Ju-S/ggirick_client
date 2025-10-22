@@ -8,9 +8,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class EmployeeAddressShareGroupService {
-    private final EmployeeAddressShareGroupDAO easgDAO;
 
-//    public int addShareGroup(EmployeeAddressShareGroupDTO easgDTO) {
-//        return easgDAO.addShareGroup(easgDTO);
-//    }
+
 }

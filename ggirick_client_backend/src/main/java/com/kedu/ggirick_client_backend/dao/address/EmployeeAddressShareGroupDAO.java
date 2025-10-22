@@ -8,9 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class EmployeeAddressShareGroupDAO {
-    private final SqlSession mybatis;
 
-//    public int addShareGroup(EmployeeAddressShareGroupDTO easgDTO) {
-//        return mybatis.insert("Address.addShareGroup", easgDTO);
-//    }
+
 }

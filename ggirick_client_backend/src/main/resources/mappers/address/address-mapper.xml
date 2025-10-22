@@ -18,20 +18,32 @@
         select * from address_group_type
     </select>
 
+    <!-- 공유주소록 부서그룹 getList -->
+    <select id="selectAllDepartments" resultType="com.kedu.ggirick_client_backend.dto.common.DepartmentDTO">
+        select * from department
+    </select>
+
+    <!-- 공유주소록 부서그룹에 직원정보 getList -->
+    <select id="getAddressesByCode" resultType="com.kedu.ggirick_client_backend.dto.address.ShareAddressDTO">
+        SELECT
+            e.name,
+            e.phone,
+            e.extension,
+            e.email,
+            d.name AS department,
+            (SELECT a.rank FROM ADDRESS a WHERE a.name = e.name AND a.email = e.email) AS rank,
+            (SELECT a.company_name FROM ADDRESS a WHERE a.name = e.name AND a.email = e.email) AS company_name
+        FROM EMPLOYEE e
+                 JOIN EMPLOYEE_DEPARTMENT ed ON e.id = ed.employee_id
+                 JOIN DEPARTMENT d ON ed.department_code = d.code
+        WHERE ed.department_code = #{departmentCode}
+    </select>
 
     <!-- 주소록 소그룹 getList -->
     <select id="AddressGroupSelectAll" parameterType="com.kedu.ggirick_client_backend.dto.UserTokenDTO"
             resultType="com.kedu.ggirick_client_backend.dto.address.AddressGroupDTO">
         SELECT id, owner, group_name AS groupName FROM address_group WHERE owner=#{id}
     </select>
-
-<!--    &lt;!&ndash; EmployeeAddressShareGroup 추가  &ndash;&gt;-->
-<!--    <insert id="addShareGroup" parameterType="com.kedu.ggirick_client_backend.dto.address.EmployeeAddressShareGroupDTO">-->
-<!--        <selectKey order="BEFORE" keyProperty="id" resultType="int">-->
-<!--            select address_seq.nextval from dual-->
-<!--        </selectKey>-->
-<!--        insert into EmployeeAddressShareGroup values(#{id},#{groupId},#{employeeId},#{typeId})-->
-<!--    </insert>-->
 
     <!-- AddressGroup 추가 -->
     <insert id="addAddressGroup" parameterType="com.kedu.ggirick_client_backend.dto.address.AddressGroupDTO">
@@ -51,6 +63,25 @@
     parameterType="int">
         select * from address where group_id = #{subGroupId}
     </select>
+
+    <!-- AddressId로 Address 삭제 -->
+    <delete id="deleteAddressByAddressId" parameterType="int">
+        delete from address where id = #{addressId}
+    </delete>
+
+    <!-- AddressId로 Address 수정-->
+    <update id="updateAddressByAddressId" parameterType="map">
+        update address set name = #{address.name},
+            company_name = #{address.companyName},
+            department = #{address.department},
+            rank = #{address.rank},
+            email = #{address.email},
+            phone = #{address.phone},
+            address = #{address.address}
+        where id = #{addressId}
+    </update>
+
+
 </mapper>
 
 
