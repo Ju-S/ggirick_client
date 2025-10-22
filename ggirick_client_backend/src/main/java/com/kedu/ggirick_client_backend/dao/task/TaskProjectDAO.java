@@ -34,7 +34,7 @@ public class TaskProjectDAO {
     }
     //프로젝트 업데이트 하기
     public boolean updateProject(ProjectDTO projectDTO) {
-        return mybatis.update("taskProject.updateProject", projectDTO)>0;
+        return mybatis.update("taskProject.updateProjectNameAndDesc", projectDTO)>0;
     }
     //특정 사용자가 관여한 프로젝트 가져오기
     public List<ProjectDTO> findProjectsByEmployeeId(String employeeId){
@@ -62,13 +62,13 @@ public class TaskProjectDAO {
 
     //해당 멤버가 존재하는지 확인하기
     public boolean existsMember(long projectId, String employeeId) {
-        Map<String, Object> params = Map.of("projectId", projectId, "employeeId", employeeId);
-        Integer result = mybatis.selectOne("TaskProjectMapper.existsMember", params);
+        Map<String, Object> params = Map.of("projectId", projectId, "employeeId", String.valueOf(employeeId));
+        Integer result = mybatis.selectOne("taskProject.existsMember", params);
         return result != null && result == 1;
     }
 
     public boolean deleteProjectMember(ProjectMemberDTO member) {
-        return mybatis.delete("TaskProjectMapper.deleteProjectMember", member)>0;
+        return mybatis.delete("taskProject.deleteProjectMember", member)>0;
     }
 
     //업무 (Task)관련 DAO

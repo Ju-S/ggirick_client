@@ -16,6 +16,8 @@ import java.util.stream.Collectors;
 @Service
 public class TaskProjectService {
 
+    private final int PROJECT_ADMIN_CODE = 1;
+    private final int PROJECT_MEMBER_CODE = 2;
 
     @Autowired
     private TaskProjectDAO taskProjectDAO;
@@ -110,7 +112,7 @@ public class TaskProjectService {
 
          projectMemberDTO.setProjectId(projectDTO.getId());
          projectMemberDTO.setEmployeeId(loginId);
-         projectMemberDTO.setRoleId(1); //프로젝트를 만든 사람이 admin
+         projectMemberDTO.setRoleId(PROJECT_ADMIN_CODE); //프로젝트를 만든 사람이 admin
 
 
        boolean insertSuccess =  taskProjectDAO.insertProjectMember(projectMemberDTO);
@@ -147,4 +149,71 @@ public class TaskProjectService {
         }
 
     }
+
+    @Transactional
+    public boolean syncProjectMembers(Long projectId, List<String> employeeIds) {
+
+        //  현재 DB에 존재하는 멤버 조회
+        List<String> existingMemberIds = taskProjectDAO.getMembers(projectId)
+                .stream()
+                .map(ProjectMemberDTO::getEmployeeId)
+                .collect(Collectors.toList());
+
+        //  삭제할 멤버: DB에는 존재하지만 프론트에서 보내지 않은 멤버
+        List<String> toRemove = existingMemberIds.stream()
+                .filter(id -> !employeeIds.contains(id))
+                .collect(Collectors.toList());
+
+        //  추가할 멤버: DB에는 없지만 프론트에서 새로 보내온 멤버
+        List<String> toAdd = employeeIds.stream()
+                .filter(id -> !existingMemberIds.contains(id))
+                .collect(Collectors.toList());
+
+        // 삭제 처리
+        for (String id : toRemove) {
+            ProjectMemberDTO member = new ProjectMemberDTO();
+            member.setProjectId(projectId);
+            member.setEmployeeId(id);
+            taskProjectDAO.deleteProjectMember(member);
+        }
+
+        // 추가 처리
+        for (String id : toAdd) {
+            ProjectMemberDTO member = new ProjectMemberDTO();
+            member.setProjectId(projectId);
+            member.setEmployeeId(id);
+            member.setRoleId(PROJECT_MEMBER_CODE);
+            taskProjectDAO.insertProjectMember(member);
+        }
+
+        return true;
+    }
+
+
+
+    //멤버 아이디 리스트를 받아서 프로젝트에 추가
+
+    public boolean addMembersToProject(Long projectId, List<String> employeeIds) {
+
+        for (String employeeId : employeeIds) {
+            boolean exists = taskProjectDAO.existsMember(projectId, employeeId);
+
+
+            if (!exists) {
+                ProjectMemberDTO member = new ProjectMemberDTO();
+                member.setProjectId(projectId);
+                member.setEmployeeId(employeeId);
+                member.setRoleId(PROJECT_MEMBER_CODE);
+
+                System.out.println("프로젝트 안에 존재하지 않는다고 판단된 멤버아이디: "+member.getEmployeeId());
+
+                boolean inserted = addMemberToProject(member);
+                if (!inserted) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
 }

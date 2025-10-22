@@ -33,10 +33,6 @@ public class TaskProjectController {
         return ResponseEntity.ok(response);
     }
 
-//    @GetMapping()
-//    public List<ProjectDTO> getProjects() {
-//        return projectService.getProjects();
-//    }
 
     @GetMapping()
     public List<ProjectDTO> getMyProjects(@AuthenticationPrincipal UserTokenDTO userInfo) {
@@ -46,7 +42,7 @@ public class TaskProjectController {
 
     @PutMapping("/{id}")
     public ResponseEntity<Map<String, Boolean>> updateProject(@PathVariable Long id, @RequestBody ProjectDTO projectDTO) {
-
+        projectDTO.setId(id);
         boolean success = projectService.updateProject(projectDTO);
         Map<String, Boolean> map = new HashMap<>();
         map.put("result", success);
@@ -123,13 +119,20 @@ public class TaskProjectController {
 
     }
 
+    @PostMapping("/{projectId}/members")
+    public ResponseEntity<Map<String, Boolean>> syncProjectMembers(
+            @PathVariable Long projectId,
+            @RequestBody List<String> employeeIds) {
 
-    //프로젝트에서 멤버 삭제
-    @DeleteMapping("/member")
-    public ResponseEntity<Map<String, Boolean>> deleteTaskMember(@RequestBody ProjectMemberDTO projectMemberDTO) {
-        boolean success = projectService.deleteMemberToProject(projectMemberDTO);
+        System.out.println("projectId: " + projectId);
+        System.out.println("employeeIds: " + employeeIds);
+
+        boolean success = projectService.syncProjectMembers(projectId, employeeIds);
         Map<String, Boolean> map = new HashMap<>();
         map.put("result", success);
         return ResponseEntity.ok(map);
     }
+
+
+
 }

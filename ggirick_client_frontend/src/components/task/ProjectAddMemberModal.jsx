@@ -1,9 +1,10 @@
 import { useState } from "react";
 import useTaskProjectStore from "@/store/task/useTaskProjectStore.js";
-import OrganizationMemberPickerModal from "@/components/common/modals/OrganizationMemberModal.jsx";
+import OrganizationMemberModal from "@/components/common/modals/OrganizationMemberModal.jsx";
+import { syncMembersAPI} from "@/api/task/projectAPI.js";
 
 export default function ProjectAddMemberModal({ open, onClose }) {
-    const { selectedProject } = useTaskProjectStore();
+    const { selectedProjectId,selectedProject,fetchProjects } = useTaskProjectStore();
 
     // 기존 멤버 id 배열
     const existingMemberIds = selectedProject?.members?.map((m) => m.employeeId) || [];
@@ -13,12 +14,26 @@ export default function ProjectAddMemberModal({ open, onClose }) {
     const handleSave = (members) => {
         console.log("선택된 멤버:", members);
         setSelectedMembers(members);
-        //있다가 프로젝트에 추가하는 로직 넣을것임
+
+        syncMembersAPI(selectedProject.id, members)
+            .then(response => {
+                if (response.data.result) {
+                    alert("멤버 변경에 성공했습니다.");
+                    fetchProjects();
+                } else {
+                    alert("멤버 변경에 실패했습니다.");
+                }
+            })
+            .catch(err => {
+                console.error("멤버 변경 실패:", err);
+                alert("서버 오류가 발생했습니다.");
+            });
+
         onClose();
     };
 
     return (
-        <OrganizationMemberPickerModal
+        <OrganizationMemberModal
             open={open}
             onClose={onClose}
             title="프로젝트 멤버 관리"
