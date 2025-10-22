@@ -106,21 +106,6 @@ export default function BoardSidebar() {
                                                     +
                                                 </button>
 
-                                                {/* 수정 버튼 */}
-                                                <button
-                                                    className="btn btn-xs btn-outline btn-info"
-                                                    onClick={(e) => {
-                                                        e.stopPropagation();
-                                                        setModifyGroupInfo({
-                                                            id: group.id,
-                                                            name: group.name,
-                                                            description: group.description
-                                                        });
-                                                    }}
-                                                >
-                                                    ✏️
-                                                </button>
-
                                                 {/* 삭제 버튼 */}
                                                 <button
                                                     className="btn btn-xs btn-outline btn-error"
@@ -136,7 +121,22 @@ export default function BoardSidebar() {
                                                         }
                                                     }}
                                                 >
-                                                    🗑️
+                                                    -
+                                                </button>
+
+                                                {/* 수정 버튼 */}
+                                                <button
+                                                    className="btn btn-xs btn-outline btn-info"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        setModifyGroupInfo({
+                                                            id: group.id,
+                                                            name: group.name,
+                                                            description: group.description
+                                                        });
+                                                    }}
+                                                >
+                                                    수정
                                                 </button>
                                             </>
                                         )}
