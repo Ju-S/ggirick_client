@@ -12,5 +12,5 @@ export function useBoardItem(boardId) {
         fetchData();
     }, [boardId]);
 
-    return {...boardData, refetch: fetchData};
+    return {...boardData};
 }

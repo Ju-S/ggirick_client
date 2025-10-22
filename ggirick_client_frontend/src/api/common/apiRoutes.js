@@ -77,7 +77,10 @@ const apiRoutes = {
          * PUT /api/board/{boardId}<br>
          * body: {BoardDTO}
          */
-        put: {url: `/board`, method: "PUT"},
+        put: (id) => ({
+            url: `/board/${id}`,
+            method: "PUT"
+        }),
     },
     boardGroup: {
         /**
@@ -91,12 +94,21 @@ const apiRoutes = {
         }),
 
         /**
+         * 게시판 그룹 생성 API<br>
+         * POST /api/board/group<br>
+         */
+        insert: {
+            url: `/board/group`,
+            method: "POST"
+        },
+
+        /**
          * 게시판 그룹 구성원 목록 API<br>
          * GET /api/board/group/{groupId}<br>
          * response: {List<String>}
          */
         members: (groupId) => ({
-            url: `/board/group/${groupId}`,
+            url: `/board/group/${groupId}/members`,
             method: "GET"
         }),
 
@@ -105,7 +117,7 @@ const apiRoutes = {
          * PUT /api/board/group/{groupId}<br>
          */
         put: (groupId) => ({
-            url: `/board/group/${groupId}`,
+            url: `/board/group/${groupId}/members`,
             method: "PUT"
         }),
     },
@@ -118,6 +130,15 @@ const apiRoutes = {
         download: (oriname, sysname) => ({
             url: `/board/file?sysname=${sysname}&oriname=${oriname}`,
             method: "GET"
+        }),
+        /**
+         * 파일 삭제 API<br>
+         * DB와 GCP 두곳에서 모두 삭제<br>
+         * DELETE /api/board/file/{id}<br>
+         */
+        delete: (id) => ({
+            url: `/board/file/${id}`,
+            method: "DELETE"
         }),
     },
     boardComment: {

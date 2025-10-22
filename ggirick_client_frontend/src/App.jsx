@@ -17,6 +17,8 @@ import useAuthStore from "@/store/authStore.js";
 import EmployeeRoutes from "./routes/EmployeeRoutes.jsx";
 import AlertModal from "@/components/common/modals/AlertModal.jsx";
 import {LoginPage} from "@/pages/auth/LoginPage.jsx";
+import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
+import useEmployeeStore from "@/store/employeeStore.js";
 
 export default function App() {
     // 전역 상태변수

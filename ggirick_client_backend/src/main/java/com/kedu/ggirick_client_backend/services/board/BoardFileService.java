@@ -20,7 +20,7 @@ public class BoardFileService {
         for (MultipartFile file : files) {
             if (!file.isEmpty()) {
                 String oriName = file.getOriginalFilename();
-                String sysName = fileUtil.fileUpload(oriName, file);
+                String sysName = fileUtil.fileUpload(oriName, "/board/" + boardId + "/", file);
 
                 boardFileDAO.insertFileInfo(
                         BoardFileDTO
@@ -42,5 +42,20 @@ public class BoardFileService {
     // 게시판 파일 리스트 조회
     public List<BoardFileDTO> getFileList(int boardId) {
         return boardFileDAO.getFileList(boardId);
+    }
+
+    public BoardFileDTO getFileById(int id) {
+        return boardFileDAO.getFileById(id);
+    }
+
+    public void deleteFile(BoardFileDTO fileInfo) {
+        boardFileDAO.deleteFile(fileInfo.getId());
+        fileUtil.deleteFile(fileInfo.getUrl());
+    }
+
+    public void deleteFolder(int boardId) {
+        for (BoardFileDTO file : getFileList(boardId)) {
+            deleteFile(file);
+        }
     }
 }

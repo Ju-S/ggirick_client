@@ -26,7 +26,22 @@
         INSERT INTO board_group_employee(id, employee_id, board_group_id) VALUES(board_group_employee_seq.nextval, #{userId}, #{boardId})
     </insert>
 
+    <insert id="addBoardGroup">
+        INSERT INTO board_group(id, name, description, owner_id) VALUES(board_group_seq.nextval, #{name}, #{description}, #{ownerId})
+        <selectKey resultType="int" keyProperty="id" order="AFTER">
+            select board_group_seq.currval from dual
+        </selectKey>
+    </insert>
+
     <delete id="deleteGroupEmployee">
         DELETE FROM board_group_employee WHERE employee_id=#{userId} AND board_group_id=#{boardId}
     </delete>
+
+    <delete id="deleteBoardGroup">
+        DELETE FROM board_group WHERE id=#{groupId}
+    </delete>
+
+    <update id="updateBoardGroup">
+        UPDATE board_group SET name=#{name}, description=#{description} WHERE id=#{id}
+    </update>
 </mapper>

@@ -1,6 +1,6 @@
-export default function Dropdown({onClickHandler, selectedItem, title, items}) {
+export default function Dropdown({onClickHandler, selectedItem, title, items, disabled}) {
     return (
-        <select className="select" required>
+        <select className="select" required disabled={disabled}>
             <option disabled selected>{title}</option>
             {items && items.map(e =>
                 <option

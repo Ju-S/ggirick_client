@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-export default function AddGroupModal({ isOpen, onClose, onSubmit }) {
+export default function AddGroupModal({ isOpen, onClose, onSubmit, editMode }) {
     const [groupData, setGroupData] = useState({ name: "", description: "" });
 
     const handleChange = (e) => {

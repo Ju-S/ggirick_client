@@ -26,10 +26,10 @@ public class BoardGroupService {
         return boardGroupDAO.getGroupOwner(groupId);
     }
 
-    public void updateGroupEmployee(List<String> members, int boardId) {
+    public void updateGroupEmployee(List<String> members, int boardId, String ownerId) {
         // 없던 멤버 추가
         for (String member : members) {
-            if(!getGroupEmployeeList(boardId).contains(member)) {
+            if(!getGroupEmployeeList(boardId).contains(member) && !member.equals(ownerId)) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("boardId", boardId);
                 params.put("userId", member);
@@ -39,12 +39,31 @@ public class BoardGroupService {
 
         // 있던 멤버 삭제
         for (String existedMember : getGroupEmployeeList(boardId)) {
-            if(!members.contains(existedMember)) {
+            if(!members.contains(existedMember) && !existedMember.equals(ownerId)) {
                 Map<String, Object> params = new HashMap<>();
                 params.put("boardId", boardId);
                 params.put("userId", existedMember);
                 boardGroupDAO.deleteGroupEmployee(params);
             }
         }
+    }
+
+    public void addBoardGroup(BoardGroupDTO groupInfo) {
+        int groupId = boardGroupDAO.addBoardGroup(groupInfo);
+
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("boardId", groupId);
+        params.put("userId", groupInfo.getOwnerId());
+
+        boardGroupDAO.insertGroupEmployee(params);
+    }
+
+    public void deleteBoardGroup(int groupId) {
+        boardGroupDAO.deleteBoardGroup(groupId);
+    }
+
+    public void updateBoardGroup(BoardGroupDTO groupInfo) {
+        boardGroupDAO.updateBoardGroup(groupInfo);
     }
 }

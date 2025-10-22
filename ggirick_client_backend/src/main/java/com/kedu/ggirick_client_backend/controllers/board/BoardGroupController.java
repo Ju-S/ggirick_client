@@ -24,32 +24,52 @@ public class BoardGroupController {
     }
 
     // 게시판 그룹 생성
-
-
-    // 게시판 그룹 삭제
-
-
-    // 게시판 그룹 수정
-
-    // 게시판 그룹 멤버 조회
-    @GetMapping("/{groupId}")
-    public ResponseEntity<List<String>> getBoardGroupEmployeeList(@PathVariable int groupId) {
-        return ResponseEntity.ok(boardGroupService.getGroupEmployeeList(groupId));
+    @PostMapping
+    public ResponseEntity<Void> addBoardGroup(@RequestBody BoardGroupDTO groupInfo,
+                                              @AuthenticationPrincipal UserTokenDTO userInfo) {
+        groupInfo.setOwnerId(userInfo.getId());
+        boardGroupService.addBoardGroup(groupInfo);
+        return ResponseEntity.ok().build();
     }
 
-    // 게시판 그룹 멤버 수정
-    @PutMapping("/{groupId}")
-    public ResponseEntity<Void> updateBoardGroupEmployee(@PathVariable int groupId,
-                                                         @RequestBody List<String> members,
-                                                         @AuthenticationPrincipal UserTokenDTO userInfo) {
+    // 게시판 그룹 삭제
+    @DeleteMapping("/{groupId}")
+    public ResponseEntity<Void> deleteBoardGroup(@PathVariable int groupId,
+                                                 @AuthenticationPrincipal UserTokenDTO userInfo) {
         if (boardGroupService.getGroupOwner(groupId).equals(userInfo.getId())) {
-            members.remove(userInfo.getId());
-            boardGroupService.updateGroupEmployee(members, groupId);
+            boardGroupService.deleteBoardGroup(groupId);
             return ResponseEntity.ok().build();
         }
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
-    // 게시판 그룹 멤버 삭제
+    // 게시판 그룹 수정
+    @PutMapping("/{groupId}")
+    public ResponseEntity<Void> updateBoardGroup(@RequestBody BoardGroupDTO groupInfo,
+                                              @AuthenticationPrincipal UserTokenDTO userInfo) {
+        if (boardGroupService.getGroupOwner(groupInfo.getId()).equals(userInfo.getId())) {
+            boardGroupService.updateBoardGroup(groupInfo);
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 
+
+    // 게시판 그룹 멤버 조회
+    @GetMapping("/{groupId}/members")
+    public ResponseEntity<List<String>> getBoardGroupEmployeeList(@PathVariable int groupId) {
+        return ResponseEntity.ok(boardGroupService.getGroupEmployeeList(groupId));
+    }
+
+    // 게시판 그룹 멤버 수정
+    @PutMapping("/{groupId}/members")
+    public ResponseEntity<Void> updateBoardGroupEmployee(@PathVariable int groupId,
+                                                         @RequestBody List<String> members,
+                                                         @AuthenticationPrincipal UserTokenDTO userInfo) {
+        if (boardGroupService.getGroupOwner(groupId).equals(userInfo.getId())) {
+            boardGroupService.updateGroupEmployee(members, groupId, userInfo.getId());
+            return ResponseEntity.ok().build();
+        }
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+    }
 }

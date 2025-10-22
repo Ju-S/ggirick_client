@@ -20,6 +20,10 @@ export default function BoardRoutes() {
                     path="posting"
                     element={<BoardPostingPage/>}
                 ></Route>
+                <Route
+                    path="edit/:id"
+                    element={<BoardPostingPage editMode={true}/>}
+                ></Route>
             </Routes>
         </BoardLayout>
     );

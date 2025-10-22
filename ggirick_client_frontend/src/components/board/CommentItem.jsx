@@ -1,40 +1,74 @@
 import {useState} from "react";
 import {timestampToMonthDay} from "@/utils/board/boardDateFormat.js";
-import {insertCommentAPI} from "@/api/board/boardAPI.js";
-import {useParams} from "react-router-dom";
+import {insertCommentAPI, updateCommentAPI, deleteCommentAPI} from "@/api/board/boardCommentAPI.js";
+import useBoardStore from "@/store/board/boardStore.js";
+import useEmployeeStore from "@/store/employeeStore.js";
 
-export default function CommentItem({ comment, depth = 0, refetch }) {
+export default function CommentItem({comment, depth = 0}) {
     const [showReply, setShowReply] = useState(false);
-
     const [contents, setContents] = useState("");
-    const [refId] = useState(comment.id);
+    const [editMode, setEditMode] = useState(false);
+    const [editContents, setEditContents] = useState(comment.contents); // 수정용 상태
     const [loading, setLoading] = useState(false);
 
-    // 댓글 스타일 결정
-    const cardClass = depth === 0 ?
-        `card bg-base-100 shadow-sm mb-3`
-    :
-    "card bg-base-100 mb-3 border-t border-base-content/10 rounded-none"; // 대댓글: 연한 테두리
+    const refetch = useBoardStore(state => state.fetchBoardInfo);
+    const {selectedEmployee} = useEmployeeStore();
 
-    // 댓글 작성
+    const isDeleted = comment.contents === "ZGVsZXRlZEdnaXJpY2tCb2FyZENvbW1lbnQ=";
+
+    // 댓글 스타일 결정
+    const cardClass = depth === 0
+        ? `card bg-base-100 shadow-sm mb-3`
+        : "card bg-base-100 mb-3 border-t border-base-content/10 rounded-none";
+
+    // 수정모드 시작
+    const handleEdit = () => setEditMode(true);
+    const handleCancelEdit = () => {
+        setEditMode(false);
+        setEditContents(comment.contents);
+    };
+
+    const handleSaveEdit = async () => {
+        if (!editContents.trim()) {
+            alert("내용을 입력해주세요.");
+            return;
+        }
+        try {
+            setLoading(true);
+            await updateCommentAPI(comment.boardId, comment.id, editContents);
+            setEditMode(false);
+            if (refetch) refetch(comment.boardId);
+        } catch (err) {
+            console.error("댓글 수정 실패:", err);
+            alert("댓글 수정에 실패했습니다.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleDelete = async () => {
+        if (!window.confirm("정말로 이 댓글을 삭제하시겠습니까?")) return;
+        try {
+            await deleteCommentAPI(comment.boardId, comment.id);
+            if (refetch) refetch(comment.boardId);
+        } catch (err) {
+            console.error("댓글 삭제 실패:", err);
+            alert("댓글 삭제에 실패했습니다.");
+        }
+    };
+
     const handleCommentSubmit = async () => {
         if (!contents.trim()) {
             alert("댓글 내용을 입력해주세요.");
             return;
         }
-
         try {
             setLoading(true);
-            await insertCommentAPI(comment.boardId, refId, contents);
-
-            // 입력창 초기화
+            await insertCommentAPI(comment.boardId, comment.id, contents);
             setContents("");
-
-            // 최신 댓글 목록 다시 불러오기
-            if (refetch) refetch();
             setShowReply(false);
+            if (refetch) refetch(comment.boardId);
         } catch (err) {
-            console.error("댓글 등록 실패:", err);
             alert("댓글 등록에 실패했습니다.");
         } finally {
             setLoading(false);
@@ -44,32 +78,84 @@ export default function CommentItem({ comment, depth = 0, refetch }) {
     return (
         <div
             className={cardClass}
-            style={{ marginLeft: `${depth * 2}rem` }}
+            style={{marginLeft: `${depth * 2}rem`}}
         >
             <div className="card-body p-4">
                 {/* 작성자, 날짜 */}
                 <div className="flex justify-between items-center text-sm text-base-600 mb-2">
-                    <span className="font-semibold">{comment.name}</span>
-                    <span>{timestampToMonthDay(comment.createdAt)}</span>
+                    <span className="font-semibold">
+                        {isDeleted ? "삭제된 댓글" : comment.name}
+                    </span>
+                    <span>{isDeleted ? "" : timestampToMonthDay(comment.createdAt)}</span>
                 </div>
 
-                {/* 댓글 내용 */}
-                <p className="text-base-800 whitespace-pre-wrap mb-2">
-                    {comment.contents}
-                </p>
+                {/* 댓글 내용 / 삭제된 댓글 UI / 수정 입력창 */}
+                {isDeleted ? (
+                    <p className="text-base-400 italic">이 댓글은 삭제되었습니다.</p>
+                ) : editMode ? (
+                    <textarea
+                        className="textarea textarea-bordered w-full h-24 resize-none mb-2"
+                        value={editContents}
+                        onChange={(e) => setEditContents(e.target.value)}
+                    ></textarea>
+                ) : (
+                    <p className="text-base-800 whitespace-pre-wrap mb-2">{comment.contents}</p>
+                )}
 
-                {/* 답글 버튼 */}
-                <div className="card-actions justify-end">
-                    <button
-                        className="btn btn-xs btn-outline btn-primary"
-                        onClick={() => setShowReply(!showReply)}
-                    >
-                        {showReply ? "취소" : "답글"}
-                    </button>
-                </div>
+                {/* 버튼 영역 */}
+                {!isDeleted && (
+                    <div className="card-actions justify-end">
+                        {!editMode && (
+                            <button
+                                className="btn btn-xs btn-primary"
+                                onClick={() => setShowReply(!showReply)}
+                            >
+                                {showReply ? "취소" : "답글"}
+                            </button>
+                        )}
+
+                        {selectedEmployee.id === comment.writer && (
+                            <div className="flex gap-2">
+                                {editMode ? (
+                                    <>
+                                        <button
+                                            className={`btn btn-xs btn-primary ${loading ? "loading" : ""}`}
+                                            onClick={handleSaveEdit}
+                                            disabled={loading}
+                                        >
+                                            {loading ? "저장 중..." : "수정 완료"}
+                                        </button>
+                                        <button
+                                            className="btn btn-xs btn-outline btn-error"
+                                            onClick={handleCancelEdit}
+                                            disabled={loading}
+                                        >
+                                            수정 취소
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button
+                                            className="btn btn-xs btn-outline btn-primary"
+                                            onClick={handleEdit}
+                                        >
+                                            수정
+                                        </button>
+                                        <button
+                                            className="btn btn-xs btn-outline btn-error"
+                                            onClick={handleDelete}
+                                        >
+                                            삭제
+                                        </button>
+                                    </>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                )}
 
                 {/* 답글 입력창 */}
-                {showReply && (
+                {showReply && !editMode && !isDeleted && (
                     <div className="mt-3">
                         <textarea
                             className="textarea textarea-bordered w-full h-20 resize-none"

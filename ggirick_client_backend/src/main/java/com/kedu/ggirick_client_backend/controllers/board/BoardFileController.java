@@ -2,6 +2,7 @@ package com.kedu.ggirick_client_backend.controllers.board;
 
 import com.google.cloud.storage.Blob;
 import com.google.cloud.storage.Storage;
+import com.kedu.ggirick_client_backend.dto.board.BoardFileDTO;
 import com.kedu.ggirick_client_backend.services.board.BoardFileService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -34,5 +35,10 @@ public class BoardFileController {
 
     // 선택된 파일 삭제
     // DB및 GCP에서 삭제
-
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deleteFile(@PathVariable int id) {
+        BoardFileDTO targetFile = boardFileService.getFileById(id);
+        boardFileService.deleteFile(targetFile);
+        return ResponseEntity.ok().build();
+    }
 }

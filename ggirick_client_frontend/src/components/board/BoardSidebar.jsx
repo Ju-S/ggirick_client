@@ -1,9 +1,11 @@
 import {useNavigate} from "react-router-dom";
-import {useState} from "react";
+import {useEffect, useState} from "react";
 import AddGroupModal from "@/components/board/AddGroupModal.jsx";
 import useBoardGroupStore from "@/store/board/boardGroupStore.js";
 import OrganizationMemberPickerModal from "@/components/common/modals/OrganizationMemberModal.jsx";
-import {boardGroupMemberListAPI, putGroupMemberAPI} from "@/api/board/boardAPI.js";
+import {addBoardGroup, boardGroupMemberListAPI, putGroupMemberAPI} from "@/api/board/boardGroupAPI.js";
+import useEmployeeStore from "@/store/employeeStore.js";
+import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 
 export default function BoardSidebar() {
     const navigate = useNavigate();
@@ -14,11 +16,19 @@ export default function BoardSidebar() {
     const [boardGroupMembers, setBoardGroupMembers] = useState([]);
     const [selectedGroup, setSelectedGroup] = useState(1);
 
+    const {selectedEmployee, setEmployee} = useEmployeeStore();
+
+    useEffect(() => {
+        getMyInfoAPI().then(resp => {
+            setEmployee(resp.data)
+        });
+    }, []);
+
     const openModal = () => setIsModalOpen(true);
     const closeModal = () => setIsModalOpen(false);
 
-    const addGroupHandler = (groupId) => {
-        closeModal();
+    const addGroupHandler = (groupInfo) => {
+        addBoardGroup(groupInfo).then(closeModal);
     };
 
     return (
@@ -48,7 +58,7 @@ export default function BoardSidebar() {
             >
                 <span>그룹</span>
                 <button
-                    className={`btn btn-xs btn-outline btn-primary`}
+                    className={`btn btn-xs btn-primary`}
                     onClick={(e) => {
                         e.stopPropagation();
                         openModal();
@@ -67,22 +77,60 @@ export default function BoardSidebar() {
                             .map(group => (
                                 <div
                                     key={group.id}
-                                    className="flex justify-between items-center p-2 rounded hover:bg-base-200 cursor-pointer"
+                                    className="flex justify-between items-center p-2 rounded hover:bg-base-200 cursor-pointer group"
                                     onClick={() => navigate(`/board?groupId=${group.id}`)}
                                 >
-                                    <span className="ml-3">{group.name}</span>
-                                    <button
-                                        className={`btn btn-xs btn-outline btn-primary`}
-                                        onClick={(e) => {
-                                            e.stopPropagation();
-                                            boardGroupMemberListAPI(group.id)
-                                                .then(resp => setBoardGroupMembers(resp.data))
-                                                .then(() => setSelectedGroup(group.id))
-                                                .then(() => setIsOrgModalOpen(true));
-                                        }}
-                                    >
-                                        +
-                                    </button>
+                                    {/* 그룹명 */}
+                                    <span className="ml-3 font-medium">{group.name}</span>
+
+                                    {/* 오른쪽 버튼 영역 */}
+                                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                                        {/* 그룹 소유자일 경우 멤버추가/수정/삭제 버튼 노출 */}
+                                        {selectedEmployee?.id === group.ownerId && (
+                                            <>
+                                                {/* 구성원 추가 버튼 */}
+                                                <button
+                                                    className="btn btn-xs btn-outline btn-primary"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        boardGroupMemberListAPI(group.id)
+                                                            .then(resp => setBoardGroupMembers(resp.data))
+                                                            .then(() => setSelectedGroup(group.id))
+                                                            .then(() => setIsOrgModalOpen(true));
+                                                    }}
+                                                >
+                                                    +
+                                                </button>
+
+                                                {/* 수정 버튼 */}
+                                                <button
+                                                    className="btn btn-xs btn-outline btn-info"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        // TODO: 수정 모달 오픈 로직
+                                                        console.log("그룹 수정:", group.id);
+                                                    }}
+                                                >
+                                                    ✏️
+                                                </button>
+
+                                                {/* 삭제 버튼 */}
+                                                <button
+                                                    className="btn btn-xs btn-outline btn-error"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        // TODO: 삭제 확인 및 API 호출
+                                                        if (confirm(`"${group.name}" 그룹을 삭제하시겠습니까?`)) {
+                                                            console.log("그룹 삭제:", group.id);
+                                                            // deleteGroupAPI(group.id).then(...)
+                                                        }
+                                                    }}
+                                                >
+                                                    🗑️
+                                                </button>
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             ))
                     ) : (

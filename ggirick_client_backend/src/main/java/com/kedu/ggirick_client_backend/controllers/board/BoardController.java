@@ -1,29 +1,23 @@
 package com.kedu.ggirick_client_backend.controllers.board;
 
-import com.google.cloud.storage.BlobId;
-import com.google.cloud.storage.BlobInfo;
-import com.google.cloud.storage.Storage;
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardCommentDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardFileDTO;
 import com.kedu.ggirick_client_backend.services.board.BoardCommentService;
 import com.kedu.ggirick_client_backend.services.board.BoardFileService;
+import com.kedu.ggirick_client_backend.services.board.BoardGroupService;
 import com.kedu.ggirick_client_backend.services.board.BoardService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import static com.kedu.ggirick_client_backend.config.BoardConfig.ITEM_PER_PAGE;
 import static com.kedu.ggirick_client_backend.config.BoardConfig.PAGE_PER_NAV;
@@ -36,45 +30,55 @@ public class BoardController {
     private final BoardService boardService;
     private final BoardCommentService boardCommentService;
     private final BoardFileService boardFileService;
+    private final BoardGroupService boardGroupService;
 
     // 게시글 목록 조회
     @GetMapping
     public ResponseEntity<Map<String, Object>> getList(@RequestParam(defaultValue = "1") int currentPage,
                                                        @RequestParam(defaultValue = "1") int groupId,
                                                        @RequestParam(defaultValue = "0") int searchFilter,
-                                                       @RequestParam(defaultValue = "", required = false) String searchQuery) {
-        Map<String, Object> response = new HashMap<>();
+                                                       @RequestParam(defaultValue = "", required = false) String searchQuery,
+                                                       @AuthenticationPrincipal UserTokenDTO userInfo) {
+        if (boardGroupService.getGroupEmployeeList(groupId).contains(userInfo.getId())) {
+            Map<String, Object> response = new HashMap<>();
 
-        List<BoardDTO> boardNotificationList = boardService.getNotificationList(groupId);
-        List<BoardDTO> boardList = boardService.getList(currentPage, groupId, searchFilter, searchQuery);
-        long totalPage = boardService.getTotalPage(groupId, searchFilter, searchQuery);
+            List<BoardDTO> boardNotificationList = boardService.getNotificationList(groupId);
+            List<BoardDTO> boardList = boardService.getList(currentPage, groupId, searchFilter, searchQuery);
+            long totalPage = boardService.getTotalPage(groupId, searchFilter, searchQuery);
 
-        response.put("boardNotificationList", boardNotificationList);
-        response.put("boardList", boardList);
-        response.put("itemPerPage", ITEM_PER_PAGE);
-        response.put("pagePerNav", PAGE_PER_NAV);
-        response.put("totalPage", totalPage);
+            response.put("boardNotificationList", boardNotificationList);
+            response.put("boardList", boardList);
+            response.put("itemPerPage", ITEM_PER_PAGE);
+            response.put("pagePerNav", PAGE_PER_NAV);
+            response.put("totalPage", totalPage);
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     // 단일 게시글 조회
     @GetMapping("/{id}")
-    public ResponseEntity<Map<String, Object>> getById(@PathVariable int id) {
+    public ResponseEntity<Map<String, Object>> getById(@PathVariable int id,
+                                                       @AuthenticationPrincipal UserTokenDTO userInfo) {
         Map<String, Object> response = new HashMap<>();
-
         BoardDTO selectedItem = boardService.getById(id);
 
-        List<BoardCommentDTO> commentList = boardCommentService.getList(id);
-        List<BoardFileDTO> fileList = boardFileService.getFileList(id);
+        if (boardGroupService.getGroupEmployeeList(selectedItem.getBoardGroupId()).contains(userInfo.getId())) {
+            List<BoardCommentDTO> commentList = boardCommentService.getList(id);
+            List<BoardFileDTO> fileList = boardFileService.getFileList(id);
 
-        response.put("boardDetail", selectedItem);
-        response.put("commentList", commentList);
-        response.put("fileList", fileList);
+            response.put("boardDetail", selectedItem);
+            response.put("commentList", commentList);
+            response.put("fileList", fileList);
 
-        boardService.increaseViewCount(id);
+            boardService.increaseViewCount(id);
 
-        return ResponseEntity.ok(response);
+            return ResponseEntity.ok(response);
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     // 게시글 등록
@@ -82,9 +86,13 @@ public class BoardController {
     public ResponseEntity<Void> posting(@RequestPart("boardInfo") BoardDTO dto,
                                         @RequestPart(value = "files", required = false) List<MultipartFile> files,
                                         @AuthenticationPrincipal UserTokenDTO userInfo) throws Exception {
-        dto.setWriter(userInfo.getId());
-        boardService.posting(dto, files);
-        return ResponseEntity.ok().build();
+        if (boardGroupService.getGroupEmployeeList(dto.getBoardGroupId()).contains(userInfo.getId())) {
+            dto.setWriter(userInfo.getId());
+            boardService.posting(dto, files);
+            return ResponseEntity.ok().build();
+        }
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
     }
 
     // 게시글 삭제
@@ -100,12 +108,13 @@ public class BoardController {
 
     // 게시글 수정
     @PutMapping("/{id}")
-    public ResponseEntity<Void> updateById(@RequestBody BoardDTO dto,
+    public ResponseEntity<Void> updateById(@RequestPart("boardInfo") BoardDTO dto,
+                                           @RequestPart(value = "files", required = false) List<MultipartFile> files,
                                            @PathVariable int id,
-                                           @AuthenticationPrincipal UserTokenDTO userInfo) {
+                                           @AuthenticationPrincipal UserTokenDTO userInfo) throws Exception {
         if (boardService.getById(id).getWriter().equals(userInfo.getId())) {
             dto.setId(id);
-            boardService.updateById(dto);
+            boardService.updateById(dto, files);
         }
 
         return ResponseEntity.ok().build();

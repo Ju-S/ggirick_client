@@ -1,5 +1,5 @@
 import {create} from "zustand";
-import {boardGroupListAPI} from "@/api/board/boardAPI.js";
+import {boardGroupListAPI} from "@/api/board/boardGroupAPI.js";
 
 const useBoardGroupStore = create((set) => ({
     list: [],

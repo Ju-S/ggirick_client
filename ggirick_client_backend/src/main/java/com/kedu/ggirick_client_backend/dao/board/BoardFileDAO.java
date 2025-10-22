@@ -23,5 +23,12 @@ public class BoardFileDAO {
     }
 
     // 파일 삭제
+    public void deleteFile(int id) {
+        mybatis.delete("BoardFile.delete", id);
+    }
 
+    // 개별 파일 조회
+    public BoardFileDTO getFileById(int id) {
+        return mybatis.selectOne("BoardFile.getFileById", id);
+    }
 }

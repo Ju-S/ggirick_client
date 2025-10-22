@@ -85,12 +85,17 @@ public class BoardService {
 
     // 게시글 삭제
     public void deleteById(int targetId) {
+        boardFileService.deleteFolder(targetId);
         boardDAO.deleteById(targetId);
     }
 
     // 게시글 수정
-    public void updateById(BoardDTO dto) {
+    @Transactional
+    public void updateById(BoardDTO dto, List<MultipartFile> files) throws Exception {
         boardDAO.updateById(dto);
+        if(files != null) {
+            boardFileService.insertFileInfo(files, dto.getId());
+        }
     }
 
     // 게시글 조회수 증가

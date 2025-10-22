@@ -23,11 +23,21 @@ public class BoardGroupDAO {
         return mybatis.selectOne("BoardGroup.getGroupOwner", groupId);
     }
 
-    // 그룹 생성
+    // 그룹 생성(생성 후 id반환)
+    public int addBoardGroup(BoardGroupDTO groupInfo) {
+        mybatis.insert("BoardGroup.addBoardGroup", groupInfo);
+        return groupInfo.getId();
+    }
 
     // 그룹 삭제
+    public void deleteBoardGroup(int groupId) {
+        mybatis.delete("BoardGroup.deleteBoardGroup", groupId);
+    }
 
     // 그룹 수정
+    public void updateBoardGroup(BoardGroupDTO groupInfo) {
+        mybatis.update("BoardGroup.updateBoardGroup", groupInfo);
+    }
 
     // 그룹 구성원 조회
     public List<String> getGroupEmployeeList(int boardId) {
