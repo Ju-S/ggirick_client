@@ -5,6 +5,7 @@ import BoardRoutes from "./BoardRoutes.jsx";
 import Dashboard from "@/pages/dashboard/Dashboard.jsx";
 import ReservationPage from "@/pages/reservation/ReservationPage.jsx";
 import TaskPage from "@/pages/task/TaskPage.jsx";
+import WorkmanagementPage from "@/pages/workmanagement/WorkmanagementPage.jsx";
 
 export default function EmployeeRoutes() {
     return (
@@ -21,7 +22,7 @@ export default function EmployeeRoutes() {
             ></Route>
             <Route
                 path="/workmanagement"
-                element={<>workmanagement</>}
+                element={<WorkmanagementPage/>}
             ></Route>
             <Route
                 path="/reservation"
