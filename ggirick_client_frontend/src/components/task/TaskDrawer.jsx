@@ -15,7 +15,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
     title: "",
     projectId: "",
     assignee: "",
-    status: "할 일",
+    logs: "할 일",
     priority: "medium",
     startedAt: "",
     endedAt: "",
@@ -47,7 +47,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
         title: "",
         projectId: selectedProjectId,
         assignee: "",
-        status: "할 일",
+        logs: "할 일",
         priority: "medium",
         startedAt: "",
         endedAt: "",
@@ -208,7 +208,7 @@ const validateForm = () => {
           <label className="block text-sm font-medium mb-1">상태</label>
           <select
             name="status"
-            value={task.status}
+            value={task.logs}
             className="select select-bordered w-full bg-base-100"
             onChange={handleChange}
           >

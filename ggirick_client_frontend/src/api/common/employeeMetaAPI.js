@@ -1,9 +1,6 @@
-
-
-// 부서 목록 조회
 import apiRoutes from "./apiRoutes.js";
 import api from "./apiInterceptor.js";
-
+// 부서 목록 조회
 export const getDepartmentsAPI = () => api(apiRoutes.hrMeta.departments);
 
 // 직급 목록 조회

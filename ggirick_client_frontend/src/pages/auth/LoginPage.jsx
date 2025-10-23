@@ -1,6 +1,6 @@
 import { useState } from "react";
-import useEmployeeStore from "../../store/employeeStore.js";
-import useAuthStore from "../../store/authStore.js";
+import useEmployeeStore from "../../store/employee/employeeStore.js";
+import useAuthStore from "../../store/auth/authStore.js";
 
 import ggirickLogo from "../../assets/logo/ggirick-header.png";
 

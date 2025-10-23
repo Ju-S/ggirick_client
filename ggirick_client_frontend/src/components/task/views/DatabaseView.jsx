@@ -29,7 +29,7 @@ export const DatabaseView = () => {
             {selectedProject.tasks.map((task) => {
               const dueDate = new Date(task.endedAt);
               const today = new Date();
-              const isOverdue = dueDate < today && task.status !== "완료";
+              const isOverdue = dueDate < today && task.logs !== "완료";
 
               return (
                 <tr
@@ -62,14 +62,14 @@ export const DatabaseView = () => {
                   <td className="px-4 py-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium ${
-                          task.status === "완료"
+                          task.logs === "완료"
                             ? "bg-success text-success-content"
-                            : task.status === "진행 중"
+                            : task.logs === "진행 중"
                               ? "bg-info text-info-content"
                               : "bg-neutral text-neutral-content"
                         }`}
                       >
-                        {task.status}
+                        {task.logs}
                       </span>
                   </td>
                   {/* ✅ 시작일 */}

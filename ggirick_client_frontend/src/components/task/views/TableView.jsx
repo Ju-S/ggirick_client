@@ -36,14 +36,14 @@ export default function TableView() {
             <td className="px-6 py-3">
                 <span
                   className={`px-2 py-1 rounded text-xs font-medium ${
-                    task.status === "완료"
+                    task.logs === "완료"
                       ? "bg-success text-success-content"
-                      : task.status === "진행 중"
+                      : task.logs === "진행 중"
                         ? "bg-info text-info-content"
                         : "bg-neutral text-neutral-content"
                   }`}
                 >
-                  {task.status}
+                  {task.logs}
                 </span>
             </td>
             <td className="px-6 py-3 text-base-content/80">{formatDate(task.endedAt)}</td>

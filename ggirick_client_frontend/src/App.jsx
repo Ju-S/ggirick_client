@@ -10,15 +10,15 @@ import {Navigate} from "react-router";
 import {getAllHrMetaAPI} from "@/api/common/employeeMetaAPI.js";
 
 // 스토어
-import useCommonStore from "@/store/commonStore.js";
-import useAuthStore from "@/store/authStore.js";
+import useCommonStore from "@/store/common/commonStore.js";
+import useAuthStore from "@/store/auth/authStore.js";
 
 // 페이지
 import EmployeeRoutes from "./routes/EmployeeRoutes.jsx";
 import AlertModal from "@/components/common/modals/AlertModal.jsx";
 import {LoginPage} from "@/pages/auth/LoginPage.jsx";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/employee/employeeStore.js";
 
 export default function App() {
     // 전역 상태변수

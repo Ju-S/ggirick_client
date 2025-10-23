@@ -220,7 +220,7 @@ const apiRoutes = {
       method: "POST",
     },
 
-        updateStatus: (taskId) => ({
+        updateLogs: (taskId) => ({
             url: `/project/task/${taskId}/status`,
             method: "PATCH",
         }),
@@ -420,6 +420,20 @@ const apiRoutes = {
       method:"GET",
     })
   },
+
+    // 근무 관리
+    workmanagement: {
+        /**
+         * 원하는 기간만큼 근무 현황 조회 API<br>
+         * GET /workmanagement?startDate=${startDate}&endDate=${endDate}<br>
+         * response: WorkTimeLogDTO
+         */
+        getWorkTimeLogByPeriod:(startDate, endDate) => ({
+            url:`/workmanagement?startDate=${startDate}&endDate=${endDate}`,
+            method:"GET"
+        }),
+
+    }
 };
 
 export default apiRoutes;
