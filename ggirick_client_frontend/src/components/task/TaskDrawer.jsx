@@ -127,20 +127,13 @@ const validateForm = () => {
 
 
       if (mode === "create") {
-          const success=  await createTask(finalTask);
-
-        alert("작업이 성공적으로 생성되었습니다!");
-          if (success) {
-              onClose();
-          }
+          await createTask(finalTask);
+          onClose();
 
       } else if (mode === "edit") {
 
-          const success= await updateTask(selectedTask.id, finalTask);
-        alert("작업이 성공적으로 수정되었습니다!");
-          if (success) {
-              onClose();
-          }
+          await updateTask(selectedTask.id, finalTask);
+          onClose();
 
       }
 

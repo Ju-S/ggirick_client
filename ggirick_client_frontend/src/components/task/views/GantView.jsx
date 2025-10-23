@@ -47,9 +47,7 @@ export default function GanttView() {
                   {/* Task Info */}
                   <div className="flex-1">
                     <p className="font-medium text-base-content">{task.title}</p>
-                    <p className="text-sm text-base-content/70 mt-1"> <div>    {
-                      selectedProject.members.find(m => m.employeeId === task.assignee)?.name
-                      || task.assignee // 혹시 매칭 안 되면 employee_id 그대로 보여줌
+                    <p className="text-sm text-base-content/70 mt-1"> <div>    {selectedProject.members.find((m) => m.employeeId === task.assignee)?.name || "사용자가 없거나 탈주했습니다"
                     }</div></p>
                   </div>
 
