@@ -10,6 +10,7 @@ export default defineConfig({
   plugins: [react(), tailwindcss(), flowbiteReact(), svgr()],
     server: {
       host: '0.0.0.0',
+      allowedHosts: ["ggirick.site", "www.ggirick.site"],
     },
     resolve: {
         alias: {

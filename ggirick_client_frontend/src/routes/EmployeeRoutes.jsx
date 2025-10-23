@@ -34,7 +34,7 @@ export default function EmployeeRoutes() {
             ></Route>
             <Route
                 path="/mail"
-                element={<>mail</>}
+                element={<MailPage/>}
             ></Route>
             <Route
                 path="/address"

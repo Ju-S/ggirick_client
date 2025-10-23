@@ -21,9 +21,9 @@ public class FileUtil {
     @Value("${spring.cloud.gcp.storage.bucket}")
     private String bucketName;
 
-    // 파일 업로드(실제 저장된 파일명을 반환
-    public String fileUpload(String oriName, MultipartFile file) throws Exception {
-        String sysName = UUID.randomUUID() + "_" + oriName;
+    // 파일 업로드(실제 저장된 파일명을 반환)
+    public String fileUpload(String oriName, String path, MultipartFile file) throws Exception {
+        String sysName = path + UUID.randomUUID() + "_" + oriName;
         BlobInfo blobInfo =
                 BlobInfo.newBuilder(BlobId.of(bucketName, sysName))
                         .setContentType(file.getContentType())
@@ -40,5 +40,23 @@ public class FileUtil {
     public byte[] fileDownload(String sysName) {
         Blob blob = storage.get(bucketName, sysName);
         return blob.getContent();
+    }
+
+    // 폴더 삭제
+    public void deleteFolder(String folderName) {
+        // folderName 예: "board/images" 또는 "board/images/"
+        String prefix = folderName.endsWith("/") ? folderName : folderName + "/";
+
+        Iterable<Blob> blobs = storage.list(bucketName, Storage.BlobListOption.prefix(prefix)).iterateAll();
+
+        for (Blob blob : blobs) {
+            storage.delete(blob.getBlobId());
+        }
+    }
+
+    // 파일 삭제
+    public void deleteFile(String sysName) {
+        BlobId blobId = BlobId.of(bucketName, sysName);
+        storage.delete(blobId);
     }
 }

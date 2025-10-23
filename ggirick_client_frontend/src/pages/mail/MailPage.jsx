@@ -1,15 +1,23 @@
 import MailSidebar from "../../components/mail/MailSidebar.jsx";
-import MailList from "../../components/mail/MailList.jsx";
+
+import MailMain from "@/components/mail/MailMain.jsx";
 
 
 export default function MailPage() {
-    return (<div className="flex h-screen p-4 pt-20 md:ml-64 bg-gray-50">
-            {/* 메일 사이드바*/}
-            <MailSidebar />
+    return (
+      <main className="min-h-screen max-h-screen flex flex-col p-4 pt-20 md:ml-64 bg-base-200">
+        <div className="flex-1 grid grid-cols-6 gap-4 ">
+          {/* ------------------- 사이드 네비게이션 ------------------- */}
+          <aside
+            className="col-span-1 rounded-lg">
+            <MailSidebar/>
+          </aside>
 
-            {/* 메일 리스트 공간*/}
-            <MailList />
-
+          {/* ------------------- 메인 영역 ------------------- */}
+          <section className="col-span-5 rounded-lg">
+            <MailMain />
+          </section>
         </div>
+      </main>
     );
 }
