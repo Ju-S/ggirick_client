@@ -11,7 +11,7 @@
 
     <!-- 결재문서 파일 목록 조회 -->
     <select id="getListByApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalFilesDTO">
-        SELECT * FROM approval_files WHERE board_id=#{approvalId}
+        SELECT * FROM approval_files WHERE approval_id=#{approvalId}
     </select>
 
     <!-- 결재문서 파일 조회 -->

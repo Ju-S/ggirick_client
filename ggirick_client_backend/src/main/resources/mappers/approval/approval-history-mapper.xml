@@ -8,9 +8,19 @@
         SELECT * FROM approval_history WHERE approval_id=#{approvalId} ORDER BY recorded_at DESC
     </select>
 
+    <!-- assigner와 approvalId를 가지는 결재기록 조회 -->
+    <select id="getByAssignerAndApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO">
+        SELECT * FROM approval_history WHERE approval_id=#{approvalId} AND assigner=#{userId}
+    </select>
+
     <!-- 결재 변경이력 기록 -->
     <insert id="insert">
         INSERT INTO approval_history(id, approval_id, assigner, content, type_id, recorded_at)
-        VALUES(approval_history_seq.nextval, #{approvalId}, #{assigner}, #{content}, #{typeId}, sysdate)
+        VALUES(approval_history_seq.nextval, #{approvalId}, #{assigner}, #{contents}, #{typeId}, sysdate)
     </insert>
+
+    <!-- 결재 기록 취소(삭제) -->
+    <delete id="deleteByApprovalIdAndAssigner">
+        DELETE FROM approval_history WHERE approval_id=#{approvalId} AND assigner=#{userId}
+    </delete>
 </mapper>

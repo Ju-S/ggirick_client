@@ -2,9 +2,10 @@ package com.kedu.ggirick_client_backend.controllers.approval;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
+import com.kedu.ggirick_client_backend.dto.approval.ApprovalFilesDTO;
+import com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO;
-import com.kedu.ggirick_client_backend.services.approval.ApprovalLineService;
-import com.kedu.ggirick_client_backend.services.approval.ApprovalService;
+import com.kedu.ggirick_client_backend.services.approval.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -12,7 +13,9 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/approval")
@@ -20,12 +23,34 @@ import java.util.List;
 public class ApprovalController {
     private final ApprovalService approvalService;
     private final ApprovalLineService approvalLineService;
+    private final ApprovalFilesService approvalFilesService;
+    private final ApprovalHistoryService approvalHistoryService;
+    private final ApprovalProcessService approvalProcessService;
 
     // 결재 목록 조회
     // 사용자가 상신한 결재문서, 승인했던 결재문서, 반려했던 결재문서, 승인했지만 위에서 반려당한 결재문서, 결재해야할 문서를 조회
     @GetMapping
     public ResponseEntity<List<ApprovalDTO>> getList(@AuthenticationPrincipal UserTokenDTO userInfo) {
         return ResponseEntity.ok(approvalService.getList(userInfo.getId()));
+    }
+
+    // 결재 문서 상세 조회
+    @GetMapping("/{approvalId}")
+    public ResponseEntity<Map<String, Object>> getItem(@PathVariable int approvalId,
+                                                       @AuthenticationPrincipal UserTokenDTO userInfo) {
+        Map<String, Object> response = new HashMap<>();
+
+        ApprovalDTO approvalInfo = approvalService.getById(approvalId);
+        List<ApprovalFilesDTO> approvalFilesList = approvalFilesService.getListByApprovalId(approvalId);
+        List<ApprovalHistoryDTO> approvalHistoryList = approvalHistoryService.getListByApprovalId(approvalId);
+        List<ApprovalLineDTO> approvalLineList = approvalLineService.getList(approvalId);
+
+        response.put("approvalInfo", approvalInfo);
+        response.put("approvalFilesList", approvalFilesList);
+        response.put("approvalHistoryList", approvalHistoryList);
+        response.put("approvalLineList", approvalLineList);
+
+        return ResponseEntity.ok(response);
     }
 
     // 결재 문서 작성
@@ -36,8 +61,7 @@ public class ApprovalController {
                                        @RequestPart(value = "files", required = false) List<MultipartFile> files,
                                        @AuthenticationPrincipal UserTokenDTO userInfo) throws Exception {
         approvalInfo.setWriter(userInfo.getId());
-        approvalService.insert(approvalInfo, files);
-        approvalLineService.insert(approvalLineInfoList);
+        approvalProcessService.processInsertApproval(approvalInfo, files, approvalLineInfoList);
         return ResponseEntity.ok().build();
     }
 
@@ -49,17 +73,8 @@ public class ApprovalController {
                                        @RequestPart(value = "files", required = false) List<MultipartFile> files,
                                        @PathVariable int approvalId,
                                        @AuthenticationPrincipal UserTokenDTO userInfo) throws Exception {
-        ApprovalDTO selectedApproval = approvalService.getById(approvalId);
-
-        if (selectedApproval.getWriter().equals(userInfo.getId())
-                && selectedApproval.getTypeId() == 3) {
-            approvalInfo.setId(approvalId);
-            approvalService.update(approvalInfo, files);
-            approvalLineService.deleteByApprovalId(approvalId);
-            approvalLineService.insert(approvalLineInfoList);
-            return ResponseEntity.ok().build();
-        }
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        approvalProcessService.processUpdateApproval(approvalInfo, files, approvalLineInfoList, approvalId, userInfo.getId());
+        return ResponseEntity.ok().build();
     }
 
 
@@ -71,7 +86,8 @@ public class ApprovalController {
         ApprovalDTO selectedApproval = approvalService.getById(approvalId);
 
         if (selectedApproval.getWriter().equals(userInfo.getId())
-                && selectedApproval.getTypeId() == 3) {
+                && selectedApproval.getAssignedAt() == null
+                && (selectedApproval.getTypeId() == null || selectedApproval.getTypeId() == 3)) {
             approvalService.delete(approvalId);
             return ResponseEntity.ok().build();
         }
@@ -80,6 +96,7 @@ public class ApprovalController {
 
     @ExceptionHandler
     public ResponseEntity<Void> error(Exception e) {
+        e.printStackTrace();
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 }

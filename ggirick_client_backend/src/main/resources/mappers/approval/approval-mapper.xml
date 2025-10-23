@@ -57,6 +57,11 @@
         UPDATE approval SET title=#{title}, content=#{content}, updated_at=sysdate WHERE id=#{id}
     </update>
 
+    <!-- 결재문서 상태 수정 -->
+    <update id="updateType">
+        UPDATE approval SET type_id=#{typeId}, assigned_at=sysdate WHERE id=#{id}
+    </update>
+
     <!-- 결재문서 삭제 -->
     <delete id="delete">
         DELETE FROM approval WHERE id=#{id}

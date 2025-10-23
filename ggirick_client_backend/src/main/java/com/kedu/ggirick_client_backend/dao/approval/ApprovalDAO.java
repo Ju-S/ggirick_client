@@ -6,6 +6,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
@@ -33,6 +34,11 @@ public class ApprovalDAO {
     // 결재 문서 수정
     public void update(ApprovalDTO approvalInfo) {
         mybatis.update("Approval.update", approvalInfo);
+    }
+
+    // 결재 문서 상태 수정
+    public void updateType(Map<String, Object> params) {
+        mybatis.update("Approval.updateType", params);
     }
 
     // 결재 문서 삭제

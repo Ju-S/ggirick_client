@@ -34,4 +34,9 @@ public class ApprovalFilesService {
             }
         }
     }
+
+    // approvalId에 따른 파일 목록 조회
+    public List<ApprovalFilesDTO> getListByApprovalId(int approvalId) {
+        return approvalFilesDAO.getListByApprovalId(approvalId);
+    }
 }
