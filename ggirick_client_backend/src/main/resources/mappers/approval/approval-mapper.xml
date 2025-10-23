@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Approval">
+    <!-- 사용자가 상신한 결재문서, 승인했던 결재문서, 반려했던 결재문서, 승인했지만 위에서 반려당한 결재문서, 결재해야할 문서를 조회 -->
+    <select id="getList" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO">
+        SELECT DISTINCT a.*
+        FROM approval a
+        JOIN (
+        SELECT al.approval_id,
+        al.assigner,
+        al.next_assigner,
+        LEVEL AS lvl
+        FROM approval_line al
+        START WITH al.assigner IS NULL
+        CONNECT BY PRIOR al.next_assigner = al.assigner
+        AND PRIOR al.approval_id = al.approval_id
+        ) lineage
+        ON lineage.approval_id = a.id
+        WHERE (
+        a.writer = #{userId}
+        OR (
+        lineage.assigner = #{userId}
+        AND EXISTS (
+        SELECT 1
+        FROM approval_history ah
+        WHERE ah.approval_id = lineage.approval_id
+        AND ah.assigner = (
+        SELECT assigner
+        FROM approval_line
+        WHERE approval_id = lineage.approval_id
+        AND next_assigner = #{userId}
+        )
+        AND (ah.recorded_at between a.updated_at and sysdate OR a.updated_at is null)
+        )));
+    </select>
+
+    <!-- 파일업로드를 위한 selectKey -->
+    <insert id="insert">
+        INSERT INTO approval(id, title, writer, content, created_at)
+        VALUES(approval_seq.nextval, #{title}, #{writer}, #{content}, sysdate)
+        <selectKey keyProperty="id" resultType="int" order="AFTER">
+            SELECT approval_seq.currval FROM dual
+        </selectKey>
+    </insert>
+</mapper>

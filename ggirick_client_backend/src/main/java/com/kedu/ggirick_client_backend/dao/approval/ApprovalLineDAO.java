@@ -1,0 +1,11 @@
+package com.kedu.ggirick_client_backend.dao.approval;
+
+import lombok.RequiredArgsConstructor;
+import org.mybatis.spring.SqlSessionTemplate;
+import org.springframework.stereotype.Repository;
+
+@Repository
+@RequiredArgsConstructor
+public class ApprovalLineDAO {
+    private final SqlSessionTemplate mybatis;
+}
