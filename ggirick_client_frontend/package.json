@@ -12,6 +12,11 @@
     "format:check": "prettier . --check"
   },
   "dependencies": {
+    "@blocknote/core": "^0.41.1",
+    "@blocknote/mantine": "^0.41.1",
+    "@blocknote/react": "^0.41.1",
+    "@emoji-mart/data": "^1.2.1",
+    "@emoji-mart/react": "^1.1.1",
     "@floating-ui/react": "^0.27.16",
     "@fullcalendar/daygrid": "^6.1.19",
     "@fullcalendar/interaction": "^6.1.19",
@@ -23,6 +28,7 @@
     "axios": "^1.12.2",
     "daisyui": "^5.3.3",
     "date-fns": "^4.1.0",
+    "flowbite": "^3.1.2",
     "flowbite-react": "^0.12.4",
     "lodash.throttle": "^4.1.1",
     "lucide-react": "^0.546.0",

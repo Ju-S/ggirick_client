@@ -48,3 +48,27 @@
 .fc-event {
     @apply bg-primary text-primary-content border-none rounded-md px-1 py-0.5;
 }
+
+
+.bn-editor {
+    @apply bg-base-100
+}
+
+.bn-inline-content {
+    @apply text-base-content hover:bg-base-200;
+
+}
+.bn-visual-media-wrapper{
+    @apply border-base-300
+}
+
+
+pre .bn-inline-content{
+
+    @apply text-white;
+    /* DaisyUI에서 사용하는 방식으로 가정: (h s l) 값이 변수에 들어있음 */
+}
+
+.bn-inline-content input-checkbox{
+
+}

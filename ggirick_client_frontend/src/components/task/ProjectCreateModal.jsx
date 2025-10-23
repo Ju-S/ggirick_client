@@ -33,6 +33,7 @@ export default function ProjectCreateModal({ open, onClose }) {
             return false;
         }
         return true;
+
     };
 
     // 제출 핸들러

@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import BaseModal from "@/components/common/BaseModal.jsx";
 import { getHrMetaStructureAPI } from "@/api/common/employeeMetaAPI.js";
 
-export default function OrganizationMemberPickerModal({
+export default function OrganizationMemberModal({
                                                           open,
                                                           onClose,
                                                           title = "조직도에서 멤버 선택",

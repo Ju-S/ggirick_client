@@ -1,8 +1,12 @@
 import {Route, Routes} from "react-router-dom";
+import AddressPage from "../pages/address/AddressPage.jsx";
+import "flowbite/dist/flowbite.css";
 import BoardRoutes from "./BoardRoutes.jsx";
 import Dashboard from "@/pages/dashboard/Dashboard.jsx";
 import ReservationPage from "@/pages/reservation/ReservationPage.jsx";
 import TaskPage from "@/pages/task/TaskPage.jsx";
+import ChatPage from "@/pages/chat/ChatPage.jsx";
+import MailPage from "@/pages/mail/MailPage.jsx";
 
 export default function EmployeeRoutes() {
     return (
@@ -31,15 +35,15 @@ export default function EmployeeRoutes() {
             ></Route>
             <Route
                 path="/mail"
-                element={<>mail</>}
+                element={<MailPage/>}
             ></Route>
             <Route
                 path="/address"
-                element={<>address</>}
+                element={<AddressPage/>}
             ></Route>
             <Route
                 path="/chat"
-                element={<>chat</>}
+                element={<ChatPage/>}
             ></Route>
             <Route
                 path="/videomeeting"

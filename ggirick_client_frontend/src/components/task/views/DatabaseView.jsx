@@ -26,18 +26,18 @@ export const DatabaseView = () => {
 
 
             <tbody className="divide-y divide-base-300">
-            {selectedProject.tasks.map((task) => {
+            {selectedProject.tasks.map((task, index) => {
               const dueDate = new Date(task.endedAt);
               const today = new Date();
               const isOverdue = dueDate < today && task.status !== "완료";
 
               return (
                 <tr
-                  key={task.id}
+                  key={index}
                   className="hover:bg-base-200 transition-colors"
                 >
                   <td className="px-4 py-4 font-mono text-xs text-base-content/60 font-medium">
-                    {task.id}
+                    {index+1}
                   </td>
 
                   <td className="px-4 py-4 font-medium text-base-content">
@@ -52,8 +52,7 @@ export const DatabaseView = () => {
                           || task.assignee.charAt(0)
                         }
                       </div>
-                      <span className="text-base-content/80">{ selectedProject.members.find(m => m.employeeId === task.assignee)?.name
-                        || task.assignee
+                      <span className="text-base-content/80">{selectedProject.members.find((m) => m.employeeId === task.assignee)?.name || "사용자가 없거나 탈주했습니다"
                          }</span>
                     </div>
                   </td>
