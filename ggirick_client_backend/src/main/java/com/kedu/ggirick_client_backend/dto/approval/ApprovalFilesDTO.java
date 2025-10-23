@@ -2,18 +2,14 @@ package com.kedu.ggirick_client_backend.dto.approval;
 
 import lombok.*;
 
-import java.sql.Timestamp;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ApprovalHistoryDTO {
+public class ApprovalFilesDTO {
     private int id;
+    private String name;
+    private String url;
     private int approvalId;
-    private String assigner;
-    private String contents;
-    private int typeId;
-    private Timestamp recordedAt;
 }

@@ -3,4 +3,28 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="ApprovalLine">
+    <!-- 결재선 생성 -->
+    <insert id="insert">
+        INSERT INTO approval_line(id, approval_id, assigner, next_assigner)
+        VALUES(approval_line_seq.nextval, #{approvalId}, #{assigner}, #{nextAssigner})
+    </insert>
+
+    <!-- 결재선 조회 -->
+    <!-- 트리구조로 순서대로 출력하면 됨 -->
+    <select id="getListByApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO">
+        SELECT assigner FROM (SELECT DISTINCT
+        al.assigner,
+        LEVEL AS lvl
+        FROM approval_line al
+        WHERE al.approval_id = #{approvalId}
+        START WITH al.assigner IS NULL
+        CONNECT BY PRIOR al.next_assigner = al.assigner
+        ORDER BY lvl) WHERE lvl > 1;
+    </select>
+
+    <!-- 결재선 삭제 -->
+    <!-- 결재문서에 관한 모든 결재선을 삭제하고 수정된 결재선으로 재생성할 예정 -->
+    <delete id="deleteByApprovalId">
+        DELETE FROM approval_line WHERE approval_id=#{approval_id}
+    </delete>
 </mapper>

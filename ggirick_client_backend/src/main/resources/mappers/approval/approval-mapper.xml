@@ -33,7 +33,13 @@
         AND next_assigner = #{userId}
         )
         AND (ah.recorded_at between a.updated_at and sysdate OR a.updated_at is null)
-        )));
+        )))
+        ORDER BY a.created_at DESC
+    </select>
+
+    <!-- 개별 결재문서 조회 -->
+    <select id="getById" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO">
+        SELECT * FROM approval WHERE id=#{id}
     </select>
 
     <!-- 파일업로드를 위한 selectKey -->
@@ -44,4 +50,15 @@
             SELECT approval_seq.currval FROM dual
         </selectKey>
     </insert>
+
+    <!-- 결재문서 수정 -->
+    <!-- 결재문서 수정일을 기록하여 결재기록을 초기화시키기 위함 -->
+    <update id="update">
+        UPDATE approval SET title=#{title}, content=#{content}, updated_at=sysdate WHERE id=#{id}
+    </update>
+
+    <!-- 결재문서 삭제 -->
+    <delete id="delete">
+        DELETE FROM approval WHERE id=#{id}
+    </delete>
 </mapper>
