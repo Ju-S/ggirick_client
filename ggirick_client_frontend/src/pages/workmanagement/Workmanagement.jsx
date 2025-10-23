@@ -39,7 +39,7 @@ export default function WorkDashboard() {
     const day = dayNames[today.getDay()];
 
     const listRef = useRef(null);
-    const handleCheck = (type) => setStatus(type);
+    const handleCheck = (type) => setLogs(type);
 
     useEffect(() => {
         if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
@@ -69,7 +69,7 @@ export default function WorkDashboard() {
 
     // ✅ 주간 근무현황 API 호출
     useEffect(() => {
-        const fetchWeeklyLogs = async () => {
+        const getWeeklyLogs = async () => {
             const startDate = currentWeekStart.toISOString().split("T")[0];
             const endDate = new Date(currentWeekStart.getTime() + 6 * 86400000)
                 .toISOString()
@@ -83,7 +83,7 @@ export default function WorkDashboard() {
             }
         };
 
-        fetchWeeklyLogs();
+        getWeeklyLogs();
     }, [currentWeekStart]);
 
     return (
@@ -165,6 +165,17 @@ export default function WorkDashboard() {
                                 <div className="flex justify-center gap-4 mb-4">
                                     <button className="btn btn-soft btn-primary text-primary hover:text-white" onClick={() => handleCheck("출근")}>출근하기</button>
                                     <button className="btn btn-soft btn-secondary text-secondary hover:text-white" onClick={() => handleCheck("퇴근")}>퇴근하기</button>
+                                </div>
+                                <div className="flex justify-center gap-2 mb-3">
+                                    {["업무", "외출", "회의", "외근"].map((label) => (
+                                        <button
+                                            key={label}
+                                            className="btn btn-outline btn-xs"
+                                            onClick={() => handleCheck(label)}
+                                        >
+                                            {label}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
