@@ -6,6 +6,7 @@ import Dashboard from "@/pages/dashboard/Dashboard.jsx";
 import ReservationPage from "@/pages/reservation/ReservationPage.jsx";
 import TaskPage from "@/pages/task/TaskPage.jsx";
 import ChatPage from "@/pages/chat/ChatPage.jsx";
+import MailPage from "@/pages/mail/MailPage.jsx";
 
 export default function EmployeeRoutes() {
     return (
