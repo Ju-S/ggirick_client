@@ -55,6 +55,19 @@
             <version>3.0.5</version>
         </dependency>
 
+        <!-- MailServer -->
+        <!-- Spring Boot 기본 메일 지원 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-mail</artifactId>
+        </dependency>
+
+        <!-- Jakarta Mail (메일 송수신 프로토콜용) -->
+        <dependency>
+            <groupId>com.sun.mail</groupId>
+            <artifactId>jakarta.mail</artifactId>
+            <version>2.0.1</version>
+        </dependency>
 
 
         <dependency>
