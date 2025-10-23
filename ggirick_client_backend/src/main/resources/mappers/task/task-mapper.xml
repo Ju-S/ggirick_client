@@ -16,10 +16,13 @@
             resultType="com.kedu.ggirick_client_backend.dto.task.ProjectDTO">
         SELECT p.id,
                p.name,
+            p.created_by,
+            e.name as createdByEmployeeName,
                p.description
         FROM task_project p
                  INNER JOIN task_project_member m
                             ON p.id = m.project_id
+                 JOIN employee e ON e.id = p.created_by
         WHERE m.employee_id = #{employeeId}
         ORDER BY p.created_at DESC
     </select>

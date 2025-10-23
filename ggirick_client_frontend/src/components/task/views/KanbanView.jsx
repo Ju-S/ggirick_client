@@ -2,6 +2,7 @@ import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { useState } from "react";
 import TaskClickMenu from "../TaskClickMenu.jsx";
 import useTaskProjectStore from "@/store/task/useTaskProjectStore.js";
+import {getTagsFromTask} from "@/utils/task/getTagsFromTask.js";
 
 export default function KanbanView() {
   const {
@@ -72,6 +73,7 @@ export default function KanbanView() {
 
                 <div className="min-h-[100px] space-y-3">
                   {colTasks.map((task, index) => (
+
                     <Draggable key={task.id} draggableId={String(task.id)} index={index}>
                       {(provided, snapshot) => (
                         <div
@@ -87,12 +89,17 @@ export default function KanbanView() {
                           }}
                         >
                           <p className="text-sm font-medium">{task.title}</p>
+
                           <div className="text-base-content/70 mt-1 flex items-center justify-between text-xs">
                             <div>
-                              {selectedProject.members.find((m) => m.employeeId === task.assignee)?.name || task.assignee}
+                              {selectedProject.members.find((m) => m.employeeId === task.assignee)?.name || "사용자가 없거나 탈주했습니다"}
+
                             </div>
-                            <span>{task.due}</span>
+
+                            <span>{task.startedAt} ~ {task.endedAt}</span>
+
                           </div>
+
 
                           <TaskClickMenu
                             task={task}

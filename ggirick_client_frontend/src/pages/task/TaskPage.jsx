@@ -46,7 +46,7 @@ export default function TaskPage() {
             }
         };
 
-        loadProjects();
+        loadProjects()
     }, []);
 
     //  프로젝트 선택 갱신
@@ -76,10 +76,6 @@ export default function TaskPage() {
                 프로젝트 데이터를 불러오는 중입니다...
             </div>
         );
-    }
-
-    if (!selectedProject) {
-        return <div className="flex h-screen items-center justify-center text-gray-400">프로젝트를 선택 중입니다...</div>;
     }
 
     // 🔹 에러 상태
@@ -116,6 +112,9 @@ export default function TaskPage() {
         );
     }
 
+    if (!selectedProject) {
+        return <div className="flex h-screen items-center justify-center text-gray-400">프로젝트를 선택 중입니다...</div>;
+    }
 
     // 🔹 뷰 렌더링 함수
     const renderView = () => {
@@ -149,6 +148,7 @@ export default function TaskPage() {
                         <div>
                             <h1 className="text-2xl font-bold" onClick={() => setProjectInfoModalOpen(true)}>{selectedProject.name}</h1>
                             <p className="text-sm opacity-80 mt-1">{selectedProject.description}</p>
+                            <p className="text-sm opacity-80 mt-1">프로젝트 주인: {selectedProject.createdByEmployeeName} </p>
                         </div>
 
                         <div className="flex items-center gap-6 text-sm">
