@@ -2,7 +2,7 @@ import { useState } from "react";
 import useEmployeeStore from "../../store/employee/employeeStore.js";
 import useAuthStore from "../../store/auth/authStore.js";
 
-import ggirickLogo from "../../assets/logo/ggirick-header.png";
+import GgirickLogo from '@/assets/logo/ggirick-header.svg?react';
 
 import LoginInputForm from "../../components/auth/LoginInputForm.jsx";
 import {useNavigate} from "react-router-dom";
@@ -55,7 +55,7 @@ export function LoginPage() {
 
     return (
         <div className="min-h-screen flex flex-col items-center justify-center bg-base-200">
-            <img src={ggirickLogo} alt="회사 로고" className="w-40 mb-8" />
+            <GgirickLogo alt="회사 로고" className="w-40 mb-8" />
 
             <div className="card w-96 bg-base-100 shadow-xl">
                 <div className="card-body">
