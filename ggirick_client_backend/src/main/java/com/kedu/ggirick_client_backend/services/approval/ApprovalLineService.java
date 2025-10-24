@@ -4,6 +4,7 @@ import com.kedu.ggirick_client_backend.dao.approval.ApprovalLineDAO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +21,7 @@ public class ApprovalLineService {
     }
 
     // 결재선 insert
+    @Transactional
     public void insert(List<ApprovalLineDTO> approvalLineList, int approvalId) {
         for (ApprovalLineDTO approvalLine : approvalLineList) {
             approvalLine.setApprovalId(approvalId);

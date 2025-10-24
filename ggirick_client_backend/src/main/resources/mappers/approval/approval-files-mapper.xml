@@ -5,7 +5,7 @@
 <mapper namespace="ApprovalFiles">
     <!-- 결재문서 파일 등록 -->
     <insert id="insert">
-        INSERT INTO approval_files(id, name, url, board_id)
+        INSERT INTO approval_files(id, name, url, approval_id)
         VALUES (approval_files_seq.nextval, #{name}, #{url}, #{approvalId})
     </insert>
 

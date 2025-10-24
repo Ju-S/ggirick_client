@@ -10,12 +10,18 @@
 
     <!-- assigner와 approvalId를 가지는 결재기록 조회 -->
     <select id="getByAssignerAndApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO">
-        SELECT * FROM approval_history WHERE approval_id=#{approvalId} AND assigner=#{userId}
+        SELECT * FROM approval_history
+        WHERE approval_id=#{approvalId} AND
+        assigner=#{userId} AND
+        recorded_at between
+        (SELECT updated_at FROM approval WHERE id=#{approvalId})
+        AND
+        sysdate
     </select>
 
     <!-- 결재 변경이력 기록 -->
     <insert id="insert">
-        INSERT INTO approval_history(id, approval_id, assigner, content, type_id, recorded_at)
+        INSERT INTO approval_history(id, approval_id, assigner, contents, type_id, recorded_at)
         VALUES(approval_history_seq.nextval, #{approvalId}, #{assigner}, #{contents}, #{typeId}, sysdate)
     </insert>
 

@@ -15,8 +15,8 @@ public class ApprovalDAO {
 
     // 결재 문서 목록 조회
     // 사용자가 상신한 결재문서, 승인했던 결재문서, 반려했던 결재문서, 승인했지만 위에서 반려당한 결재문서, 결재해야할 문서를 조회
-    public List<ApprovalDTO> getList(String userId) {
-        return mybatis.selectList("Approval.getList", userId);
+    public List<ApprovalDTO> getList(Map<String, Object> params) {
+        return mybatis.selectList("Approval.getList", params);
     }
 
     // 결재 문서 개별 조회

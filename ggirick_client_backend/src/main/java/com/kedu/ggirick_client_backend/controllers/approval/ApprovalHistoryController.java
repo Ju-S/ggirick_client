@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/approval/{approvalId}/history")
 @RequiredArgsConstructor
 public class ApprovalHistoryController {
-    private final ApprovalHistoryService approvalHistoryService;
     private final ApprovalProcessService approvalProcessService;
 
     // 결재 상태 변경
@@ -29,6 +28,7 @@ public class ApprovalHistoryController {
             approvalProcessService.processApproval(approvalHistoryInfo, userInfo.getId());
             return ResponseEntity.ok().build();
         } catch (Exception e) {
+            e.printStackTrace();
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
     }

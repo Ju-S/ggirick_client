@@ -21,4 +21,14 @@ public class ApprovalFilesDAO {
     public List<ApprovalFilesDTO> getListByApprovalId(int approvalId) {
         return mybatis.selectList("ApprovalFiles.getListByApprovalId", approvalId);
     }
+
+    // 파일 개별 조회
+    public ApprovalFilesDTO getFileById(int id) {
+        return mybatis.selectOne("ApprovalFiles.getFileById", id);
+    }
+
+    // 파일 삭제
+    public void delete(int id) {
+        mybatis.delete("ApprovalFiles.delete", id);
+    }
 }

@@ -5,6 +5,9 @@
 <mapper namespace="Approval">
     <!-- 사용자가 상신한 결재문서, 승인했던 결재문서, 반려했던 결재문서, 승인했지만 위에서 반려당한 결재문서, 결재해야할 문서를 조회 -->
     <select id="getList" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO">
+        SELECT * FROM (
+        SELECT ROWNUM AS rnum, data.*
+        FROM (
         SELECT DISTINCT a.*
         FROM approval a
         JOIN (
@@ -32,9 +35,50 @@
         WHERE approval_id = lineage.approval_id
         AND next_assigner = #{userId}
         )
-        AND (ah.recorded_at between a.updated_at and sysdate OR a.updated_at is null)
-        )))
+        AND (ah.recorded_at BETWEEN a.updated_at AND SYSDATE OR a.updated_at IS NULL)
+        )
+        )
+        )
+
+        <!-- 결재함(box)에 따른 조건 -->
+        <choose>
+            <when test="box == 1">
+                AND a.type_id is null     <!-- 결재대기 -->
+            </when>
+            <when test="box == 2">
+                AND a.type_id = 1    <!-- 승인완료 -->
+            </when>
+            <when test="box == 3">
+                AND a.type_id = 2    <!-- 반려함 -->
+            </when>
+            <!-- box == 0이면 전체 -->
+        </choose>
+
+        <!-- 검색 필터 -->
+        <if test="searchQuery != null and searchQuery != ''">
+            <choose>
+                <when test="searchFilter == 0">
+                    AND (a.title LIKE '%' || #{searchQuery} || '%'
+                    OR a.content LIKE '%' || #{searchQuery} || '%'
+                    OR a.writer LIKE '%' || #{searchQuery} || '%')
+                </when>
+                <when test="searchFilter == 1">
+                    AND a.title LIKE '%' || #{searchQuery} || '%'
+                </when>
+                <when test="searchFilter == 2">
+                    AND a.writer LIKE '%' || #{searchQuery} || '%'
+                </when>
+                <when test="searchFilter == 3">
+                    AND a.content LIKE '%' || #{searchQuery} || '%'
+                </when>
+            </choose>
+        </if>
+
         ORDER BY a.created_at DESC
+        ) data
+        WHERE ROWNUM &lt;= #{to}
+        )
+        WHERE rnum &gt;= #{from}
     </select>
 
     <!-- 개별 결재문서 조회 -->
@@ -44,8 +88,8 @@
 
     <!-- 파일업로드를 위한 selectKey -->
     <insert id="insert">
-        INSERT INTO approval(id, title, writer, content, created_at)
-        VALUES(approval_seq.nextval, #{title}, #{writer}, #{content}, sysdate)
+        INSERT INTO approval(id, title, writer, content, created_at, doc_type_code)
+        VALUES(approval_seq.nextval, #{title}, #{writer}, #{content}, sysdate, #{docTypeCode})
         <selectKey keyProperty="id" resultType="int" order="AFTER">
             SELECT approval_seq.currval FROM dual
         </selectKey>
