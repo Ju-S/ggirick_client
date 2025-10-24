@@ -21,7 +21,7 @@ export default function GanttView() {
         <div className="space-y-4">
           {ganttTasks.map((task) => {
             const progress =
-              task.status === "완료" ? 100 : task.status === "진행 중" ? 50 : 0;
+              task.logs === "완료" ? 100 : task.logs === "진행 중" ? 50 : 0;
             const isOverdue = task.daysLeft < 0;
             const isUrgent = task.daysLeft >= 0 && task.daysLeft < 3;
 
@@ -47,9 +47,7 @@ export default function GanttView() {
                   {/* Task Info */}
                   <div className="flex-1">
                     <p className="font-medium text-base-content">{task.title}</p>
-                    <p className="text-sm text-base-content/70 mt-1"> <div>    {
-                      selectedProject.members.find(m => m.employeeId === task.assignee)?.name
-                      || task.assignee // 혹시 매칭 안 되면 employee_id 그대로 보여줌
+                    <p className="text-sm text-base-content/70 mt-1"> <div>    {selectedProject.members.find((m) => m.employeeId === task.assignee)?.name || "사용자가 없거나 탈주했습니다"
                     }</div></p>
                   </div>
 
@@ -74,7 +72,7 @@ export default function GanttView() {
 
                 {/* Status Info */}
                 <div className="flex justify-between mt-2">
-                  <span className="text-xs text-base-content/70">{task.status}</span>
+                  <span className="text-xs text-base-content/70">{task.logs}</span>
                   <span className="text-xs font-medium text-base-content">
                     {progress}%
                   </span>

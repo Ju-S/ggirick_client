@@ -2,6 +2,7 @@ import { DragDropContext, Draggable, Droppable } from "@hello-pangea/dnd";
 import { useState } from "react";
 import TaskClickMenu from "../TaskClickMenu.jsx";
 import useTaskProjectStore from "@/store/task/useTaskProjectStore.js";
+import {getTagsFromTask} from "@/utils/task/getTagsFromTask.js";
 
 export default function KanbanView() {
   const {
@@ -15,9 +16,9 @@ export default function KanbanView() {
   if (!selectedProject) return <div className="p-6">프로젝트 선택</div>;
 
   const getColumns = (tasks) => ({
-    "할 일": tasks.filter((t) => t.status === "할 일"),
-    "진행 중": tasks.filter((t) => t.status === "진행 중"),
-    "완료": tasks.filter((t) => t.status === "완료"),
+    "할 일": tasks.filter((t) => t.logs === "할 일"),
+    "진행 중": tasks.filter((t) => t.logs === "진행 중"),
+    "완료": tasks.filter((t) => t.logs === "완료"),
   });
 
   const onDragEnd = async (result) => {
@@ -26,7 +27,7 @@ export default function KanbanView() {
 
     const updatedTasks = selectedProject.tasks.map((task) =>
       String(task.id) === result.draggableId
-        ? { ...task, status: destination.droppableId }
+        ? { ...task, logs: destination.droppableId }
         : task
     );
 
@@ -35,7 +36,7 @@ export default function KanbanView() {
 
     try {
       const movedTask = updatedTasks.find((t) => String(t.id) === result.draggableId);
-      await updateTaskStatus(movedTask.id, movedTask.status);
+      await updateTaskStatus(movedTask.id, movedTask.logs);
     } catch (err) {
       console.error("업데이트 실패, 롤백", err);
 
@@ -72,6 +73,7 @@ export default function KanbanView() {
 
                 <div className="min-h-[100px] space-y-3">
                   {colTasks.map((task, index) => (
+
                     <Draggable key={task.id} draggableId={String(task.id)} index={index}>
                       {(provided, snapshot) => (
                         <div
@@ -87,12 +89,17 @@ export default function KanbanView() {
                           }}
                         >
                           <p className="text-sm font-medium">{task.title}</p>
+
                           <div className="text-base-content/70 mt-1 flex items-center justify-between text-xs">
                             <div>
-                              {selectedProject.members.find((m) => m.employeeId === task.assignee)?.name || task.assignee}
+                              {selectedProject.members.find((m) => m.employeeId === task.assignee)?.name || "사용자가 없거나 탈주했습니다"}
+
                             </div>
-                            <span>{task.due}</span>
+
+                            <span>{task.startedAt} ~ {task.endedAt}</span>
+
                           </div>
+
 
                           <TaskClickMenu
                             task={task}

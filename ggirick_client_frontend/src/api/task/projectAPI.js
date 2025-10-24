@@ -1,9 +1,7 @@
 import api from "../common/apiInterceptor.js";
 import apiRoutes from "../common/apiRoutes.js";
 
-export function fetchAvailableMembersAPI(){
 
-};
 
 export function updateProjectAPI(projectId, data){
     api({

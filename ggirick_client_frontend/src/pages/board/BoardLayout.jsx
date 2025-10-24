@@ -1,10 +1,20 @@
 import BoardSidebar from "@/components/board/BoardSidebar.jsx";
-import Dropdown from "daisyui/components/dropdown/index.js";
-import {TextInput} from "flowbite-react";
-import Pagination from "@/components/board/Pagination.jsx";
-import {useState} from "react";
+import {useEffect} from "react";
+import useBoardGroupStore from "@/store/board/boardGroupStore.js";
 
 export default function BoardLayout({children}) {
+    const loading = useBoardGroupStore(state => state.loading);
+    const initGroupList = useBoardGroupStore(state => state.init);
+
+    useEffect(() => {
+        initGroupList();
+    }, []);
+
+    if (loading) {
+        return (
+            <div>loading...</div>
+        );
+    }
 
     return (
         <main className="min-h-screen max-h-screen flex flex-col p-4 pt-20 md:ml-64 bg-base-200">

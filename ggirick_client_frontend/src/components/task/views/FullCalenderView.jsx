@@ -45,7 +45,7 @@ export default function FullCalenderView() {
         projectId: selectedProject.id,
         assignee: "EMP001",
         assigner: "EMP001",
-        status: "할 일",
+        logs: "할 일",
         priority: "medium",
         description: "설명 없음",
         file: "",
@@ -96,7 +96,7 @@ export default function FullCalenderView() {
             className={`text-white px-2 py-1 rounded text-sm font-medium ${getPriorityColor(
               arg.event.extendedProps.priority
             )}`}
-            title={`Assignee: ${arg.event.extendedProps.assignee}\nStatus: ${arg.event.extendedProps.status}`}
+            title={`Assignee: ${arg.event.extendedProps.assignee}\nStatus: ${arg.event.extendedProps.logs}`}
           >
             {arg.event.title}
           </div>

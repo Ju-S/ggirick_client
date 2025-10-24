@@ -15,7 +15,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
     title: "",
     projectId: "",
     assignee: "",
-    status: "할 일",
+    logs: "할 일",
     priority: "medium",
     startedAt: "",
     endedAt: "",
@@ -47,7 +47,7 @@ export default function TaskDrawer({ open, onClose, selectedTask, mode = "create
         title: "",
         projectId: selectedProjectId,
         assignee: "",
-        status: "할 일",
+        logs: "할 일",
         priority: "medium",
         startedAt: "",
         endedAt: "",
@@ -127,20 +127,13 @@ const validateForm = () => {
 
 
       if (mode === "create") {
-          const success=  await createTask(finalTask);
-
-        alert("작업이 성공적으로 생성되었습니다!");
-          if (success) {
-              onClose();
-          }
+          await createTask(finalTask);
+          onClose();
 
       } else if (mode === "edit") {
 
-          const success= await updateTask(selectedTask.id, finalTask);
-        alert("작업이 성공적으로 수정되었습니다!");
-          if (success) {
-              onClose();
-          }
+          await updateTask(selectedTask.id, finalTask);
+          onClose();
 
       }
 
@@ -208,7 +201,7 @@ const validateForm = () => {
           <label className="block text-sm font-medium mb-1">상태</label>
           <select
             name="status"
-            value={task.status}
+            value={task.logs}
             className="select select-bordered w-full bg-base-100"
             onChange={handleChange}
           >

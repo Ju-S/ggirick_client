@@ -32,7 +32,7 @@ export default function ReservationCalendarTab() {
     extendedProps: {
       description: item.description,
       createdBy: item.createdBy,
-      status: item.status,
+      logs: item.logs,
       employeeId: item.employeeId,
         fullReservationData: item
     }

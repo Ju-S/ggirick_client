@@ -15,9 +15,14 @@ public class BoardDAO {
     private final SqlSessionTemplate mybatis;
 
     // 게시글 목록 조회
-    // searchParams는 to, from을 필수로 가지고 searchQuery를 선택적으로 가진다.
+    // searchParams는 to, from을 필수로 가지고 searchQuery, searchFilter를 선택적으로 가진다.
     public List<BoardDTO> getList(Map<String, Object> searchParams) {
         return mybatis.selectList("Board.getList", searchParams);
+    }
+
+    // 공지글 목록 조회
+    public List<BoardDTO> getNotificationList(int groupId) {
+        return mybatis.selectList("Board.getNotificationList", groupId);
     }
 
     // 단일 게시글 조회

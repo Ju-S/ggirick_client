@@ -3,55 +3,24 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="BoardFile">
-    <!-- (to, from) 페이징 게시글 목록 게시 순서대로 select (검색을 위한 필터 설정 - title, writer) -->
-    <!-- board_group_id에 대한 설정까지 필요 -->
-    <select id="getList" resultType="com.kedu.ggirick_client_backend.dto.board.BoardDTO">
-        SELECT b.*, e.name FROM board b
-        JOIN employee e ON b.writer = e.id
-        WHERE b.id = #{id}
-    </select>
-
-    <!-- 선택된 게시글의 내용 select -->
-    <select id="getById" resultType="com.kedu.ggirick_client_backend.dto.board.BoardDTO">
-        SELECT b.*, e.name FROM board b
-        JOIN employee e ON b.writer = e.id
-        WHERE b.id = #{id}
-    </select>
-
-    <!-- 총 게시물의 갯수 조회 -->
-    <select id="getBoardCount" resultType="Long">
-        SELECT count(*) FROM board
-        WHERE board_group_id = #{boardGroupId}
-        <if test="searchQuery != null and searchQuery != ''">
-            AND
-            (title like '%'||#{searchQuery}||'%' OR
-            writer like '%'||#{searchQuery}||'%' OR
-            contents like '%'||#{searchQuery}||'%')
-        </if>
-    </select>
-
-    <!-- 게시글 등록 -->
-    <!-- 파일 등록을 위한 selectKey -->
-    <insert id="posting">
-        INSERT INTO board(id, writer, title, contents, board_group_id)
-        VALUES (board_seq.nextval, #{writer}, #{title}, #{contents}, #{boardGroupId})
-        <selectKey resultType="int" keyProperty="id" order="AFTER">
-            select board_seq.currval from dual
-        </selectKey>
+    <!-- 게시글 파일 등록 -->
+    <insert id="insert">
+        INSERT INTO board_file(id, name, url, board_id)
+        VALUES (board_file_seq.nextval, #{name}, #{url}, #{boardId})
     </insert>
 
-    <!-- 게시글 삭제 -->
-    <delete id="deleteById">
-        DELETE FROM board WHERE id = #{id}
+    <!-- 게시글 파일 목록 조회 -->
+    <select id="getListByBoardId" resultType="com.kedu.ggirick_client_backend.dto.board.BoardFileDTO">
+        SELECT * FROM board_file WHERE board_id=#{boardId}
+    </select>
+
+    <!-- 게시글 파일 목록 조회 -->
+    <select id="getFileById" resultType="com.kedu.ggirick_client_backend.dto.board.BoardFileDTO">
+        SELECT * FROM board_file WHERE id=#{id}
+    </select>
+
+    <!-- 게시글 파일 삭제 -->
+    <delete id="delete">
+        DELETE FROM board_file WHERE id=#{id}
     </delete>
-
-    <!-- 게시글 수정(제목, 내용만 수정 가능) -->
-    <update id="updateById">
-        UPDATE board SET title = #{title}, contents = #{contents} WHERE id = #{id}
-    </update>
-
-    <!-- 게시글 조회수 증가 -->
-    <update id="increaseViewCount">
-        UPDATE board SET view_count = view_count+1 WHERE id = #{id}
-    </update>
 </mapper>
