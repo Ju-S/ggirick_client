@@ -1,155 +1,184 @@
-import React, { useState } from "react";
+import React, {useCallback, useEffect, useRef} from "react";
 import ChatInput from "./ChatInput";
-import "@blocknote/mantine/style.css";
 import {Message} from "@/components/chat/Message.jsx";
-
+import useChatStore from "../../store/chat/useChatStore.js";
+import { debounce } from "lodash";
+import {useChatWebSocket} from "@/hooks/chat/useChatWebSocket.js";
 
 export default function ChatRoom() {
-  const [messages, setMessages] = useState([
-    {
-        id:1001,
-        senderId: 1,
-      senderName: "Alice",
-      type:"user",
-      content: [
-        { type: "paragraph", content: [{ type: "text", text: "헤이, " }] },
-        { type: "paragraph", content: [{ type: "text", text: "프로젝트 진행이 얼마나 되었어 bro!" }] },
-      ],
-      time: "10:12 AM",
-      like:3,
-      viewer:["Alice","Bob","Chocolate","Dab"],
-        reactions: [
-            { emoji: "👍", users: ["Bob", "Chocolate"] },
-            { emoji: "🔥", users: ["Dab"] },
-        ],
-    },
-    { id:1002,
-        senderId: 2,
-      type: "user",
-        senderName: "You", content: [
-        { type: "paragraph", content: [{ type: "text", text: "나는 능이버섯이다 🍄" }] },
 
-      ],
-      time: "10:14 AM",
-        viewer:["Alice","Bob","Chocolate","Dab"],
-        like:0,
-      isMine: true },
-    {id:1003,
-        senderId: 1,
-        senderName: "Alice",
-      type:"user",
-      content: [
-        { type: "heading", content: [{ type: "text", text: "헤이 헤이!" }] },
-      ],
-      time: "10:15 AM",
-      like:7,  viewer:["Alice","Bob","Chocolate"],
-    },
-    {  id: 1004,
-        type: "system",
-        subtype: "user_left",
-        text: "Charlie님이 채팅에서 나갔습니다.",
-        time: "10:15 AM",
-        relatedUsers: ["Charlie"],
-        relatedChannel: "general",
-        metadata: {
-            reason: "inactive",
-            roleChanged: "admin",
-         }
-        },
-  ]);
+    const {
+        messages,
+        loading,
+        setLoading,
+        addMessage,
+        selectedWorkspace,
+        selectedChannel,
+        selectedChannelMember,
+        fetchOldMessages,
+        hasMoreMessages
+    } = useChatStore();
 
-  const handleSendMessage = (newContent) => {
-    const newMessage = {
-        senderId: 2,
-      sender: "You",
-      type:"user",
-      content: newContent,
-        like:0,
-        viewer:[],
-      time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+
+    //역무한 스크롤 감지용
+    const containerRef = useRef(null);
+    const topRef = useRef(null);
+    const bottomRef = useRef(null);
+
+    const { sendMessage } = useChatWebSocket(
+        selectedWorkspace?.id,
+        selectedChannel?.id,
+        (msg) => addMessage(msg)
+    );
+
+
+
+    useEffect(() => {
+        if (!containerRef.current || messages.length === 0) return;
+
+        const lastReadId = sessionStorage.getItem(`lastRead_${selectedChannel.id}`);
+        if (lastReadId) {
+            const node = containerRef.current.querySelector(`[data-msg-id="${lastReadId}"]`);
+            if (node) {
+                node.scrollIntoView({ behavior: "auto" });
+            }
+        } else {
+            // 처음 입장 → 맨 아래로
+            bottomRef.current.scrollIntoView({ behavior: "auto" });
+        }
+
+    }, [messages, selectedChannel]);
+
+
+    const loadOlderMessages = async () => {
+        if (loading ||  !hasMoreMessages) return;
+        setLoading(true);
+
+        const container = containerRef.current;
+        const oldScrollHeight = container.scrollHeight;
+
+        await fetchOldMessages(); // zustand 함수
+
+        // 스크롤 위치 유지
+        container.scrollTop = container.scrollHeight - oldScrollHeight;
+
+        setLoading(false);
     };
-    setMessages((prev) => [...prev, newMessage]);
-  };
 
-    const handleAddReaction = (messageId, emoji) => {
-        setMessages((prev) =>
-            prev.map((msg) => {
-                if (msg.id !== messageId) return msg;
+    const handleIntersect = useCallback(
+        debounce((entries) => {
+            console.log("위에 닿음")
+            if (entries[0].isIntersecting && !loading) {
+                loadOlderMessages();
+            }
+        }, 300),
+        [loadOlderMessages, loading]
+    );
 
-                // 이미 존재하는 반응인지 확인
-                const existing = msg.reactions?.find((r) => r.emoji === emoji);
-                if (existing) {
-                    // 이미 있으면 users에 추가 (중복 방지)
-                    return {
-                        ...msg,
-                        reactions: msg.reactions.map((r) =>
-                            r.emoji === emoji
-                                ? {
-                                    ...r,
-                                    users: [...new Set([...r.users, "You"])],
-                                }
-                                : r
-                        ),
-                    };
-                }
-                console.log(messages)
+    useEffect(() => {
+        if (!containerRef.current || !topRef.current) return;
 
-                // 새 반응 추가
-                return {
-                    ...msg,
-                    reactions: [...(msg.reactions || []), { emoji, users: ["You"] }],
-                };
-            })
+        const observer = new IntersectionObserver(handleIntersect, {
+            root: containerRef.current,
+            threshold: 0.1,
+        });
+
+        observer.observe(topRef.current);
+
+        return () => observer.disconnect();
+    }, [handleIntersect]);
+
+
+    const handleScroll = () => {
+        if (!containerRef.current) return;
+        const messagesNodes = containerRef.current.querySelectorAll("[data-msg-id]");
+        let lastVisibleId = null;
+
+        for (let node of messagesNodes) {
+            const rect = node.getBoundingClientRect();
+            if (rect.top < containerRef.current.getBoundingClientRect().bottom) {
+                lastVisibleId = node.dataset.msgId;
+            }
+        }
+
+        if (lastVisibleId) {
+            sessionStorage.setItem(`lastRead_${selectedChannel.id}`, lastVisibleId);
+        }
+    };
+
+    if (!selectedWorkspace|| !selectedChannel) {
+        return (
+            <div className="flex-1 flex items-center justify-center text-gray-500">
+                워크스페이스와 채널을 선택해주세요.
+            </div>
         );
-    };
+    }
 
-  return (
-    <main className="flex flex-1 flex-col bg-base-200 text-base-content">
-      <header className="flex items-center justify-between  bg-primary p-4">
-        <div>
-          <h2 className="text-lg font-semibold text-primary-content"># general</h2>
-          <p className="text-sm text-primary-content/60">일반 대화방입니다</p>
-        </div>
-          <button className="text-sm text-primary-content hover:underline">
-              View Members
-          </button>
-      </header>
 
-      {/* 메시지 영역 */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((msg) => (
-          msg.type === "user" ? (
-            <div>
-              <div className="flex items-start space-x-3">
-                <img
-                  src={`https://flowbite.com/docs/images/people/profile-picture-${msg.senderId}.jpg`}
-                  className="h-8 w-8 rounded-full"
-                  alt={msg.senderName}
-                />
-                <Message key={msg.id}
-                         msg={msg}
-                         like={msg.like}
-                         viewer={msg.viewer}
-                         reactions ={ msg.reactions}
-                         onAddReaction={handleAddReaction}/>
+    return (
+        <main className="flex flex-1 flex-col bg-base-200 text-base-content">
+            {/* 메시지 영역 */}
+            <div  ref={containerRef}
+                  onScroll={handleScroll}
+                    className="flex-1 overflow-y-auto p-4 space-y-4">
+                <div ref={topRef}></div> {/* 맨 위 감지용 */}
+                {/* 로딩 컴포넌트 */}
+                {loading && messages.length === 0 && (
+                    <div className="abosolute inset-0 flex items-center justify-center bg-base-200 z-50">
 
-              </div>
+                        <progress className="progress w-56 progress-primary" value="40" max="100"></progress>
+                    </div>
+                )}
+                {/* 로딩 컴포넌트 */}
+                {loading && (
+                    <div className="text-center py-4 text-gray-500 flex-none sticky top-0 bg-base-100 border-b border-base-200">
+                        <svg className="animate-spin h-5 w-5 text-primary-500 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        이전 메시지를 불러오는 중...
+                    </div>
+                )}
+                {!hasMoreMessages && (
+                    <div className="text-center text-sm text-base-content-100">
+                        더 불러올 메시지가 없습니다.
+                    </div>
+                )}
 
+                {messages.map((msg) =>
+                    msg.type === "user" ? (
+                        <div key={msg.id} data-msg-id={msg.id} className="flex items-start space-x-3">
+                            <img
+                                src={
+                                    selectedChannelMember.find(
+                                        (member) => member.employeeId === msg.senderId
+                                    )?.profileUrl || "https://flowbite.com/docs/images/people/profile-picture-1.jpg"
+                                }
+                                className="h-8 w-8 rounded-full"
+                                alt={msg.senderName}
+                            />
+                            <Message
+                                msg={msg}
+                                like={msg.like}
+                                viewer={msg.viewer}
+                                reactions={msg.reactions}
+                                sendMessage={sendMessage}
+                            />
+                        </div>
+                    ) : (
+                        <div
+                            key={msg.id}
+                            className="text-center text-xs text-base-content/50 italic"
+                        >
+                            {msg.text}
+                        </div>
+                    )
+                )}
+                <div ref={bottomRef}></div>
             </div>
-          ):(
-            <div
-              key={msg.id}
-              className="text-center text-xs text-base-content/50 italic"
-            >
-              {msg.text}
-            </div>
-          )
 
-        ))}
-      </div>
-
-      {/* 채팅 입력창 */}
-      <ChatInput onSend={handleSendMessage} />
-    </main>
-  );
+            {/* 입력창 */}
+            <ChatInput onSend={sendMessage}   />
+        </main>
+    );
 }

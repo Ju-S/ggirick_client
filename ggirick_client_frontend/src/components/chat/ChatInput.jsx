@@ -7,9 +7,14 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/style.css";
 import "@blocknote/mantine/style.css";
 import { ko } from "@blocknote/core/locales";
+import chatAPI from "@/api/chat/chatAPI.js";
+import useChatStore from "@/store/chat/useChatStore.js";
 
-export default function ChatInput({ onSend }) {
-  const [content, setContent] = useState([]);
+export default function ChatInput({onSend}) {
+
+    const {sendMessage} = useChatStore();
+
+    const [content, setContent] = useState([]);
   const editor = useCreateBlockNote({
     initialContent: [{ type: "paragraph", content: [] }],
     dictionary: {
@@ -38,10 +43,22 @@ export default function ChatInput({ onSend }) {
       alert("채팅을 입력해주세요");
       return;
     }
-    onSend(content);
-    console.log(JSON.stringify(editor.document));
-    editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
-  };
+
+      try {
+
+          onSend({
+              type: "user",
+              content: editor.document
+          });
+          editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
+
+
+      } catch (err) {
+          console.error("메시지 전송 실패:", err);
+      }
+    };
+
+
 
   return (
     <div className="border-t bg-base-100 p-4">
@@ -51,33 +68,16 @@ export default function ChatInput({ onSend }) {
         </label>
         <div className="flex items-center rounded-lg bg-base-100/50 px-3 py-2">
 
-          {/* 이모지 버튼 */}
-          <button
-            type="button"
-            className="cursor-pointer rounded-lg p-2 text-base-content/60 hover:bg-base-200 hover:text-base-content"
-          >
-            <svg
-              className="h-5 w-5"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                stroke="currentColor"
-                d="M13.408 7.5h.01m-6.876 0h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM4.6 11a5.5 5.5 0 0 0 10.81 0H4.6Z"
-              />
-            </svg>
-            <span className="sr-only">Add emoji</span>
-          </button>
-
           {/* 입력창 */}
-          <BlockNoteView
-            id="chat"
-            editor={editor}
-            className="mx-4 block w-full rounded-lg border border-base-300 bg-base-100 text-base-content p-2.5 text-sm placeholder:text-base-content/50 focus:border-primary focus:ring-primary"
 
-          ></BlockNoteView>
+               <div className="chat-input w-full h-full">
+                   <BlockNoteView
+                       id="chat"
+                       editor={editor}
+                       className="w-full h-full p-2.5 text-sm placeholder:text-base-content/50 focus:outline-none"
+                   />
+
+               </div>
 
           {/* 전송 버튼 */}
           <button

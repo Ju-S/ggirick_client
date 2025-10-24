@@ -1,24 +1,37 @@
-import React from "react";
+import React, {useEffect, useState} from "react";
+import useChatStore from "@/store/chat/useChatStore.js";
+import WorkspaceCreateModal from "@/components/chat/WorkspaceCreateModal.jsx";
 
 export default function SidebarWorkspaces() {
-  return (
-    <aside className="w-0 md:w-20 bg-base-200 flex flex-col items-center py-4 text-base-content shadow-md">
-      {/* 워크스페이스 로고 */}
-      <div className="font-bold text-lg mb-6">WS</div>
+    const { workspaces, fetchWorkspaces, selectWorkspace } = useChatStore();
+    const [modalOpen, setModalOpen] = useState(false);
+    useEffect(() => {
+        fetchWorkspaces();
+    }, []);
 
-      {/* 아바타/채널 아이콘 */}
-      <div className="flex flex-col space-y-4">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-primary text-primary-content hover:bg-primary-focus cursor-pointer">
-          A
-        </div>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-secondary text-secondary-content hover:bg-secondary-focus cursor-pointer">
-          B
-        </div>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-accent text-accent-content hover:bg-accent-focus cursor-pointer">
-          +
-        </div>
-      </div>
-    </aside>
-
-  );
+    return (
+        <>
+            <aside className="w-20 bg-base-200 flex flex-col items-center py-4">
+                {workspaces.map((ws) => (
+                    <div
+                        key={ws.id}
+                        className="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center cursor-pointer mb-2"
+                        onClick={() => selectWorkspace(ws)}
+                    >
+                        {ws.name[0]}
+                    </div>
+                ))}
+                <div
+                    className="w-10 h-10 rounded-full bg-accent text-accent-content flex items-center justify-center cursor-pointer mb-2"
+                    onClick={()=>setModalOpen(true)}
+                >
+                    +
+                </div>
+            </aside>
+            <WorkspaceCreateModal
+                open={modalOpen}
+                onClose={() => setModalOpen(false)}
+            />
+        </>
+    );
 }
