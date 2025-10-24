@@ -40,6 +40,7 @@ public class ApprovalController {
                                                        @RequestParam(defaultValue = "", required = false) String searchQuery,
                                                        @AuthenticationPrincipal UserTokenDTO userInfo) {
         Map<String, Object> response = new HashMap<>();
+        // box = 0(전체), 1(대기), 2(승인), 3(반려) 보관함 선택
         List<ApprovalDTO> approvalList = approvalService.getList(userInfo.getId(), currentPage, box, searchFilter, searchQuery);
 
         response.put("approvalList", approvalList);

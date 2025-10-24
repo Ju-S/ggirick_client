@@ -17,6 +17,7 @@
         (SELECT updated_at FROM approval WHERE id=#{approvalId})
         AND
         sysdate
+        ORDER BY recorded_at DESC
     </select>
 
     <!-- 결재 변경이력 기록 -->

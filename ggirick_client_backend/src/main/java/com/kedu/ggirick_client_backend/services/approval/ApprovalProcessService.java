@@ -33,10 +33,12 @@ public class ApprovalProcessService {
 
         // 조회된 approval_line의 assigner와 approvalId에 해당하는 approval_history를 조회
         // 조회된 내용이 있거나 approval_line의 assigner가 null인 경우, 결재 상태 변경
+        // 단, 조회된 내용의 type_id가 CANCLE(취소)상태라면 결재 상태 변경을 허용하지 않는다
         // 조회 시, 대리결재자가 있을 수 있으므로 List로 조회하여 비교
         for (ApprovalLineDTO approvalLine : approvalLineList) {
             if (approvalLine.getAssigner() == null ||
-                    approvalHistoryService.getByAssignerAndApprovalId(approvalLine.getAssigner(), approvalHistoryInfo.getApprovalId()) != null) {
+                    (approvalHistoryService.getByAssignerAndApprovalId(approvalLine.getAssigner(), approvalHistoryInfo.getApprovalId()) != null &&
+                            approvalHistoryService.getByAssignerAndApprovalId(approvalLine.getAssigner(), approvalHistoryInfo.getApprovalId()).getTypeId() != TYPE_CANCEL)) {
                 approvalHistoryInfo.setAssigner(userId);
                 approvalHistoryService.insert(approvalHistoryInfo);
 
@@ -56,7 +58,7 @@ public class ApprovalProcessService {
 
                             // 문서 승인 후, 문서 종류에 따라 다른 로직 수행
                             // TODO: 문서 종류에 대한 처리 - config/ApprovalConfig에 정의
-                            switch(approvalService.getById(approvalHistoryInfo.getApprovalId()).getDocTypeCode()) {
+                            switch (approvalService.getById(approvalHistoryInfo.getApprovalId()).getDocTypeCode()) {
                                 case DOC_TYPE_CONTACT -> {
                                     break;
                                 }
