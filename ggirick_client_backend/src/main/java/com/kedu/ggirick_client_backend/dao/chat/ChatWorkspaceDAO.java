@@ -7,7 +7,10 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Repository
 
@@ -21,8 +24,11 @@ public class ChatWorkspaceDAO {
     }
 
     //해당 워크 스페이스 안에 있는 채널 목록 가져오기
-    public List<ChatChannelDTO> selectChannelsByWorkspaceId(Long workspaceId) {
-        return mybatis.selectList("ChatWorkspaceChannel.selectChannelsByWorkspaceId",workspaceId);
+    public List<ChatChannelDTO> selectChannelsByWorkspaceId(Long workspaceId, String userId) {
+        Map<String,Object> map = new HashMap<>();
+        map.put("workspaceId",workspaceId);
+        map.put("userId",userId);
+        return mybatis.selectList("ChatWorkspaceChannel.selectChannelsByWorkspaceId",map);
     }
 
     //워크스페이스 만들기
@@ -45,5 +51,26 @@ public class ChatWorkspaceDAO {
     //워크스페이스 멤버 가져오기
     public List<ChatWorkspaceMemberDTO> getMembers(Long workspaceId) {
         return mybatis.selectList("ChatWorkspaceChannel.selectWorkspaceMembers", workspaceId);
+    }
+
+
+    public void updateWorkspaceParticipantLeftAt(ChatWorkspaceMemberDTO dto) {
+        mybatis.update("ChatWorkspaceChannel.updateWorkspaceParticipantLeftAt", dto);
+    }
+
+    public void insertorUpdateWorkspaceMember(ChatWorkspaceMemberDTO dto) {
+        int updated = mybatis.update("ChatWorkspaceChannel.restoreWorkspaceParticipantIfExists", dto);
+        if(updated==0){
+            mybatis.insert("ChatWorkspaceChannel.insertWorkspaceMember", dto);
+        }
+    }
+    /*
+    workspace 안의 해당 타입 채널 수 세기
+     */
+    public int countChannelsByWorkspaceIdAndNotType(Long workspaceId, int excludedTypeId) {
+        Map<String,Object> map = new HashMap<>();
+        map.put("workspaceId",workspaceId);
+        map.put("excludedTypeId",excludedTypeId);
+        return mybatis.selectOne("ChatWorkspaceChannel.countChannelsByWorkspaceIdAndNotType", map);
     }
 }

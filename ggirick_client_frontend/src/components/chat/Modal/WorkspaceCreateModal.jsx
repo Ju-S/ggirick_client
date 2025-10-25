@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import BaseModal from "@/components/common/BaseModal.jsx";
 import useChatStore from "@/store/chat/useChatStore.js";
+import chatAPI from "@/api/chat/chatAPI.js";
 
 export default function WorkspaceCreateModal({ open, onClose }) {
-    const { createWorkspace, isLoading } = useChatStore();
+    const { fetchWorkspaces, workspaces, isLoading } = useChatStore();
     const [form, setForm] = useState({ name: "" });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -37,10 +38,17 @@ export default function WorkspaceCreateModal({ open, onClose }) {
         if (!validateForm()) return;
 
         setSubmitting(true);
-        const success = await createWorkspace(form); // useChatStore에 구현 필요
+
+        console.log(form);
+        const success = await chatAPI.createWorkspace(form); // useChatStore에 구현 필요
+
         setSubmitting(false);
 
-        if (success) onClose();
+        if (success) {
+
+            onClose();
+            await fetchWorkspaces();
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -61,7 +69,7 @@ export default function WorkspaceCreateModal({ open, onClose }) {
                         value={form.name}
                         onChange={handleChange}
                         onKeyDown={handleKeyDown}
-                        className="w-full border border-base-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full bg-base-100 text-base-content border border-base-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="예: 개발팀"
                         disabled={submitting || isLoading}
                     />

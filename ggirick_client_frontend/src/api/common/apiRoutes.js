@@ -447,6 +447,29 @@ const apiRoutes = {
         }),
 
         /**
+         * 워크스페이스 생성
+         */
+        createWorkspace: () =>( {
+            url: `/workspace`,
+            method: "POST",
+        }),
+
+        /**
+         * 채널 생성
+         */
+        createChannel: (workspaceId) =>( {
+            url: `/workspace/${workspaceId}/channels`,
+            method: "POST",
+        }),
+        /**
+         * 채널 제목 정보 수정
+         */
+        updateChannel: (workspaceId,channelId) =>( {
+            url: `/workspace/${workspaceId}/channels/${channelId}`,
+            method: "PATCH",
+        }),
+
+        /**
          * 워크스페이스 목록 조회
          */
         listWorkspaces: () => ({
@@ -477,8 +500,49 @@ const apiRoutes = {
             url: `/workspace/${workspaceId}/channels/${channelId}/members`,
             method: "GET",
         }),
+        /**
+         * 채널 참가자 싱크 수정
+         */
+        syncChannelMembers: (workspaceId,channelId) => ({
+            url:`/workspace/${workspaceId}/channels/${channelId}/members`,
+            method:"POST"
+        }),
+        /**
+         * 워크스페이스 참가자 싱크 수정
+         */
+        syncWorkspaceMembers: (workspaceId) => ({
+            url:`/workspace/${workspaceId}/members`,
+            method:"POST"
+        }),
+        /**
+         * DM 채널 조회하거나 생성
+         */
+        directChannel: (workspaceId)  =>({
+            url:`workspace/${workspaceId}/dm`,
+            method:"POST"
+        }),
 
+    },
+    file: {
+        /**
+         * 파일 업로드 API<br>
+         * POST /file/upload?folder={path}<br>
+         * body: MultipartFile<br>
+         * response: {url: string}
+         */
+        upload: (folder) => ({
+            url: `/file/upload?folder=${folder}`,
+            method: "POST",
+        }),
 
+        /**
+         * 파일 삭제 API<br>
+         * DELETE /file/{sysName}<br>
+         */
+        delete: (sysName) => ({
+            url: `/file/${sysName}`,
+            method: "DELETE",
+        }),
     },
 };
 

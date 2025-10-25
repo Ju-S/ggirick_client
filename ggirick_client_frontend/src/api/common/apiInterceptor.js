@@ -1,5 +1,5 @@
 import axios from "axios";
-const BASE_URL = "http://10.5.5.1:8081";
+const BASE_URL = "http://192.168.45.172:8081";
 // const BASE_URL = "http://10.5.5.7:8081";
 // const BASE_URL = "http://192.168.0.8:8081"
 // const BASE_URL = "http://10.5.5.8:8081";

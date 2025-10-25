@@ -19,16 +19,22 @@
     </select>
 
     <!-- 워크스페이스 아이디로 채널 가져오기 -->
-    <select id="selectChannelsByWorkspaceId" parameterType="long" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO">
+    <select id="selectChannelsByWorkspaceId" parameterType="map" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO">
         SELECT
         c.ID AS id,
         c.WORKSPACE_ID AS workspaceId,
         c.NAME AS name,
+        c.DESCRIPTION AS description,
+        c.CREATED_AT AS createdAt,
         t.TYPE AS type
         FROM CHAT_CHANNEL c
         LEFT JOIN CHAT_CHANNEL_TYPE t ON c.TYPE_ID = t.ID
+        INNER JOIN CHAT_CHANNEL_PARTICIPANT p
+        ON c.ID = p.CHANNEL_ID
+        AND p.EMPLOYEE_ID = #{userId}
+        AND p.LEFT_AT IS NULL
         WHERE c.WORKSPACE_ID = #{workspaceId}
-        ORDER BY c.ID ASC
+        ORDER BY c.CREATED_AT ASC
     </select>
     <!--  워크스페이스 만들기 -->
     <insert id="createWorkspace" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceDTO" >
@@ -36,8 +42,8 @@
             SELECT chat_workspace_seq.nextval FROM dual
         </selectKey>
 
-        INSERT INTO CHAT_WORKSPACE (ID, NAME, CREATED_BY, CREATED_AT)
-        VALUES (#{id}, #{name}, #{createdBy}, SYSTIMESTAMP)
+        INSERT INTO CHAT_WORKSPACE (ID, NAME, CREATED_BY,description, CREATED_AT)
+        VALUES (#{id}, #{name}, #{createdBy},#{description}, SYSTIMESTAMP)
     </insert>
     <!-- 채널 만들기 -->
     <insert id="createChannel" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO">
@@ -45,16 +51,49 @@
             SELECT chat_channel_seq.nextval FROM dual
         </selectKey>
 
-        INSERT INTO CHAT_CHANNEL (ID, WORKSPACE_ID, NAME, TYPE_ID)
-        VALUES (#{id}, #{workspaceId}, #{name}, #{typeId})
+        INSERT INTO CHAT_CHANNEL (ID, WORKSPACE_ID, NAME, TYPE_id,description,created_at)
+        VALUES (#{id}, #{workspaceId}, #{name}, #{typeId}, #{description}, SYSTIMESTAMP)
     </insert>
+
+    <!-- 채널 단일 조회 -->
+    <select id="selectChannelById" parameterType="long" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO">
+        SELECT *
+        FROM CHAT_CHANNEL
+        WHERE id = #{channelId}
+    </select>
+
+    <!-- 채널 정보 업데이트 -->
+    <update id="updateChannel" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO">
+        UPDATE CHAT_CHANNEL
+        SET name = #{name},
+        description = #{description}
+        WHERE id = #{id}
+    </update>
 
     <!-- 채널 참여자 추가 -->
     <insert id="insertChannelParticipant" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelParticipantDTO" useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO CHAT_CHANNEL_PARTICIPANT (CHANNEL_ID, EMPLOYEE_ID, JOINED_AT)
-        VALUES (#{channelId}, #{employeeId}, sysdate)
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT chat_channel_participant_seq.nextval FROM dual
+        </selectKey>
+        INSERT INTO CHAT_CHANNEL_PARTICIPANT (id, CHANNEL_ID, EMPLOYEE_ID, JOINED_AT)
+        VALUES (#{id},#{channelId}, #{employeeId}, sysdate)
     </insert>
+    <!-- 채널 참여자 나갔다가 다시 들어오게 만들기 (left_at을 null로) -->
+    <update id="restoreParticipantIfExists" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelParticipantDTO">
+        UPDATE CHAT_CHANNEL_PARTICIPANT
+        SET left_at = NULL
+        WHERE channel_id = #{channelId}
+        AND EMPLOYEE_ID = #{employeeId}
+        AND left_at IS NOT NULL
+    </update>
+    <!-- 채널 퇴장 처리 -->
+    <update id="updateParticipantLeftAt" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceMemberDTO">
+        UPDATE CHAT_CHANNEL_PARTICIPANT
+        SET LEFT_AT = sysdate
+        WHERE EMPLOYEE_ID = #{employeeId}
+        and channel_id = #{channelId}
 
+    </update>
     <!-- 채널 참여자 조회 -->
     <select id="selectChannelParticipantsByChannelId"
             parameterType="long"
@@ -71,6 +110,7 @@
         JOIN employee e
         ON e.id = p.EMPLOYEE_ID
         WHERE p.CHANNEL_ID = #{channelId}
+        AND p.left_at IS NULL
     </select>
 
     <!---해당 아이디가 속한 채널 목록인지 조회 -->
@@ -81,6 +121,36 @@
         WHERE p.EMPLOYEE_ID = #{userId}
         AND p.LEFT_AT IS NULL
     </select>
+
+
+    <!-- 워크스페이스 멤버 추가 -->
+
+    <insert id="insertWorkspaceMember" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceMemberDTO">
+        <selectKey keyProperty="id" resultType="long" order="BEFORE">
+            SELECT chat_workspace_member_seq.nextval FROM dual
+        </selectKey>
+        INSERT INTO chat_workspace_member(ID, workspace_id, employee_id, role_id, joined_at)
+        VALUES(#{id}, #{workspaceId}, #{employeeId}, #{roleId}, sysdate)
+    </insert>
+
+    <!-- 워크스페이스 참가자 복원 (left_at이 존재하면 null로) -->
+    <update id="restoreWorkspaceParticipantIfExists" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceMemberDTO">
+        UPDATE CHAT_WORKSPACE_MEMBER
+        SET LEFT_AT = NULL
+        WHERE WORKSPACE_ID = #{workspaceId}
+        AND EMPLOYEE_ID = #{employeeId}
+        AND LEFT_AT IS NOT NULL
+    </update>
+
+    <!-- 워크스페이스 참가자 퇴장 처리 -->
+    <update id="updateWorkspaceParticipantLeftAt" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceMemberDTO">
+        UPDATE CHAT_WORKSPACE_MEMBER
+        SET LEFT_AT = sysdate
+        WHERE WORKSPACE_ID = #{workspaceId}
+        AND EMPLOYEE_ID = #{employeeId}
+        AND LEFT_AT IS NULL
+    </update>
+
 
 
     <!-- 워크스페이스 멤버 조회 -->
@@ -94,19 +164,42 @@
         e.name AS name,
         e.profile_url as profileUrl,
         wsm.role_id AS roleId,
-        wsm.joined_at AS joinedAt
+        wsm.joined_at AS joinedAt,
+        wsm.left_at AS leftAt
         FROM chat_workspace_member wsm
         JOIN employee e
         ON e.id = wsm.employee_id
         WHERE wsm.workspace_id = #{workspaceId}
+        AND LEFT_AT IS NULL
         ORDER BY wsm.joined_at ASC
+
     </select>
 
-
-    <!-- 채널 퇴장 처리 -->
-    <update id="updateParticipantLeftAt" parameterType="map">
-        UPDATE CHAT_CHANNEL_PARTICIPANT
-        SET LEFT_AT = sysdate
-        WHERE EMPLOYEE_ID = #{employeeId}
-    </update>
+    <!-- 존재하는 1:1 DM 채널 조회 -->
+    <select id="findExistDMChannel" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO" parameterType="map">
+        SELECT c.*,t.TYPE AS type
+        FROM CHAT_CHANNEL c
+        LEFT JOIN CHAT_CHANNEL_TYPE t ON c.TYPE_ID = t.ID
+        WHERE c.type_id = 3
+        AND c.workspace_id = #{workspaceId}
+        AND c.id IN (
+        SELECT channel_id
+        FROM CHAT_CHANNEL_PARTICIPANT
+        WHERE employee_id IN (#{employeeId1}, #{employeeId2})
+        GROUP BY channel_id
+        HAVING COUNT(DISTINCT employee_id) = 2
+        )
+        AND NOT EXISTS (
+        SELECT 1
+        FROM CHAT_CHANNEL_PARTICIPANT p2
+        WHERE p2.channel_id = c.id
+        AND p2.employee_id NOT IN (#{employeeId1}, #{employeeId2})
+        )
+    </select>
+    <select id="countChannelsByWorkspaceIdAndNotType" parameterType="map" resultType="int">
+        SELECT COUNT(*)
+        FROM chat_channel
+        WHERE workspace_id = #{workspaceId}
+        AND type_id != #{excludedTypeId}
+    </select>
 </mapper>

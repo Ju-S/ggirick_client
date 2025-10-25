@@ -12,6 +12,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static com.kedu.ggirick_client_backend.config.ChatConfig.initialChatMessageSize;
+
 @Repository
 public class ChatDAO {
     @Autowired
@@ -29,6 +31,7 @@ public class ChatDAO {
         Map<String,Object> map = new HashMap<>();
         map.put("workspaceId", workspaceId);
         map.put("channelId", channelId);
+        map.put("offset", initialChatMessageSize);
         return mybatis.selectList("Chat.selectMessagesByChannel",map);
     }
 

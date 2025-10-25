@@ -103,7 +103,7 @@ export default function TaskPage() {
                     </div>
                 </main>
 
-                {/* ✅ 항상 최상단에 모달 유지 */}
+                {/* 항상 최상단에 모달 유지 */}
                 <ProjectCreateModal
                     open={isProjectModalOpen}
                     onClose={() => setProjectModalOpen(false)}
@@ -113,7 +113,7 @@ export default function TaskPage() {
     }
 
     if (!selectedProject) {
-        return <div className="flex h-screen items-center justify-center text-gray-400">프로젝트를 선택 중입니다...</div>;
+        return <div className="flex h-screen items-center justify-center bg-base-100 text-base-content">프로젝트를 선택 중입니다...</div>;
     }
 
     // 🔹 뷰 렌더링 함수
@@ -131,7 +131,7 @@ export default function TaskPage() {
                 return <GanttView />;
             default:
                 return (
-                    <div className="p-6 text-gray-400 text-center h-96 flex items-center justify-center">
+                    <div className="p-6 bg-base-100 text-base-content text-center h-96 flex items-center justify-center">
                         (선택된 뷰 표시)
                     </div>
                 );

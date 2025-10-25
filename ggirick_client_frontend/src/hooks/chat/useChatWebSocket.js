@@ -17,30 +17,23 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
 
         const token = sessionStorage.getItem("token");
 
-        //  STOMP client 생성
         const client = new Client({
-            brokerURL: "ws://10.5.5.1:8081/ws", // ws 또는 wss 주소
+            brokerURL: "ws://192.168.45.172:8081/ws",
             reconnectDelay: 5000,
             debug: (str) => console.log("[STOMP]", str),
-            connectHeaders: {
-                Authorization: "Bearer " + token
-            }
+            connectHeaders: { Authorization: "Bearer " + token },
         });
 
         clientRef.current = client;
+
         client.onConnect = () => {
             console.log(`[STOMP] Connected to workspace ${workspaceId} channel ${channelId}`);
 
-            //  채널 구독
             const topic = `/subscribe/workspace/${workspaceId}/channel/${channelId}`;
             client.subscribe(topic, (msg) => {
-
                 if (!msg.body) return;
                 try {
                     const data = JSON.parse(msg.body);
-                    console.log(data);
-
-
                     onMessage(data);
                 } catch (e) {
                     console.error("Failed to parse STOMP message", e);
@@ -54,13 +47,16 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
 
         client.activate();
 
-        // Cleanup: 컴포넌트 unmount 시 구독 해제 및 client 종료
+        // 🟢 수정된 cleanup
         return () => {
-            console.log(`[STOMP] Deactivating client for channel ${channelId}`);
-            clientRef.current.deactivate();
-            clientRef.current = null;
+            console.log(`[STOMP] Cleanup for channel ${channelId}`);
+            // 채널 변경 시에만 해제
+            if (clientRef.current) {
+                clientRef.current.deactivate();
+                clientRef.current = null;
+            }
         };
-    }, [workspaceId, channelId, onMessage]);
+    }, [workspaceId, channelId]); // ✅ onMessage 제거
 
     //  메시지 전송 함수
     const sendMessage = ({ type, content, parentId, emoji }) => {

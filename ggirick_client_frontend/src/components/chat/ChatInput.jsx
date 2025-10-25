@@ -9,6 +9,8 @@ import "@blocknote/mantine/style.css";
 import { ko } from "@blocknote/core/locales";
 import chatAPI from "@/api/chat/chatAPI.js";
 import useChatStore from "@/store/chat/useChatStore.js";
+import FileAPI from "@/api/common/FileAPI.js";
+import {getUploadFolder} from "@/utils/common/fileFolderUtil.js";
 
 export default function ChatInput({onSend}) {
 
@@ -21,13 +23,17 @@ export default function ChatInput({onSend}) {
       ...ko,
       placeholders: { default: "채팅을 작성하세요" },
     },
-    uploadFile: async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      return data.url;
-    },
+      uploadFile: async (file) => {
+          try {
+              const folder = getUploadFolder(file, "chat"); // chat, task, board 등 변경 가능
+              const data = await FileAPI.uploadFile(file, folder);
+              return data.url;
+          } catch (err) {
+              console.error("파일 업로드 실패:", err);
+              alert("파일 업로드 중 오류가 발생했습니다.");
+              throw err;
+          }
+      },
   });
 
   useEffect(() => {
@@ -74,6 +80,15 @@ export default function ChatInput({onSend}) {
                    <BlockNoteView
                        id="chat"
                        editor={editor}
+                       onKeyDown={(e) => {
+                           if (e.key === "Enter") {
+                               if (!e.shiftKey) {
+                                   e.preventDefault(); // 기본 엔터 동작 막기
+                                   handleSubmit(e);    // submit 호출
+                               }
+                               // Shift+Enter는 그대로 줄바꿈
+                           }
+                       }}
                        className="w-full h-full p-2.5 text-sm placeholder:text-base-content/50 focus:outline-none"
                    />
 

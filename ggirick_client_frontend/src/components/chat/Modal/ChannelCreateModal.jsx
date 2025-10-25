@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import BaseModal from "@/components/common/BaseModal.jsx";
 import useChatStore from "@/store/chat/useChatStore.js";
+import chatAPI from "@/api/chat/chatAPI.js";
 
 export default function ChannelCreateModal({ open, onClose }) {
     const { createChannel, isLoading, selectedWorkspace } = useChatStore();
@@ -40,7 +41,7 @@ export default function ChannelCreateModal({ open, onClose }) {
         if (!validateForm()) return;
 
         setSubmitting(true);
-        const success = await createChannel(selectedWorkspace.id, form); // useChatStore에 구현 필요
+        const success = await chatAPI.createChannel(selectedWorkspace.id, form);
         setSubmitting(false);
 
         if (success) onClose();

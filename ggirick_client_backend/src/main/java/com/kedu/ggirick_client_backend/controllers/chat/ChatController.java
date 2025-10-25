@@ -7,25 +7,21 @@ import com.kedu.ggirick_client_backend.services.chat.ChatReactionService;
 import com.kedu.ggirick_client_backend.services.chat.ChatService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
 import org.springframework.messaging.handler.annotation.MessageMapping;
-import org.springframework.messaging.handler.annotation.SendTo;
-import org.springframework.messaging.simp.SimpMessageHeaderAccessor;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Principal;
-import java.sql.Timestamp;
-import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+
+import static com.kedu.ggirick_client_backend.config.ChatConfig.additionalMessageSize;
 
 @Controller
 @RequiredArgsConstructor
@@ -57,6 +53,11 @@ public class ChatController {
         message.setSenderId(userInfo.getId());
 
         switch (message.getType()) {
+            /**
+             * message의 타입필드를 통해 메시지의 종류를 구분함
+             *
+             * user라고 붙은 경우가 메시지를 유저가 직접 보낸 채팅메시지의 경우
+             */
             case "user":
                 message.setId(UUID.randomUUID().toString());
                 chatService.sendMessage(message, null);
@@ -112,7 +113,9 @@ public class ChatController {
 //
 //        return  ResponseEntity.ok().build();
 //    }
-
+    /**
+     * 초기 메시지를 가져오는 컨트롤러
+     */
     @GetMapping("/workspace/{workspaceId}/channel/{channelId}/message")
     public ResponseEntity<List<ChatMessageFromDBDTO>> getMessages(
             @PathVariable Long workspaceId,
@@ -121,7 +124,9 @@ public class ChatController {
         List<ChatMessageFromDBDTO> messages = chatService.getMessages(workspaceId, channelId);
         return ResponseEntity.ok(messages);
     }
-
+    /**
+     * 더 오래된 메시지를 가져오는 컨트롤러
+     */
     @GetMapping("/workspace/{workspaceId}/channel/{channelId}/message/older")
     public ResponseEntity<List<ChatMessageFromDBDTO>> getOlderMessages(
             @PathVariable Long workspaceId,
@@ -129,9 +134,11 @@ public class ChatController {
             @RequestParam("beforeId") String beforeId // 마지막으로 불러온 메시지의 ID
     ) {
         List<ChatMessageFromDBDTO> messages =
-                chatService.getOlderMessages(workspaceId, channelId, beforeId, 30);
+                chatService.getOlderMessages(workspaceId, channelId, beforeId, additionalMessageSize);
 
         return ResponseEntity.ok(messages);
     }
+
+
 
 }

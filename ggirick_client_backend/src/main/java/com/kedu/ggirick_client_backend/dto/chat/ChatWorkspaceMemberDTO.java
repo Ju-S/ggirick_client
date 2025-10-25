@@ -18,4 +18,5 @@ public class ChatWorkspaceMemberDTO {
     private String profileUrl; //사용자 프로필 (join해서 가져오기)
     private Long roleId;         // 권한
     private Timestamp joinedAt;
+    private Timestamp leftAt;
 }

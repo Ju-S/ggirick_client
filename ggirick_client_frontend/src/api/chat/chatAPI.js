@@ -2,6 +2,33 @@ import apiRoutes from "../common/apiRoutes.js";
 import api from "../common/apiInterceptor.js";
 
 const chatAPI = {
+
+    createWorkspace: async (workspaceData) => {
+        const route = apiRoutes.chat.createWorkspace();
+      return api({
+          url: route.url,
+          method: route.method,
+          data:workspaceData,
+      })
+    },
+
+    createChannel: async (workspaceId, channelData) =>{
+        const route = apiRoutes.chat.createChannel(workspaceId);
+        return api({
+            url: route.url,
+            method: route.method,
+            data:channelData,
+        })
+    },
+    updateChannel: async (workspaceId, channelId, channelData) => {
+        const route = apiRoutes.chat.updateChannel(workspaceId, channelId);
+        return api({
+            url:route.url,
+            method: route.method,
+            data: channelData
+        })
+    }
+    ,
     fetchWorkspaces: async () => {
         const route = apiRoutes.chat.listWorkspaces();
         const response = await api({ url: route.url, method: route.method });
@@ -38,8 +65,35 @@ const chatAPI = {
         return api({
             url:route.url,
             method: route.method,
+
         })
+    },
+    syncChannelMembers: async (workspaceId, channelId, memberList) => {
+        const route = apiRoutes.chat.syncChannelMembers(workspaceId,channelId);
+        return api({
+            url:route.url,
+            method:route.method,
+            data:memberList
+        })
+    },
+    syncWorkspaceMembers: async (workspaceId,memberList) => {
+        const route = apiRoutes.chat.syncWorkspaceMembers(workspaceId);
+        return api({
+            url:route.url,
+            method:route.method,
+            data:memberList
+        })
+    },
+    openOrCreateDMChannel : async (workspaceId, targetId) => {
+        const route= apiRoutes.chat.directChannel(workspaceId);
+        const response = await api({
+            url: route.url,
+            method: route.method,
+            data: { targetId },
+        });
+        return response.data
     }
+
 };
 
 export default chatAPI;

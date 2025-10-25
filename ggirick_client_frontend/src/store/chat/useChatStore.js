@@ -11,9 +11,20 @@ const useChatStore = create((set, get) => ({
     selectedChannelMember: [],
     messages: [],
     loading: false,
-    hasMoreMessages: true,
+    hasMoreMessages: false,
     setLoading: (isLoading) => set({loading: isLoading}),
     setHasMoreMessages: (hasMore) => set({ hasMoreMessages: hasMore }),
+    setSelectedChannelMember: (members) => set({ selectedChannelMember: members }),
+    setSelectedWorkspaceMember: (members) => set({selectedWorkspaceMember:members}),
+
+    updateSelectedChannel: (channelInfo) =>
+        set((state) => ({
+            selectedChannel: channelInfo,
+            channels: state.channels.map((ch) =>
+                ch.id === channelInfo.id ? { ...ch, ...channelInfo } : ch
+            ),
+        })),
+
 
 // 워크스페이스 불러오기
     fetchWorkspaces: async () => {
@@ -186,7 +197,9 @@ const useChatStore = create((set, get) => ({
     fetchOldMessages : async() => {
         const { messages, selectedWorkspace,  selectedChannel,hasMoreMessages, setHasMoreMessages} = get();
 
-        if (!hasMoreMessages) return;
+        setHasMoreMessages(messages.length >= 30);
+
+        if(!hasMoreMessages) return;
 
         const oldestId= messages[0].id;
 

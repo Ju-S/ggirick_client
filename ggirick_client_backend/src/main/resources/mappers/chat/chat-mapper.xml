@@ -33,7 +33,7 @@
         ORDER BY
         cm.created_at DESC
         )
-        WHERE ROWNUM &lt;= 30
+        WHERE ROWNUM &lt;= #{offset}
     </select>
     <!--대상 메시지의 생성일 조회 -->
     <select id="getMessageCreatedAt" parameterType="String" resultType="java.time.LocalDateTime">
