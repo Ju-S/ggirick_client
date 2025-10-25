@@ -1,5 +1,8 @@
 package com.kedu.ggirick_client_backend.config;
 
+import com.kedu.ggirick_client_backend.interceptors.JWTInterceptor;
+import com.kedu.ggirick_client_backend.services.AuthService;
+import com.kedu.ggirick_client_backend.utils.JWTUtil;
 import com.kedu.ggirick_client_backend.websocket.ChatPreHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
@@ -17,15 +20,18 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     private final ChatPreHandler chatPreHandler;
 
+
     @Override
     public void configureMessageBroker(MessageBrokerRegistry registry) {
         registry.setApplicationDestinationPrefixes("/send");
-        registry.enableSimpleBroker("/room");
+        registry.enableSimpleBroker("/subscribe");
     }
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry){
-        registry.addEndpoint("/ws-stomp").setAllowedOriginPatterns("*").withSockJS();
+        registry.addEndpoint("/ws")
+                .setAllowedOriginPatterns("*")
+               ;
     }
 
     @Override

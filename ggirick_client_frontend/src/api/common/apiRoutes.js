@@ -420,6 +420,130 @@ const apiRoutes = {
       method:"GET",
     })
   },
+    chat: {
+        /**
+         * 채팅 메시지 전송 API<br>
+         * POST /workspace/{workspaceId}/channel/{channelId}/send<br>
+         * body: {ChatMessageDTO}
+         */
+        sendMessage: (workspaceId, channelId) => ({
+            url: `/workspace/${workspaceId}/channel/${channelId}/send`,
+            method: "POST",
+        }),
+
+        /**
+         * 채널 메시지 리스트 조회 API<br>
+         * GET /workspace/{workspaceId}/channel/{channelId}/messages<br>
+         * response: List<ChatMessageDTO>
+         */
+        list: (workspaceId, channelId) => ({
+            url: `/workspace/${workspaceId}/channel/${channelId}/message`,
+            method: "GET",
+        }),
+
+        oldlist: (workspaceId, channelId, oldestId) => ({
+            url: `/workspace/${workspaceId}/channel/${channelId}/message/older?beforeId=${oldestId}`,
+            method:"GET"
+        }),
+
+        /**
+         * 워크스페이스 생성
+         */
+        createWorkspace: () =>( {
+            url: `/workspace`,
+            method: "POST",
+        }),
+
+        /**
+         * 채널 생성
+         */
+        createChannel: (workspaceId) =>( {
+            url: `/workspace/${workspaceId}/channels`,
+            method: "POST",
+        }),
+        /**
+         * 채널 제목 정보 수정
+         */
+        updateChannel: (workspaceId,channelId) =>( {
+            url: `/workspace/${workspaceId}/channels/${channelId}`,
+            method: "PATCH",
+        }),
+
+        /**
+         * 워크스페이스 목록 조회
+         */
+        listWorkspaces: () => ({
+            url: `/workspace`,
+            method: "GET",
+        }),
+
+        /**
+         * 워크스페이스 내 채널 목록 조회
+         */
+        listChannels: (workspaceId) => ({
+            url: `/workspace/${workspaceId}/channels`,
+            method: "GET",
+        }),
+
+        /**
+         * 워크스페이스 멤버 조회
+         */
+        listWorkspaceMembers: (workspaceId) => ({
+            url: `/workspace/${workspaceId}/members`,
+            method: "GET",
+        }),
+
+        /**
+         * 채널 참가자 조회
+         */
+        listChannelParticipants: (workspaceId, channelId) => ({
+            url: `/workspace/${workspaceId}/channels/${channelId}/members`,
+            method: "GET",
+        }),
+        /**
+         * 채널 참가자 싱크 수정
+         */
+        syncChannelMembers: (workspaceId,channelId) => ({
+            url:`/workspace/${workspaceId}/channels/${channelId}/members`,
+            method:"POST"
+        }),
+        /**
+         * 워크스페이스 참가자 싱크 수정
+         */
+        syncWorkspaceMembers: (workspaceId) => ({
+            url:`/workspace/${workspaceId}/members`,
+            method:"POST"
+        }),
+        /**
+         * DM 채널 조회하거나 생성
+         */
+        directChannel: (workspaceId)  =>({
+            url:`workspace/${workspaceId}/dm`,
+            method:"POST"
+        }),
+
+    },
+    file: {
+        /**
+         * 파일 업로드 API<br>
+         * POST /file/upload?folder={path}<br>
+         * body: MultipartFile<br>
+         * response: {url: string}
+         */
+        upload: (folder) => ({
+            url: `/file/upload?folder=${folder}`,
+            method: "POST",
+        }),
+
+        /**
+         * 파일 삭제 API<br>
+         * DELETE /file/{sysName}<br>
+         */
+        delete: (sysName) => ({
+            url: `/file/${sysName}`,
+            method: "DELETE",
+        }),
+    },
 };
 
 export default apiRoutes;

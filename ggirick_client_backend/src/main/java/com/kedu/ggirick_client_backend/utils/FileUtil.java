@@ -36,6 +36,17 @@ public class FileUtil {
         return sysName;
     }
 
+   //url 만들기
+    public String getPublicUrl(String objectName) {
+        return String.format("https://storage.googleapis.com/%s/%s", bucketName, objectName);
+    }
+
+    //파일 업로드 후 추가로 공개 url까지 반환
+    public String uploadAndGetUrl(String oriName, String path, MultipartFile file) throws Exception {
+        String objectName = fileUpload(oriName, path, file);
+        return getPublicUrl(objectName);
+    }
+
     // 파일 다운로드
     public byte[] fileDownload(String sysName) {
         Blob blob = storage.get(bucketName, sysName);

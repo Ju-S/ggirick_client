@@ -4,7 +4,7 @@ import ChatRoom from "../../components/chat/ChatRoom.jsx";
 
 export default function ChatPage() {
   return(
-    <div className="flex h-screen  pt-15 md:ml-64 bg-gray-50 dark:bg-gray-800">
+    <div className="flex h-screen  pt-20 md:ml-64 bg-base-200">
       {/* 워크스페이스 사이드바 */}
       <SidebarWorkspaces />
 
