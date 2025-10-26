@@ -16,6 +16,8 @@ public class ChatFileDTO {
     private String filename;
     private String fileUrl;
     private Long fileSize;
+    private Long channelId;
+    private Long workspaceId;
     private Timestamp createdAt;
 
     // getter/setter

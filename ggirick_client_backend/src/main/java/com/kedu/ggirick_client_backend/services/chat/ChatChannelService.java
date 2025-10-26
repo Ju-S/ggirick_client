@@ -2,9 +2,12 @@ package com.kedu.ggirick_client_backend.services.chat;
 
 import com.kedu.ggirick_client_backend.config.ChatConfig;
 import com.kedu.ggirick_client_backend.dao.chat.ChatChannelDAO;
+import com.kedu.ggirick_client_backend.dao.chat.ChatDAO;
 import com.kedu.ggirick_client_backend.dao.chat.ChatWorkspaceDAO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatChannelParticipantDTO;
+import com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO;
+import com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +24,11 @@ public class ChatChannelService {
 
     @Autowired
     private ChatWorkspaceDAO chatWorkspaceDAO;
+
+    @Autowired
+    private ChatNotificationService chatNotificationService;
+    @Autowired
+    private ChatDAO chatDAO;
 
 
     //채널 아이디 참가자 확인하기
@@ -48,7 +56,7 @@ public class ChatChannelService {
      *   필요한 추가/삭제를 자동으로 수행함.
      */
     @Transactional
-    public boolean syncChannelParticipants(Long channelId, List<String> employeeIds) {
+    public boolean syncChannelParticipants(Long workspaceId, Long channelId, List<String> employeeIds) {
 
         //  현재 DB에 존재하는 참여자 조회
         List<String> existingParticipants = chatChannelDAO.selectChannelParticipantsByChannelId(channelId)
@@ -81,6 +89,8 @@ public class ChatChannelService {
             dto.setEmployeeId(id);
             chatChannelDAO.insertorUpdateChannelParticipant(dto);
         }
+
+        chatNotificationService.notifyChannelMembersUpdated(workspaceId, channelId, employeeIds);
 
         return true;
     }
@@ -137,5 +147,10 @@ public class ChatChannelService {
         chatChannelDAO.updateChannel(existing);
 
         return existing;
+    }
+
+
+    public List<ChatFileDTO> listFilesByChannel(Long workspaceId, Long channelId) {
+        return chatChannelDAO.selectFilesByChannel(workspaceId, channelId);
     }
 }

@@ -2,10 +2,7 @@ package com.kedu.ggirick_client_backend.controllers.chat;
 
 import com.kedu.ggirick_client_backend.config.ChatConfig;
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
-import com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO;
-import com.kedu.ggirick_client_backend.dto.chat.ChatChannelParticipantDTO;
-import com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceDTO;
-import com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceMemberDTO;
+import com.kedu.ggirick_client_backend.dto.chat.*;
 import com.kedu.ggirick_client_backend.services.chat.ChatChannelService;
 import com.kedu.ggirick_client_backend.services.chat.ChatWorkspaceService;
 import lombok.RequiredArgsConstructor;
@@ -63,7 +60,7 @@ public class ChatWorkspaceChannelController {
     @PostMapping("/{workspaceId}/channels")
     public void createChannel(@PathVariable Long workspaceId,
                               @RequestBody ChatChannelDTO channel,@AuthenticationPrincipal UserTokenDTO userInfo) {
-        workspaceService.createChannel(workspaceId, channel,userInfo.getId(), ChatConfig.CHANNEL_PRIVATE_CODE);
+        workspaceService.createChannel(workspaceId, channel,userInfo.getId(), ChatConfig.CHANNEL_PUBLIC_CODE);
     }
 
     // 채널 정보 수정
@@ -81,13 +78,28 @@ public class ChatWorkspaceChannelController {
         return ResponseEntity.ok(result);
     }
 
+    // 워크스페이스 정보 수정
+    @PatchMapping("/{workspaceId}")
+    public ResponseEntity<ChatWorkspaceDTO> updateWorkspace(
+            @PathVariable Long workspaceId,
+
+            @RequestBody ChatWorkspaceDTO updatedWorkspace,
+            @AuthenticationPrincipal UserTokenDTO userInfo) {
+
+        // 수정 가능한 권한 체크 (선택 사항)
+        // workspaceService.checkWorkspaceEditPermission(workspaceId,  userInfo.getId());
+
+        ChatWorkspaceDTO result = workspaceService.updateWorkspace(workspaceId,  updatedWorkspace);
+        return ResponseEntity.ok(result);
+    }
+
     //채널 멤버 싱크
     @PostMapping("/{workspaceId}/channels/{channelId}/members")
     public ResponseEntity<Map<String, Boolean>> syncProjectMembers(
             @PathVariable Long workspaceId, @PathVariable Long channelId,
             @RequestBody List<String> employeeIds) {
 
-        boolean success = channelService.syncChannelParticipants(channelId,employeeIds);
+        boolean success = channelService.syncChannelParticipants(workspaceId, channelId,employeeIds);
         Map<String, Boolean> map = new HashMap<>();
         map.put("result", success);
         return ResponseEntity.ok(map);
@@ -115,6 +127,56 @@ public class ChatWorkspaceChannelController {
         System.out.println("targetId = " + targetId);
         ChatChannelDTO dm = channelService.openOrCreateDMChannel(workspaceId, userInfo.getId(), targetId);
         return ResponseEntity.ok(dm);
+    }
+
+    /**
+     * 워크스페이스 삭제 (Soft Delete)
+     */
+    @DeleteMapping("/{workspaceId}")
+    public ResponseEntity<Map<String, Boolean>> deleteWorkspace(
+            @PathVariable Long workspaceId,
+            @AuthenticationPrincipal UserTokenDTO userInfo) {
+
+        workspaceService.deleteWorkspace(workspaceId,userInfo.getId());
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("deleted", true);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+     * 채널 삭제 (Soft Delete)
+     */
+    @DeleteMapping("/{workspaceId}/channels/{channelId}")
+    public ResponseEntity<Map<String, Boolean>> deleteChannel(
+            @PathVariable Long workspaceId,
+            @PathVariable Long channelId,
+            @AuthenticationPrincipal UserTokenDTO userInfo) {
+
+        workspaceService.deleteChannel(workspaceId, channelId);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("deleted", true);
+        return ResponseEntity.ok(response);
+    }
+
+    /**
+    이 워크스페이스에서의 내 역할 조회
+     */
+    @GetMapping("/{workspaceId}/myrole")
+    public ResponseEntity<String> getWorkspaceRole(
+            @PathVariable Long workspaceId,
+            @AuthenticationPrincipal  UserTokenDTO userInfo
+    ) {
+        String role = workspaceService.getUserRoleInWorkspace(workspaceId, userInfo.getId());
+        return ResponseEntity.ok(role);
+    }
+
+
+    @GetMapping("/{workspaceId}/channels/{channelId}/files")
+    public List<ChatFileDTO> listFiles(
+            @PathVariable Long workspaceId,
+            @PathVariable Long channelId
+    ) {
+        return channelService.listFilesByChannel(workspaceId, channelId);
     }
 
 }

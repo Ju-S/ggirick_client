@@ -47,7 +47,7 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
 
         client.activate();
 
-        // 🟢 수정된 cleanup
+        // 수정된 cleanup
         return () => {
             console.log(`[STOMP] Cleanup for channel ${channelId}`);
             // 채널 변경 시에만 해제
@@ -56,10 +56,10 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
                 clientRef.current = null;
             }
         };
-    }, [workspaceId, channelId]); // ✅ onMessage 제거
+    }, [workspaceId, channelId]);
 
     //  메시지 전송 함수
-    const sendMessage = ({ type, content, parentId, emoji }) => {
+    const sendMessage = ({ type, content, parentId, emoji, senderId, senderName }) => {
         if (!clientRef.current || !clientRef.current.connected) return;
 
 
@@ -67,13 +67,17 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
            const payload = {
                workspaceId:workspaceId,
                channelId:channelId,
+               senderId,
+               senderName,
                type,
                parentId,
                emoji,
+               hasFile: content.some(block => ["audio","video","image","file"].includes(block.type)),
                content: JSON.stringify(content),
                createdAt: new Date()
            };
            console.log("발행 전 페이로드 확인",payload);
+           console.log(content.some(block => ["audio","video","image","file"].includes(block.type)));
 
            clientRef.current.publish({
                destination: `/send/workspace/${workspaceId}/channel/${channelId}`,

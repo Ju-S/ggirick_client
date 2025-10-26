@@ -11,12 +11,6 @@
         (#{id},#{workspaceId}, #{channelId}, #{senderId}, #{type},#{content}, #{createdAt})
     </insert>
 
-    <insert id="insertFile" useGeneratedKeys="true">
-        INSERT INTO chat_file
-        (message_id, filename, fileurl, filesize, created_at)
-        VALUES
-        (#{messageId}, #{filename}, #{fileUrl}, #{fileSize}, SYSTIMESTAMP)
-    </insert>
     <!-- 기본 메시지 30개만 가져옴-->
     <select id="selectMessagesByChannel" parameterType="map" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO">
         SELECT *
@@ -160,5 +154,41 @@
         and channel_id = #{channelId}
         AND EMOJI = #{emoji}
     </delete>
+
+    <!-- 파일 첨부 정보 저장 -->
+    <insert id="insertFile" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO">
+        INSERT INTO chat_file (
+        ID,
+        MESSAGE_ID,
+        FILENAME,
+        FILEURL,
+        channel_id,
+        workspace_id,
+        CREATED_AT
+        ) VALUES (
+        chat_file_seq.nextval,
+        #{messageId},
+        #{filename},
+        #{fileUrl},
+        #{channelId},
+        #{workspaceId},
+        SYSTIMESTAMP
+        )
+    </insert>
+   <!-- 채널 별 파일 조회-->
+    <select id="selectFilesByChannel" parameterType="map" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO">
+        SELECT *
+        FROM chat_file
+        WHERE workspace_id = #{workspaceId}
+        AND channel_id = #{channelId}
+        ORDER BY created_at DESC
+    </select>
+    <!-- 워크스페이스 별 파일 조회-->
+    <select id="selectFilesByWorkspace" parameterType="long" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO">
+        SELECT *
+        FROM chat_file
+        WHERE workspace_id = #{workspaceId}
+        ORDER BY created_at DESC
+    </select>
 
 </mapper>

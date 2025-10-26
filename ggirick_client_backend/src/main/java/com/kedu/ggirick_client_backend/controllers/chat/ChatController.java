@@ -1,8 +1,12 @@
 package com.kedu.ggirick_client_backend.controllers.chat;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO;
+import com.kedu.ggirick_client_backend.dto.chat.ContentBlock;
 import com.kedu.ggirick_client_backend.services.chat.ChatReactionService;
 import com.kedu.ggirick_client_backend.services.chat.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -17,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -42,7 +47,7 @@ public class ChatController {
     public void sendMessage(@DestinationVariable Long workspaceId,
                             @DestinationVariable Long channelId,
                             ChatMessageDTO message,
-                            Message<?> msg ) {
+                            Message<?> msg ) throws JsonProcessingException {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(msg);
         UserTokenDTO userInfo = (UserTokenDTO) accessor.getSessionAttributes().get("user");
 
@@ -60,6 +65,27 @@ public class ChatController {
              */
             case "user":
                 message.setId(UUID.randomUUID().toString());
+
+                if (message.isHasFile()) {
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    List<ContentBlock> contentBlocks = objectMapper.readValue(
+                            message.getContent(),
+                            new TypeReference<List<ContentBlock>>() {}
+                    );
+
+                    contentBlocks.stream()
+                            .filter(block -> Arrays.asList("audio", "video", "image","file").contains(block.getType()))
+                            .forEach(block -> {
+                                Map<String, Object> props = block.getProps();
+                                chatService.saveFile(
+                                        message,
+                                        (String) props.get("name"),
+                                        (String) props.get("url")
+
+
+                                );
+                            });
+                }
                 chatService.sendMessage(message, null);
                 break;
 //            case "system":
@@ -95,24 +121,6 @@ public class ChatController {
 
     }
 
-    /**
-     * Create랑 Read가 잘 되는지 테스트
-     */
-
-//    @PostMapping("/workspace/{workspaceId}/channel/{channelId}/send")
-//    public ResponseEntity<Void> sendMessageTest(
-//            @PathVariable Long workspaceId,
-//            @PathVariable Long channelId,
-//            @RequestBody ChatMessageDTO message,
-//            @AuthenticationPrincipal UserTokenDTO userInfo) {
-//
-//        message.setWorkspaceId(workspaceId);
-//        message.setChannelId(channelId);
-//        message.setSenderId(userInfo.getId());
-//        chatService.sendMessage(message, null);
-//
-//        return  ResponseEntity.ok().build();
-//    }
     /**
      * 초기 메시지를 가져오는 컨트롤러
      */

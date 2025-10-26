@@ -89,4 +89,8 @@ public class ChatDAO {
     public List<ChatMessageFromDBDTO> selectOlderMessages(Map<String, Object> params) {
         return mybatis.selectList("Chat.selectOlderMessages", params);
     }
+
+    public void insertChatFile(ChatFileDTO fileDTO) {
+            mybatis.insert("Chat.insertFile", fileDTO);
+    }
 }

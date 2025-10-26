@@ -25,14 +25,25 @@ export default function SidebarWorkspaces() {
         <>
             <aside className="w-20 bg-base-200 flex flex-col items-center py-4">
                 {workspaces.map((ws) => (
-                    <div
-                        key={ws.id}
-                        className="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center cursor-pointer mb-2"
-                        onClick={() => selectWorkspace(ws)}
-                    >
-                        {ws.name[0]}
+                    <div key={ws.id} className="relative group">
+                        {/* 원형 아이콘 */}
+                        <div
+                            className="w-10 h-10 rounded-full bg-primary text-primary-content flex items-center justify-center cursor-pointer mb-2"
+                            onClick={() => selectWorkspace(ws)}
+                        >
+                            {ws.name[0]}
+                        </div>
+
+                        {/* 툴팁 */}
+                        <div className="absolute left-full top-1/2 transform -translate-y-1/2 ml-2
+                    px-2 py-1 rounded bg-secondary text-secondary-content text-xs whitespace-nowrap
+                    opacity-0 group-hover:opacity-100 transition-opacity duration-200
+                    pointer-events-none z-10">
+                            {ws.name}
+                        </div>
                     </div>
                 ))}
+
                 <div
                     className="w-10 h-10 rounded-full bg-accent text-accent-content flex items-center justify-center cursor-pointer mb-2"
                     onClick={()=> {

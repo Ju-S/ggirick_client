@@ -4,7 +4,7 @@ import useChatStore from "@/store/chat/useChatStore.js";
 import chatAPI from "@/api/chat/chatAPI.js";
 
 export default function WorkspaceCreateModal({ open, onClose }) {
-    const { fetchWorkspaces, workspaces, isLoading } = useChatStore();
+    const { fetchWorkspaces, isLoading } = useChatStore();
     const [form, setForm] = useState({ name: "" });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");

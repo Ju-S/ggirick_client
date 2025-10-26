@@ -11,18 +11,21 @@ import chatAPI from "@/api/chat/chatAPI.js";
 import useChatStore from "@/store/chat/useChatStore.js";
 import FileAPI from "@/api/common/FileAPI.js";
 import {getUploadFolder} from "@/utils/common/fileFolderUtil.js";
+import useEmployeeStore from "@/store/employeeStore.js";
 
 export default function ChatInput({onSend}) {
 
     const {sendMessage} = useChatStore();
-
     const [content, setContent] = useState([]);
+    const {selectedEmployee, setEmployee} = useEmployeeStore();
   const editor = useCreateBlockNote({
     initialContent: [{ type: "paragraph", content: [] }],
+
     dictionary: {
       ...ko,
       placeholders: { default: "채팅을 작성하세요" },
     },
+
       uploadFile: async (file) => {
           try {
               const folder = getUploadFolder(file, "chat"); // chat, task, board 등 변경 가능
@@ -51,9 +54,11 @@ export default function ChatInput({onSend}) {
     }
 
       try {
-
+            console.log(selectedEmployee);
           onSend({
               type: "user",
+              senderId:selectedEmployee.id,
+              senderName:selectedEmployee.name,
               content: editor.document
           });
           editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);

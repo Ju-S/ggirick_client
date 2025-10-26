@@ -51,19 +51,17 @@ export function Message({ msg, like, viewer, reactions, onAddReaction, sendMessa
             <BlockActions
                 onLike={handleLike}
                 onCopy={handleCopy}
-                like={like || 0}
+                like={msg.like || 0}
                 viewer={viewer || []}
                 reactions={reactions || []}
                 content={msg.content || []}
                 onAddReaction={(emoji) => {
-                    console.log("이모지 선택"+msg.id+" "+emoji)
                     sendMessage({
                         type: "emoji",
                         parentId: msg.id,
-                        emoji: emoji,
-                    })
-                }
-                }
+                        emoji,
+                    });
+                }}
             />
         </div>
     );

@@ -17,9 +17,8 @@ export function BlockActions({ onLike, onCopy, like = 0, viewer = [], reactions 
 
     useEffect(() => {
         if (like > prevLike) {
-            // 좋아요가 증가한 경우만 애니메이션
             setLikeAnim(true);
-            setTimeout(() => setLikeAnim(false), 800); // 0.8초 후 초기화
+            setTimeout(() => setLikeAnim(false), 800);
         }
         setPrevLike(like);
     }, [like]);
@@ -55,17 +54,25 @@ export function BlockActions({ onLike, onCopy, like = 0, viewer = [], reactions 
         <>
             {/* 이모지 선택 */}
             {showPicker && (
-                <div className="absolute bottom-8 right-0 z-10 shadow-lg">
-                    <Picker
-                        data={data}
-                        onEmojiSelect={(emoji) => {
-                            if (onAddReaction) onAddReaction(emoji.native);
-                            setShowPicker(false);
-                        }}
-                        theme="light"
-                        previewPosition="none"
-                        perLine={8}
-                    />
+                <div
+                    className="fixed inset-0 z-20 flex items-center justify-center bg-black/30"
+                    onClick={() => setShowPicker(false)} // 배경 클릭 시 닫기
+                >
+                    <div
+                        className="shadow-lg bg-base-100 text-base-content rounded-md"
+                        onClick={(e) => e.stopPropagation()} // Picker 클릭 시 닫히지 않도록
+                    >
+                        <Picker
+                            data={data}
+                            onEmojiSelect={(emoji) => {
+                                if (onAddReaction) onAddReaction(emoji.native);
+                                setShowPicker(false);
+                            }}
+                            theme="light"
+                            previewPosition="none"
+                            perLine={8}
+                        />
+                    </div>
                 </div>
             )}
 
