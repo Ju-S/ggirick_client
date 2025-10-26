@@ -7,22 +7,33 @@ import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/style.css";
 import "@blocknote/mantine/style.css";
 import { ko } from "@blocknote/core/locales";
+import chatAPI from "@/api/chat/chatAPI.js";
+import useChatStore from "@/store/chat/useChatStore.js";
+import FileAPI from "@/api/common/FileAPI.js";
+import {getUploadFolder} from "@/utils/common/fileFolderUtil.js";
 
-export default function ChatInput({ onSend }) {
-  const [content, setContent] = useState([]);
+export default function ChatInput({onSend}) {
+
+    const {sendMessage} = useChatStore();
+
+    const [content, setContent] = useState([]);
   const editor = useCreateBlockNote({
     initialContent: [{ type: "paragraph", content: [] }],
     dictionary: {
       ...ko,
       placeholders: { default: "채팅을 작성하세요" },
     },
-    uploadFile: async (file) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      const res = await fetch("/api/upload", { method: "POST", body: formData });
-      const data = await res.json();
-      return data.url;
-    },
+      uploadFile: async (file) => {
+          try {
+              const folder = getUploadFolder(file, "chat"); // chat, task, board 등 변경 가능
+              const data = await FileAPI.uploadFile(file, folder);
+              return data.url;
+          } catch (err) {
+              console.error("파일 업로드 실패:", err);
+              alert("파일 업로드 중 오류가 발생했습니다.");
+              throw err;
+          }
+      },
   });
 
   useEffect(() => {
@@ -38,10 +49,22 @@ export default function ChatInput({ onSend }) {
       alert("채팅을 입력해주세요");
       return;
     }
-    onSend(content);
-    console.log(JSON.stringify(editor.document));
-    editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
-  };
+
+      try {
+
+          onSend({
+              type: "user",
+              content: editor.document
+          });
+          editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
+
+
+      } catch (err) {
+          console.error("메시지 전송 실패:", err);
+      }
+    };
+
+
 
   return (
     <div className="border-t bg-base-100 p-4">
@@ -51,33 +74,25 @@ export default function ChatInput({ onSend }) {
         </label>
         <div className="flex items-center rounded-lg bg-base-100/50 px-3 py-2">
 
-          {/* 이모지 버튼 */}
-          <button
-            type="button"
-            className="cursor-pointer rounded-lg p-2 text-base-content/60 hover:bg-base-200 hover:text-base-content"
-          >
-            <svg
-              className="h-5 w-5"
-              aria-hidden="true"
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 20 20"
-            >
-              <path
-                stroke="currentColor"
-                d="M13.408 7.5h.01m-6.876 0h.01M19 10a9 9 0 1 1-18 0 9 9 0 0 1 18 0ZM4.6 11a5.5 5.5 0 0 0 10.81 0H4.6Z"
-              />
-            </svg>
-            <span className="sr-only">Add emoji</span>
-          </button>
-
           {/* 입력창 */}
-          <BlockNoteView
-            id="chat"
-            editor={editor}
-            className="mx-4 block w-full rounded-lg border border-base-300 bg-base-100 text-base-content p-2.5 text-sm placeholder:text-base-content/50 focus:border-primary focus:ring-primary"
 
-          ></BlockNoteView>
+               <div className="chat-input w-full h-full">
+                   <BlockNoteView
+                       id="chat"
+                       editor={editor}
+                       onKeyDown={(e) => {
+                           if (e.key === "Enter") {
+                               if (!e.shiftKey) {
+                                   e.preventDefault(); // 기본 엔터 동작 막기
+                                   handleSubmit(e);    // submit 호출
+                               }
+                               // Shift+Enter는 그대로 줄바꿈
+                           }
+                       }}
+                       className="w-full h-full p-2.5 text-sm placeholder:text-base-content/50 focus:outline-none"
+                   />
+
+               </div>
 
           {/* 전송 버튼 */}
           <button
