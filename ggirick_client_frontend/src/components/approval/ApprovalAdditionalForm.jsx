@@ -1,7 +1,15 @@
 import React, {useState} from "react";
+import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";
+import useEmployeeStore from "@/store/employeeStore.js";
 
 export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocData, viewMode=false }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const {selectedEmployee} = useEmployeeStore();
+
+    const handleSelectDelegator = (data) => {
+        setDocData({...docData, delegatorList: data.map(e => ({id: e.id, name: e.name}))});
+        setIsModalOpen(false);
+    }
 
     if (docTypeCode === "CON" || !docTypeCode) return null; // 업무연락
 
@@ -13,7 +21,7 @@ export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocDat
             <div className="mt-4 grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                     <label className="block mb-2 font-semibold">대리결재자</label>
-                    <button className="btn btn-base btn-xs">추가</button>
+                    <button className="btn btn-base btn-xs" onClick={() => setIsModalOpen(true)}>추가</button>
                     {docData?.delegatorList && docData?.delegatorList.map(e => (
                         <div>
                             {e.name}
@@ -66,6 +74,19 @@ export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocDat
                         ))}
                     </select>
                 </div>
+                
+                <FilteredOrganizationMemberModal
+                    selectedOrganizationCodes={selectedEmployee.organizationCode}
+                    selectedMemberIds={docData?.delegatorList?.map(e => e.id) || []}
+                    exclusiveMemberIds={[
+                        selectedEmployee.id,
+                        ...(docData?.delegatorList?.map(e => e.id) || [])
+                    ]}
+                    title="대리결재자 선택"
+                    open={isModalOpen}
+                    onClose={() => setIsModalOpen(false)}
+                    onSave={handleSelectDelegator}
+                />
             </div>
         );
     }

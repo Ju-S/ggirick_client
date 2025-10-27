@@ -28,7 +28,6 @@ export default function ApprovalLineSelector({
     // 선택된 결재자로 변경
     const handleSelectApprovalLine = (data) => {
         setApprovalLine(data.map(e => e));
-        console.log(data);
         setIsModalOpen(false);
     }
 

@@ -12,7 +12,7 @@ import java.sql.Timestamp;
 public class ApprovalDelegateDTO {
     private int id;
     private String assigner;
-    private String delegater;
-    private Timestamp start_at;
-    private Timestamp end_at;
+    private String delegator;
+    private Timestamp startAt;
+    private Timestamp endAt;
 }

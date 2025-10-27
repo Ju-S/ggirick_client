@@ -79,6 +79,19 @@ public class ApprovalProcessService {
                             break;
                         }
                         case DOC_TYPE_VACATION -> {
+                            ApprovalDTO approvalInfo = approvalService.getById(approvalHistoryInfo.getApprovalId());
+                            // 휴가신청일 경우, 대리결재자 등록
+                            if (approvalInfo.getDocTypeCode().equals(DOC_TYPE_VACATION) && approvalInfo.getDocData().get("delegatorList") != null) {
+                                for (Map<String, Object> delegator : (List<Map<String, Object>>) approvalInfo.getDocData().get("delegatorList")) {
+                                    approvalDelegateService.insertDelegator(
+                                            ApprovalDelegateDTO.builder()
+                                                    .assigner(approvalInfo.getWriter())
+                                                    .delegator((String) delegator.get("id"))
+                                                    .startAt(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), true))
+                                                    .endAt(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), false))
+                                                    .build());
+                                }
+                            }
                             break;
                         }
                         case DOC_TYPE_HOLIDAY -> {
@@ -105,18 +118,6 @@ public class ApprovalProcessService {
         approvalInfo.setDocDataJson(gson.toJson(approvalInfo.getDocData()));
 
         int approvalId = approvalService.insert(approvalInfo);
-        // 휴가신청일 경우, 대리결재자 등록
-        if (approvalInfo.getDocTypeCode().equals(DOC_TYPE_VACATION) && approvalInfo.getDocData().get("delegatorList") != null) {
-            for (Map<String, Object> delegator : (List<Map<String, Object>>) approvalInfo.getDocData().get("delegatorList")) {
-                approvalDelegateService.insertDelegator(
-                        ApprovalDelegateDTO.builder()
-                                .assigner((String) delegator.get("id"))
-                                .delegater(approvalInfo.getWriter())
-                                .start_at(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), true))
-                                .end_at(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), false))
-                                .build());
-            }
-        }
         if (files != null) {
             approvalFilesService.insertFileInfo(files, approvalId);
         }
