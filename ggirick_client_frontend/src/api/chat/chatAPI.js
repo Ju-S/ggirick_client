@@ -20,15 +20,6 @@ const chatAPI = {
             data:channelData,
         })
     },
-    updateChannel: async (workspaceId, channelId, channelData) => {
-        const route = apiRoutes.chat.updateChannel(workspaceId, channelId);
-        return api({
-            url:route.url,
-            method: route.method,
-            data: channelData
-        })
-    }
-    ,
     fetchWorkspaces: async () => {
         const route = apiRoutes.chat.listWorkspaces();
         const response = await api({ url: route.url, method: route.method });
@@ -92,8 +83,60 @@ const chatAPI = {
             data: { targetId },
         });
         return response.data
-    }
+    },
+    deleteWorkspace: async (workspaceId) => {
+        const route = {
+            url: `/workspace/${workspaceId}`,
+            method: "DELETE",
+        };
+        return api({ url: route.url, method: route.method });
+    },
+    // 채널 삭제
+    deleteChannel: async (workspaceId, channelId) => {
+        const route = {
+            url: `/workspace/${workspaceId}/channels/${channelId}`,
+            method: "DELETE",
+        };
+        return api({ url: route.url, method: route.method });
+    },
 
+
+    getWorkspaceRole: async (workspaceId) =>{
+        const route = {
+            url: `/workspace/${workspaceId}/myrole`,
+            method:'GET'
+        }
+        const response =  await api({ url: route.url, method: route.method });
+       return response.data;
+    },
+    //채널 업데이트
+    updateChannel: async (workspaceId, channelId, channelData) => {
+        const route = apiRoutes.chat.updateChannel(workspaceId, channelId);
+        return api({
+            url:route.url,
+            method: route.method,
+            data: channelData
+        })
+    }
+    ,
+    //워크스페이스 업데이트
+    updateWorkspace:  async (workspaceId, workspaceData) => {
+        const route = apiRoutes.chat.updateWorkspace(workspaceId);
+        return api({
+            url:route.url,
+            method: route.method,
+            data:  workspaceData
+        })
+    },
+    listFiles : async (workspaceId, channelId) => {
+        const route = {
+            url: `/workspace/${workspaceId}/channels/${channelId}/files`,
+            method:'GET'
+        }
+        const response =  await api({ url: route.url, method: route.method });
+        return response.data;
+
+    }
 };
 
 export default chatAPI;

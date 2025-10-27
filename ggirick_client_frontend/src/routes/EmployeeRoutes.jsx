@@ -1,67 +1,43 @@
-import {Route, Routes} from "react-router-dom";
-import AddressPage from "../pages/address/AddressPage.jsx";
+import { Route, Routes } from "react-router-dom";
+import { Suspense, lazy, useEffect } from "react";
 import "flowbite/dist/flowbite.css";
-import BoardRoutes from "./BoardRoutes.jsx";
-import Dashboard from "@/pages/dashboard/Dashboard.jsx";
-import ReservationPage from "@/pages/reservation/ReservationPage.jsx";
-import TaskPage from "@/pages/task/TaskPage.jsx";
-import ChatPage from "@/pages/chat/ChatPage.jsx";
-import MailPage from "@/pages/mail/MailPage.jsx";
+
+// Lazy 로드
+const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard.jsx"));
+const BoardRoutes = lazy(() => import("./BoardRoutes.jsx"));
+const ReservationPage = lazy(() => import("@/pages/reservation/ReservationPage.jsx"));
+const TaskPage = lazy(() => import("@/pages/task/TaskPage.jsx"));
+const ChatPage = lazy(() => import("@/pages/chat/ChatPage.jsx"));
+const MailPage = lazy(() => import("@/pages/mail/MailPage.jsx"));
+const AddressPage = lazy(() => import("@/pages/address/AddressPage.jsx"));
 
 export default function EmployeeRoutes() {
-    return (
-        <Routes>
-            <Route path="/" element={<Dashboard/>}></Route>
-            <Route path="/board/*" element={<BoardRoutes/>}/>
-            <Route
-                path="/approval"
-                element={<>approval</>}
-            ></Route>
-            <Route
-                path="/calendar"
-                element={<>calendar</>}
-            ></Route>
-            <Route
-                path="/workmanagement"
-                element={<>workmanagement</>}
-            ></Route>
-            <Route
-                path="/reservation"
-                element={<ReservationPage/>}
-            ></Route>
-            <Route
-                path="/task"
-                element={<TaskPage/>}
-            ></Route>
-            <Route
-                path="/mail"
-                element={<MailPage/>}
-            ></Route>
-            <Route
-                path="/address"
-                element={<AddressPage/>}
-            ></Route>
-            <Route
-                path="/chat"
-                element={<ChatPage/>}
-            ></Route>
-            <Route
-                path="/videomeeting"
-                element={<>videomeeting</>}
-            ></Route>
-            <Route
-                path="/drive"
-                element={<>drive</>}
-            ></Route>
-            <Route
-                path="/organization"
-                element={<>organization</>}
-            ></Route>
+    // ✨ prefetch hook
+    useEffect(() => {
+        // 자주 이동하는 페이지를 백그라운드에서 미리 불러옴
+        import("@/pages/chat/ChatPage.jsx");
+        import("@/pages/mail/MailPage.jsx");
+        import("@/pages/task/TaskPage.jsx");
+    }, []);
 
-            <Route
-                path="*"
-                element={<>error</>}
-            ></Route>
-        </Routes>
+    return (
+        <Suspense fallback={<div className="text-center p-4">페이지 불러오는 중...</div>}>
+            <Routes>
+                <Route path="/" element={<Dashboard />} />
+                <Route path="/board/*" element={<BoardRoutes />} />
+                <Route path="/approval" element={<>approval</>} />
+                <Route path="/calendar" element={<>calendar</>} />
+                <Route path="/workmanagement" element={<>workmanagement</>} />
+                <Route path="/reservation" element={<ReservationPage />} />
+                <Route path="/task" element={<TaskPage />} />
+                <Route path="/mail" element={<MailPage />} />
+                <Route path="/address" element={<AddressPage />} />
+                <Route path="/chat" element={<ChatPage />} />
+                <Route path="/videomeeting" element={<>videomeeting</>} />
+                <Route path="/drive" element={<>drive</>} />
+                <Route path="/organization" element={<>organization</>} />
+                <Route path="*" element={<>error</>} />
+            </Routes>
+        </Suspense>
     );
 }

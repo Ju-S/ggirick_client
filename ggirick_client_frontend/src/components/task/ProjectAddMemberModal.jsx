@@ -15,6 +15,7 @@ export default function ProjectAddMemberModal({ open, onClose }) {
         console.log("선택된 멤버:", members);
         setSelectedMembers(members);
 
+
         syncMembersAPI(selectedProject.id, members)
             .then(response => {
                 if (response.data.result) {

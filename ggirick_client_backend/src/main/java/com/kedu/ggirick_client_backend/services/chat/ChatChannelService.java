@@ -2,14 +2,18 @@ package com.kedu.ggirick_client_backend.services.chat;
 
 import com.kedu.ggirick_client_backend.config.ChatConfig;
 import com.kedu.ggirick_client_backend.dao.chat.ChatChannelDAO;
+import com.kedu.ggirick_client_backend.dao.chat.ChatDAO;
 import com.kedu.ggirick_client_backend.dao.chat.ChatWorkspaceDAO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatChannelParticipantDTO;
+import com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO;
+import com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceDTO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -21,6 +25,11 @@ public class ChatChannelService {
 
     @Autowired
     private ChatWorkspaceDAO chatWorkspaceDAO;
+
+    @Autowired
+    private ChatNotificationService chatNotificationService;
+    @Autowired
+    private ChatDAO chatDAO;
 
 
     //채널 아이디 참가자 확인하기
@@ -48,25 +57,20 @@ public class ChatChannelService {
      *   필요한 추가/삭제를 자동으로 수행함.
      */
     @Transactional
-    public boolean syncChannelParticipants(Long channelId, List<String> employeeIds) {
-
-        //  현재 DB에 존재하는 참여자 조회
+    public boolean syncChannelParticipants(Long workspaceId, Long channelId, List<String> employeeIds) {
         List<String> existingParticipants = chatChannelDAO.selectChannelParticipantsByChannelId(channelId)
                 .stream()
                 .map(ChatChannelParticipantDTO::getEmployeeId)
                 .collect(Collectors.toList());
 
-        //  삭제할 대상: DB에는 있는데 프론트에서 빠진 경우
         List<String> toRemove = existingParticipants.stream()
                 .filter(id -> !employeeIds.contains(id))
                 .collect(Collectors.toList());
 
-        //  추가할 대상: 프론트에는 있는데 DB에 없는 경우
         List<String> toAdd = employeeIds.stream()
                 .filter(id -> !existingParticipants.contains(id))
                 .collect(Collectors.toList());
 
-        //  삭제 처리
         for (String id : toRemove) {
             ChatChannelParticipantDTO dto = new ChatChannelParticipantDTO();
             dto.setChannelId(channelId);
@@ -74,7 +78,6 @@ public class ChatChannelService {
             chatChannelDAO.deleteChannelParticipant(dto);
         }
 
-        // 5추가 처리
         for (String id : toAdd) {
             ChatChannelParticipantDTO dto = new ChatChannelParticipantDTO();
             dto.setChannelId(channelId);
@@ -82,8 +85,12 @@ public class ChatChannelService {
             chatChannelDAO.insertorUpdateChannelParticipant(dto);
         }
 
+        // 변경된 멤버 구분하여 전달
+        chatNotificationService.notifyChannelMembersUpdated(workspaceId, channelId, toAdd, toRemove);
+
         return true;
     }
+
 
     /*
     DM 채팅방 만들기
@@ -117,6 +124,15 @@ public class ChatChannelService {
             }
         });
 
+        // 4. DM 채널 참여자 알림 발송
+        chatNotificationService.notifyChannelMembersUpdated(
+                workspaceId,
+                dm.getId(),
+                Arrays.asList(myId,targetId),  // 추가된 멤버
+                Collections.emptyList()   // 제거된 멤버 없음
+        );
+
+
 
         return dm;
     }
@@ -137,5 +153,10 @@ public class ChatChannelService {
         chatChannelDAO.updateChannel(existing);
 
         return existing;
+    }
+
+
+    public List<ChatFileDTO> listFilesByChannel(Long workspaceId, Long channelId) {
+        return chatChannelDAO.selectFilesByChannel(workspaceId, channelId);
     }
 }

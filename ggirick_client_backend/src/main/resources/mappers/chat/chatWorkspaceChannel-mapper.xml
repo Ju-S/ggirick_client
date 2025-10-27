@@ -15,6 +15,7 @@
         FROM CHAT_WORKSPACE w
         JOIN CHAT_WORKSPACE_MEMBER m ON w.ID = m.WORKSPACE_ID
         WHERE m.EMPLOYEE_ID = #{employeeId}
+        AND w.deleted_at IS NULL
         ORDER BY w.CREATED_AT DESC
     </select>
 
@@ -34,6 +35,7 @@
         AND p.EMPLOYEE_ID = #{userId}
         AND p.LEFT_AT IS NULL
         WHERE c.WORKSPACE_ID = #{workspaceId}
+        AND c.deleted_at IS NULL
         ORDER BY c.CREATED_AT ASC
     </select>
     <!--  워크스페이스 만들기 -->
@@ -62,9 +64,24 @@
         WHERE id = #{channelId}
     </select>
 
+    <!-- 워크스페이스 단일 조회 -->
+    <select id="selectWorkspaceById" parameterType="long" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceDTO">
+        SELECT *
+        FROM CHAT_WORKSPACE
+        WHERE id = #{workspaceId}
+    </select>
+
+
     <!-- 채널 정보 업데이트 -->
     <update id="updateChannel" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO">
         UPDATE CHAT_CHANNEL
+        SET name = #{name},
+        description = #{description}
+        WHERE id = #{id}
+    </update>
+    <!-- 워크스페이스 정보 업데이트 -->
+    <update id="updateWorkspace" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceDTO">
+        UPDATE CHAT_WORKSPACE
         SET name = #{name},
         description = #{description}
         WHERE id = #{id}
@@ -201,5 +218,60 @@
         FROM chat_channel
         WHERE workspace_id = #{workspaceId}
         AND type_id != #{excludedTypeId}
+    </select>
+    <!-- 워크스페이스 삭제 -->
+    <update id="deleteWorkspace" parameterType="long">
+        UPDATE CHAT_WORKSPACE
+        SET deleted_at = SYSTIMESTAMP
+        WHERE id = #{workspaceId}
+    </update>
+
+    <!-- 채널 삭제 -->
+    <update id="deleteChannel" parameterType="long">
+        UPDATE CHAT_CHANNEL
+        SET deleted_at = SYSTIMESTAMP
+        WHERE id = #{channelId}
+    </update>
+
+    <!-- 메시지 삭제 -->
+    <update id="deleteMessagesByChannelId" parameterType="long">
+        UPDATE CHAT_MESSAGE
+        SET deleted_at = SYSTIMESTAMP
+        WHERE channel_id = #{channelId}
+    </update>
+
+    <!-- 워크스페이스 아이디랑 사용자 아이디로 그 사람의 권한 확인하기 -->
+    <select id="selectWorkspaceRoleByUser"
+            parameterType="map"
+            resultType="int">
+        SELECT role_id
+        FROM chat_workspace_member
+        WHERE workspace_id = #{workspaceId}
+        AND employee_id = #{employeeId}
+        AND left_at IS NULL
+    </select>
+    <!-- 워크스페이스 아이디랑 사용자 아이디로 그 사람의 권한이름 확인하기 -->
+    <select id="selectWorkspaceRoleNameByUser"
+            parameterType="map"
+            resultType="string">
+        SELECT r.name
+        FROM chat_workspace_member m
+        JOIN chat_workspace_role r
+        ON m.role_id = r.id
+        WHERE m.workspace_id = #{workspaceId}
+        AND m.employee_id = #{employeeId}
+        AND m.left_at IS NULL
+    </select>
+    <!-- 워크스페이스 ID로 채널 ID 목록 조회 -->
+    <select id="selectChannelIdsByWorkspaceId"
+            parameterType="long"
+            resultType="long">
+        SELECT
+        id
+        FROM
+        chat_channel
+        WHERE
+        workspace_id = #{workspaceId}
+        AND deleted_at IS NULL
     </select>
 </mapper>

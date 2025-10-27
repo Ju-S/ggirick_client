@@ -1,9 +1,9 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
 
 /**
  * useChatWebSocket
- * 채팅방별 독립 STOMP client hook
+ * 워크스페이스 단위 STOMP client 재사용 hook
  *
  * @param {number|string} workspaceId - 워크스페이스 ID
  * @param {number|string} channelId - 채널 ID
@@ -11,34 +11,26 @@ import { Client } from "@stomp/stompjs";
  */
 export function useChatWebSocket(workspaceId, channelId, onMessage) {
     const clientRef = useRef(null);
+    const currentSubscription = useRef(null);
 
+    // 항상 최신 onMessage 참조를 유지
+    const onMessageRef = useRef(onMessage);
+    onMessageRef.current = onMessage;
+
+    // 워크스페이스 클라이언트 초기화
     useEffect(() => {
-        if (!workspaceId || !channelId) return;
+        if (!workspaceId || clientRef.current) return;
 
         const token = sessionStorage.getItem("token");
-
         const client = new Client({
-            brokerURL: "ws://192.168.45.172:8081/ws",
+            brokerURL: "ws://10.5.5.1:8081/ws",
             reconnectDelay: 5000,
             debug: (str) => console.log("[STOMP]", str),
             connectHeaders: { Authorization: "Bearer " + token },
         });
 
-        clientRef.current = client;
-
         client.onConnect = () => {
-            console.log(`[STOMP] Connected to workspace ${workspaceId} channel ${channelId}`);
-
-            const topic = `/subscribe/workspace/${workspaceId}/channel/${channelId}`;
-            client.subscribe(topic, (msg) => {
-                if (!msg.body) return;
-                try {
-                    const data = JSON.parse(msg.body);
-                    onMessage(data);
-                } catch (e) {
-                    console.error("Failed to parse STOMP message", e);
-                }
-            });
+            console.log(`[STOMP] Connected to workspace ${workspaceId}`);
         };
 
         client.onStompError = (frame) => {
@@ -46,45 +38,77 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
         };
 
         client.activate();
+        clientRef.current = client;
 
-        // 🟢 수정된 cleanup
         return () => {
-            console.log(`[STOMP] Cleanup for channel ${channelId}`);
-            // 채널 변경 시에만 해제
             if (clientRef.current) {
                 clientRef.current.deactivate();
                 clientRef.current = null;
             }
         };
-    }, [workspaceId, channelId]); // ✅ onMessage 제거
+    }, [workspaceId]);
 
-    //  메시지 전송 함수
-    const sendMessage = ({ type, content, parentId, emoji }) => {
-        if (!clientRef.current || !clientRef.current.connected) return;
+    // 채널 subscribe/unsubscribe
+    useEffect(() => {
+        if (!clientRef.current || !channelId) return;
+
+        if (!clientRef.current.connected) {
+            console.warn("WebSocket not connected yet");
+            return;
+        }
+
+        // 기존 subscribe 해제
+        if (currentSubscription.current) {
+            currentSubscription.current.unsubscribe();
+            currentSubscription.current = null;
+        }
+
+        const topic = `/subscribe/workspace/${workspaceId}/channel/${channelId}`;
+        currentSubscription.current = clientRef.current.subscribe(topic, (msg) => {
+            if (!msg || !msg.body) return;
+            try {
+                const data = JSON.parse(msg.body);
+                if (data) onMessageRef.current(data);
+            } catch (e) {
+                console.error("Failed to parse STOMP message", e);
+            }
+        });
+
+        return () => {
+            currentSubscription.current?.unsubscribe();
+            currentSubscription.current = null;
+        };
+    }, [workspaceId, channelId]);
+
+    const sendMessage = useCallback(({ type, content, parentId, emoji, senderId, senderName, viewer }) => {
+
+        if (!clientRef.current || !clientRef.current?.connected || !channelId) return;
+
+        const payload = {
+            workspaceId,
+            channelId,
+            senderId,
+            senderName,
+            type,
+            parentId,
+            emoji,
+            viewer,
+            hasFile: Array.isArray(content)
+                ? content.some(block => ["audio", "video", "image", "file"].includes(block.type))
+                : false,
+            content: JSON.stringify(content),
+            createdAt: new Date()
+        };
+
+        console.log("발행한 페이로드:", payload);
+
+        clientRef.current.publish({
+            destination: `/send/workspace/${workspaceId}/channel/${channelId}`,
+            body: JSON.stringify(payload),
+        });
+    }, [workspaceId, channelId]);
 
 
-        try{
-           const payload = {
-               workspaceId:workspaceId,
-               channelId:channelId,
-               type,
-               parentId,
-               emoji,
-               content: JSON.stringify(content),
-               createdAt: new Date()
-           };
-           console.log("발행 전 페이로드 확인",payload);
-
-           clientRef.current.publish({
-               destination: `/send/workspace/${workspaceId}/channel/${channelId}`,
-               body: JSON.stringify(payload),
-           });
-       }catch (e) {
-           console.log("에러메시지"+e);
-       }
-
-
-    };
 
     return { sendMessage };
 }

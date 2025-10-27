@@ -1,9 +1,11 @@
-import React, { useEffect, useRef, useState, useCallback, memo } from "react";
+// ChatRoom.jsx
+import React, {useEffect, useRef, useCallback, useMemo, memo, useState} from "react";
 import ChatInput from "./ChatInput";
 import useChatStore from "../../store/chat/useChatStore.js";
 import { useChatWebSocket } from "@/hooks/chat/useChatWebSocket.js";
 import { Message as BaseMessage } from "@/components/chat/Message.jsx";
 import ChatRoomHeader from "@/components/chat/ChatRoomHeader.jsx";
+import ChannelFileDrawer from "@/components/chat/ChannelFileDrawer.jsx";
 
 const Message = memo(BaseMessage);
 
@@ -16,6 +18,7 @@ export default function ChatRoom() {
         selectedWorkspace,
         selectedChannel,
         selectedChannelMember,
+        selectedWorkspaceMember,
         fetchOldMessages,
         hasMoreMessages,
     } = useChatStore();
@@ -24,8 +27,13 @@ export default function ChatRoom() {
     const topRef = useRef(null);
     const bottomRef = useRef(null);
     const didInitialScroll = useRef(false);
+    const prevMessagesLength = useRef(0);
 
-
+    const memberMap = useMemo(() => {
+        const map = new Map();
+        selectedWorkspaceMember.forEach(m => map.set(m.employeeId, m));
+        return map;
+    }, [selectedWorkspaceMember]);
 
     const { sendMessage } = useChatWebSocket(
         selectedWorkspace?.id,
@@ -34,42 +42,30 @@ export default function ChatRoom() {
     );
 
 
-    const prevMessagesLength = useRef(0);
-
     useEffect(() => {
         if (!containerRef.current || messages.length === 0) return;
 
-        // 최초 진입 시 하단으로 스크롤
         if (!didInitialScroll.current) {
             bottomRef.current.scrollIntoView({ behavior: "instant" });
             didInitialScroll.current = true;
-        }
-        // 이후 새 메시지가 추가될 때만 스크롤
-        else if (messages.length > prevMessagesLength.current) {
+        } else if (messages.length > prevMessagesLength.current) {
             bottomRef.current.scrollIntoView({ behavior: "instant" });
         }
 
         prevMessagesLength.current = messages.length;
-    }, [messages, selectedChannel]);
+    }, [messages.length, selectedChannel?.id]);
 
-
-    // 이전 메시지 불러오기 (실제 요청)
     const loadOlderMessages = useCallback(async () => {
-
         if (!hasMoreMessages || messages.length === 0) return;
 
         const container = containerRef.current;
-
         setLoading(true);
-
         const oldScrollHeight = container.scrollHeight;
+
         await fetchOldMessages();
 
-        // 스크롤 위치 유지
         container.scrollTop = container.scrollHeight - oldScrollHeight;
-
         setLoading(false);
-
     }, [hasMoreMessages, messages.length, fetchOldMessages, setLoading]);
 
     if (!selectedWorkspace || !selectedChannel) {
@@ -82,85 +78,76 @@ export default function ChatRoom() {
 
     return (
         <main className="flex flex-1 flex-col bg-base-200 text-base-content">
-            <ChatRoomHeader/>
-            <div
-                ref={containerRef}
-                className="flex-1 overflow-y-auto p-4 space-y-4"
-            >
+            <ChatRoomHeader  sendMessage={sendMessage}/>
+            <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                 <div ref={topRef}></div>
 
-                {loading && messages.length === 0 && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-base-200 z-50">
-                        <progress className="progress w-56 progress-primary" value="40" max="100" />
+
+                {loading && (
+                    <div className="flex flex-col items-center justify-center gap-2 p-4">
+                        <div className="radial-progress animate-spin text-secondary" style={{ "--value": 70 }}> </div>
+                        <span className="text-sm text-base-content/70">메시지 로딩중...</span>
                     </div>
                 )}
-
-                {loading && messages.length > 0 && (
-                    <div className="text-center py-4 text-gray-500 sticky top-0 bg-base-100 border-b border-base-200">
-                        <svg
-                            className="animate-spin h-5 w-5 text-primary-500 inline-block mr-2"
-                            xmlns="http://www.w3.org/2000/svg"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                        >
-                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                            <path
-                                className="opacity-75"
-                                fill="currentColor"
-                                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042
-1.135 5.824 3 7.938l3-2.647z"
-                            />
-                        </svg>
-                        이전 메시지를 불러오는 중...
-                    </div>
-                )}
-
                 {!hasMoreMessages && messages.length >= 30  && (
                     <div className="text-center text-sm text-base-content-100">
                         더 불러올 메시지가 없습니다.
                     </div>
                 )}
-                {/* 이전 메시지 더 불러오기 버튼 */}
-                {hasMoreMessages && messages.length >= 30  &&(
+                {hasMoreMessages && messages.length >= 30 && (
                     <div className="text-center mb-2">
-                        <button
-                            className="btn btn-sm btn-outline"
-                            onClick={loadOlderMessages}
-                        >
+                        <button className="btn btn-sm btn-outline" onClick={loadOlderMessages}>
                             더 불러오기
                         </button>
                     </div>
                 )}
-                {messages.map((msg) =>
-                    msg.type === "user" ? (
-                        <div key={msg.id} data-msg-id={msg.id} className="flex items-start space-x-3">
-                            <img
-                                src={
-                                    selectedChannelMember.find((m) => m.employeeId === msg.senderId)?.profileUrl ||
-                                    "https://flowbite.com/docs/images/people/profile-picture-1.jpg"
-                                }
-                                className="h-8 w-8 rounded-full"
-                                alt={msg.senderName}
-                            />
-                            <Message
-                                msg={msg}
-                                like={msg.like}
-                                viewer={msg.viewer}
-                                reactions={msg.reactions}
-                                sendMessage={sendMessage}
-                            />
-                        </div>
-                    ) : (
-                        <div key={msg.id} className="text-center text-xs text-base-content/50 italic">
-                            {msg.text}
-                        </div>
-                    )
-                )}
+
+                {messages.map(msg => {
+                    if (msg.type === "user") {
+                        return (
+                            <div key={msg.id} data-msg-id={msg.id} className="flex items-start space-x-3">
+                                <img
+                                    src={
+                                        memberMap.get(msg.senderId)?.profileUrl ||
+                                        `https://ui-avatars.com/api/?name=${encodeURIComponent(msg.senderName || "User")}&background=random`
+                                    }
+                                    className="h-8 w-8 rounded-full"
+                                    alt={msg.senderName || "Unknown"}
+                                />
+                                <Message
+                                    key={msg.id}
+                                    msg={msg}
+                                    sendMessage={sendMessage}
+                                />
+                            </div>
+                        );
+                    } else {
+                        let contentText = "";
+                        try {
+                            const parsed = typeof msg.content === "string" ? JSON.parse(msg.content) : msg.content;
+                            contentText = parsed.text || msg.content;
+                        } catch(e) {
+                            contentText = msg.content;
+                        }
+
+                        return (
+                            <div key={msg.id} className="text-center text-xs text-base-content/50 italic">
+                                {contentText}
+                                <div className="text-[10px] text-gray-400">
+                                    {msg.time}
+                                </div>
+                            </div>
+                        );
+                    }
+                })}
+
 
                 <div ref={bottomRef}></div>
             </div>
 
             <ChatInput onSend={sendMessage} />
+
         </main>
+
     );
 }

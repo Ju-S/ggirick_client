@@ -4,7 +4,7 @@ import data from "@emoji-mart/data";
 import BaseModal from "@/components/common/BaseModal.jsx";
 import useChatStore from "@/store/chat/useChatStore.js";
 
-export function BlockActions({ onLike, onCopy, like = 0, viewer = [], reactions = [], onAddReaction, content = [] }) {
+export function BlockActions({ onLike, onCopy,onViewer, like = 0, viewer = [],likeUsers, reactions = [], onAddReaction, content = [] }) {
     const [showPicker, setShowPicker] = useState(false);
     const [showReactionModal, setShowReactionModal] = useState(false);
     const [selectedReactionUsers, setSelectedReactionUsers] = useState([]);
@@ -13,20 +13,31 @@ export function BlockActions({ onLike, onCopy, like = 0, viewer = [], reactions 
     const [likeAnim, setLikeAnim] = useState(false);
     const [prevLike, setPrevLike] = useState(like);
 
-    const {selectedChannelMember} = useChatStore();
+    const [viewerAnim, setViewerAnim] = useState(false);
+    const [prevViewerCount, setPrevViewerCount] = useState(viewer.length);
 
+    const {selectedChannelMember} = useChatStore();
+//좋아요 애니메이션
     useEffect(() => {
         if (like > prevLike) {
-            // 좋아요가 증가한 경우만 애니메이션
             setLikeAnim(true);
-            setTimeout(() => setLikeAnim(false), 800); // 0.8초 후 초기화
+            setTimeout(() => setLikeAnim(false), 800);
         }
         setPrevLike(like);
     }, [like]);
+    // 읽음 애니메이션
+    useEffect(() => {
+        if (viewer.length > prevViewerCount) {
+            setViewerAnim(true);
+            setTimeout(() => setViewerAnim(false), 800);
+        }
+        setPrevViewerCount(viewer.length);
+    }, [viewer.length]);
+
 
     // 클릭한 반응에 누가 눌렀는지 모달 띄우기
     const handleReactionClick = (reaction) => {
-        console.log(reactions)
+
         const detailedUsers = reaction.users
             .map((userId) => {
                 const member = selectedChannelMember.find(m => m.employeeId === userId);
@@ -41,6 +52,20 @@ export function BlockActions({ onLike, onCopy, like = 0, viewer = [], reactions 
 
     };
 
+    const likeUserNames = Array.isArray(likeUsers) && likeUsers.length > 0
+        ? likeUsers.map(userId => {
+            const member = selectedChannelMember.find(m => m.employeeId === userId);
+            return member ? member.name : userId; // fallback: id 그대로
+        }).join(", ")
+        : "아직 좋아요 없음";
+
+    const viewerUserNames = Array.isArray(viewer) && viewer.length > 0
+        ? viewer.map(userId => {
+            const member = selectedChannelMember.find(m => m.employeeId === userId);
+            return member ? member.name : userId; // fallback: id 그대로
+        }).join(", ")
+        : "아직 본다고 티낸사람 없음";
+    
     const handleCopyClick = () => {
         if (onCopy) onCopy(content);
 
@@ -50,22 +75,33 @@ export function BlockActions({ onLike, onCopy, like = 0, viewer = [], reactions 
         if (onLike) onLike();
 
     }
+    const handleViewerClick = () => {
+        if(onViewer) onViewer();
+    }
 
     return (
         <>
             {/* 이모지 선택 */}
             {showPicker && (
-                <div className="absolute bottom-8 right-0 z-10 shadow-lg">
-                    <Picker
-                        data={data}
-                        onEmojiSelect={(emoji) => {
-                            if (onAddReaction) onAddReaction(emoji.native);
-                            setShowPicker(false);
-                        }}
-                        theme="light"
-                        previewPosition="none"
-                        perLine={8}
-                    />
+                <div
+                    className="fixed inset-0 z-20 flex items-center justify-center bg-black/30"
+                    onClick={() => setShowPicker(false)} // 배경 클릭 시 닫기
+                >
+                    <div
+                        className="shadow-lg bg-base-100 text-base-content rounded-md"
+                        onClick={(e) => e.stopPropagation()} // Picker 클릭 시 닫히지 않도록
+                    >
+                        <Picker
+                            data={data}
+                            onEmojiSelect={(emoji) => {
+                                if (onAddReaction) onAddReaction(emoji.native);
+                                setShowPicker(false);
+                            }}
+                            theme="light"
+                            previewPosition="none"
+                            perLine={8}
+                        />
+                    </div>
                 </div>
             )}
 
@@ -88,20 +124,36 @@ export function BlockActions({ onLike, onCopy, like = 0, viewer = [], reactions 
 
             {/* 액션 버튼 */}
             <div className="mt-1 text-xs flex justify-end space-x-2">
+                <div className="tooltip" data-tip={likeUserNames
+                }>
+
                 <button
                     className={`relative px-2 py-1 rounded-lg transition-transform duration-300 ${
                         likeAnim ? "scale-125" : ""
                     }`}
                     onClick={handleLikeClick}
+
+
                 >
                     👍 {like}
                     {likeAnim && (
                         <span className="absolute -top-2 -right-2 text-lg animate-ping text-yellow-400">✨</span>
                     )}
                 </button>
-                <button className="hover:text-base-content/80">
-                    읽음 {viewer.length || 0}
-                </button>
+                </div>
+                {/* 읽음 */}
+                <div className="tooltip" data-tip={viewerUserNames}>
+                    <button
+                        className={`relative px-2 py-1 rounded-lg transition-transform duration-300 ${viewerAnim ? "scale-125" : ""}`}
+
+                        onClick={handleViewerClick}
+                    >
+                        👀 {viewer.length}
+                        {viewerAnim && (
+                            <span className="absolute -top-2 -right-2 text-lg animate-ping text-blue-400">️️👁️</span>
+                        )}
+                    </button>
+                </div>
                 <button className="hover:text-base-content/80" onClick={handleCopyClick}>
                     📋 복사하기
                 </button>

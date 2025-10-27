@@ -3,11 +3,13 @@ package com.kedu.ggirick_client_backend.dao.chat;
 import com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO;
+import com.kedu.ggirick_client_backend.dto.chat.ReactionDTO;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,6 +79,19 @@ public class ChatDAO {
         mybatis.insert("Chat.insertLike",m);
     }
 
+    public boolean existsViewed(ChatMessageDTO m) {
+        Integer count = mybatis.selectOne("Chat.existsView", m);
+        return count != null && count > 0;
+    }
+
+    public void deleteView(ChatMessageDTO m) {
+        mybatis.delete("Chat.deleteView",m);
+    }
+
+    public void insertView(ChatMessageDTO m) {
+        mybatis.insert("Chat.insertView",m);
+    }
+
     public List<Map<String, String>> getReactionsForMessage(String messageId) {
         return  mybatis.selectList("Chat.getReactionsForMessage",messageId);
     }
@@ -88,5 +103,35 @@ public class ChatDAO {
 
     public List<ChatMessageFromDBDTO> selectOlderMessages(Map<String, Object> params) {
         return mybatis.selectList("Chat.selectOlderMessages", params);
+    }
+
+    public void insertChatFile(ChatFileDTO fileDTO) {
+            mybatis.insert("Chat.insertFile", fileDTO);
+    }
+
+    public List<Map<String, Object>> getLikeCounts(List<String> messageIds) {
+        return mybatis.selectList("Chat.getLikeCounts", messageIds);
+    }
+
+    public List<Map<String, Object>> getLikeUsersMap(List<String> messageIds) {
+        return mybatis.selectList("Chat.getLikeUsersMap", messageIds);
+    }
+
+    public List<Map<String, Object>> getReactionsMap(List<String> messageIds) {
+        return mybatis.selectList("Chat.getReactionsMap", messageIds);
+    }
+
+
+    public List<Map<String, Object>>  getViewersMap(List<String> messageIds) {
+        return mybatis.selectList("Chat.getViewersMap", messageIds);
+    }
+
+    public List<ChatMessageFromDBDTO> selectMessagesByChannelUltimate(Long workspaceId, Long channelId) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("workspaceId", workspaceId);
+        params.put("channelId", channelId);
+        params.put("offset", initialChatMessageSize); // 기존처럼 페이징용
+
+        return mybatis.selectList("Chat.selectMessagesByChannelUltimate", params);
     }
 }

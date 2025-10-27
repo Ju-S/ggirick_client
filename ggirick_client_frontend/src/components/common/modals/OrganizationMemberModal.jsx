@@ -9,6 +9,7 @@ export default function OrganizationMemberModal({
                                                           selectedMemberIds = [],
                                                           onSave,
                                                           showExistingMark = true,
+                                                    disabledMemberIds = [],
                                                       }) {
     const [organizationStructure, setOrganizationStructure] = useState([]);
     const [selectedMembers, setSelectedMembers] = useState(selectedMemberIds);
@@ -98,7 +99,7 @@ export default function OrganizationMemberModal({
                 />
             </div>
 
-            {/* 👥 선택된 인원 목록 */}
+            {/* 선택된 멤버 배지 */}
             {selectedEmployeeDetails.length > 0 && (
                 <div className="bg-base-200 rounded-lg p-2 mb-3">
                     <p className="text-sm font-semibold mb-1">
@@ -106,14 +107,15 @@ export default function OrganizationMemberModal({
                     </p>
                     <div className="flex flex-wrap gap-1">
                         {selectedEmployeeDetails.map((emp) => (
-                            <div
-                                key={emp.id}
-                                className="badge badge-outline flex items-center gap-1"
-                            >
-                                {emp.name}
+                            <div key={emp.id} className="badge badge-outline flex items-center gap-1">
+                                {emp.name} {disabledMemberIds.includes(emp.id) && "(OWNER)"}
                                 <button
                                     className="ml-1 text-xs text-error"
-                                    onClick={() => handleCheckboxChange(emp.id)}
+                                    onClick={() => {
+                                        if (!disabledMemberIds.includes(emp.id)) {
+                                            handleCheckboxChange(emp.id);
+                                        }
+                                    }}
                                 >
                                     ✕
                                 </button>
@@ -152,48 +154,38 @@ export default function OrganizationMemberModal({
                                         </summary>
 
                                         <div className="collapse-content space-y-1 pl-3">
-                                            {dept.employees?.length > 0 ? (
-                                                dept.employees.map((emp) => {
-                                                    const isChecked = selectedMembers.includes(emp.id);
-                                                    const isExisting = selectedMemberIds.includes(emp.id);
+                                            {dept.employees?.map((emp) => {
+                                                const isChecked = selectedMembers.includes(emp.id);
+                                                const isDisabled = disabledMemberIds?.includes(emp.id); // OWNER 등 제외 멤버
+                                                const isExisting = selectedMemberIds.includes(emp.id);
 
-                                                    return (
-                                                        <label
-                                                            key={emp.id}
-                                                            className={`flex items-center justify-between px-3 py-1.5 rounded-md transition-colors cursor-pointer
-                                hover:bg-base-200 ${
-                                                                isExisting
-                                                                    ? "bg-base-200 font-medium text-primary"
-                                                                    : "text-gray-800"
-                                                            }`}
-                                                        >
-                                                            <div className="flex items-center gap-2">
-                                                                <input
-                                                                    type="checkbox"
-                                                                    checked={isChecked}
-                                                                    onChange={() => handleCheckboxChange(emp.id)}
-                                                                    className="checkbox checkbox-sm"
-                                                                />
-                                                                <div className="flex flex-col leading-tight">
-                                                                    <span>{emp.name}</span>
-                                                                    <span className="text-xs text-gray-500">
-                                    {emp.email}
-                                  </span>
-                                                                </div>
+                                                return (
+                                                    <label
+                                                        key={emp.id}
+                                                        className={`flex items-center justify-between px-3 py-1.5 rounded-md transition-colors cursor-pointer
+                hover:bg-base-200 ${
+                                                            isExisting ? "bg-base-200 font-medium text-primary" : "text-gray-800"
+                                                        }`}
+                                                    >
+                                                        <div className="flex items-center gap-2">
+                                                            <input
+                                                                type="checkbox"
+                                                                checked={isDisabled ? true : isChecked} // 비활성 멤버는 항상 체크
+                                                                disabled={isDisabled}
+                                                                onChange={() => !isDisabled && handleCheckboxChange(emp.id)}
+                                                                className="checkbox checkbox-sm"
+                                                            />
+                                                            <div className="flex flex-col leading-tight">
+                    <span>
+                        {emp.name} {isDisabled && "(OWNER)"}
+                    </span>
+                                                                <span className="text-xs text-gray-500">{emp.email}</span>
                                                             </div>
-                                                            {showExistingMark && isExisting && (
-                                                                <span className="badge badge-outline badge-sm">
-                                  기존
-                                </span>
-                                                            )}
-                                                        </label>
-                                                    );
-                                                })
-                                            ) : (
-                                                <p className="text-xs text-gray-400 italic px-2 py-1">
-                                                    등록된 직원이 없습니다.
-                                                </p>
-                                            )}
+                                                        </div>
+                                                        {showExistingMark && isExisting && <span className="badge badge-outline badge-sm">기존</span>}
+                                                    </label>
+                                                );
+                                            })}
                                         </div>
                                     </details>
                                 ))}

@@ -2,6 +2,7 @@ package com.kedu.ggirick_client_backend.dao.chat;
 
 import com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatChannelParticipantDTO;
+import com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -58,5 +59,17 @@ public class ChatChannelDAO {
 
     public void updateChannel(ChatChannelDTO existing) {
         mybatis.update("ChatWorkspaceChannel.updateChannel", existing);
+    }
+
+    public List<Long> selectChannelIdsByWorkspaceId(Long workspaceId) {
+        return mybatis.selectList("ChatWorkspaceChannel.selectChannelIdsByWorkspaceId", workspaceId);
+    }
+
+    public List<ChatFileDTO> selectFilesByChannel(Long workspaceId, Long channelId) {
+        Map<String, Object> map = new HashMap<>();
+        map.put("workspaceId", workspaceId);
+        map.put("channelId", channelId);
+
+    return mybatis.selectList("Chat.selectFilesByChannel",map);
     }
 }
