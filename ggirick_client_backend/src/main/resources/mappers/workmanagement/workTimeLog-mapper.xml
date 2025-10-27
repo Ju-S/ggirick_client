@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WorkTimeLog">
+
+    <!-- 근무기록 insert -->
+    <insert id="insert" parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO" useGeneratedKeys="false">
+        <selectKey keyProperty="id" order="BEFORE" resultType="java.lang.Long">
+            SELECT WORK_TIME_LOG_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO WORK_TIME_LOG (ID, EMPLOYEE_ID, TYPE, RECORDED_AT)
+        VALUES (#{id}, #{employeeId}, #{type}, #{recordedAt})
+    </insert>
+
+    <!-- insert 하고 나서 바로 조회용 -->
+    <select id="getWorkTimeLogById"
+            parameterType="long"
+            resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO">
+        SELECT
+            ID,
+            EMPLOYEE_ID,
+            TYPE,
+            RECORDED_AT
+        FROM WORK_TIME_LOG
+        WHERE ID = #{id}
+    </select>
+
+    <!-- 근무기록 수정 -->
+    <update id="update" parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO">
+        UPDATE WORK_TIME_LOG
+        SET TYPE = #{type}, RECORDED_AT = #{recordedAt, jdbcType=TIMESTAMP}
+        WHERE ID = #{id}
+    </update>
+
+    <!-- 근무기록 삭제 -->
+    <delete id="delete" parameterType="long">
+        DELETE FROM WORK_TIME_LOG WHERE ID = #{id}
+    </delete>
+
+    <!-- 오늘 내 근무 기록 전체 조회 -->
+    <select id="getWorkTimeLogsByEmployeeId"
+            parameterType="string"
+            resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO">
+        SELECT
+        ID,
+        EMPLOYEE_ID,
+        TYPE,
+        RECORDED_AT
+        FROM WORK_TIME_LOG
+        WHERE EMPLOYEE_ID = #{employeeId}
+        AND TRUNC(RECORDED_AT) = TRUNC(SYSDATE)
+        ORDER BY RECORDED_AT
+    </select>
+
+    <!-- 특정 타입의 마지막 기록 (예: 마지막 출근 기록) -->
+    <select id="getLastWorkTimeLogByType"
+            parameterType="map"
+            resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO">
+        SELECT *
+        FROM WORK_TIME_LOG
+        WHERE EMPLOYEE_ID = #{employeeId}
+        AND TYPE = #{type}
+        ORDER BY RECORDED_AT DESC
+        FETCH FIRST 1 ROWS ONLY
+    </select>
+
+    <!-- 조건 조회용 - 통합버전 (기간 + 조직/부서 등) -->
+    <select id="getWorkTimeLogsByCondition"
+            parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkSearchConditionDTO"
+            resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO">
+        SELECT w.*
+        FROM WORK_TIME_LOG w
+        JOIN EMPLOYEE e ON w.EMPLOYEE_ID = e.EMPLOYEE_ID
+        WHERE (#{employeeId} IS NULL OR w.EMPLOYEE_ID = #{employeeId})
+        AND (#{departmentId} IS NULL OR e.DEPARTMENT_CODE = #{departmentId})
+        AND (#{organizationId} IS NULL OR e.ORGANIZATION_CODE = #{organizationId})
+        AND (#{startDate} IS NULL OR w.RECORDED_AT >= TO_DATE(#{startDate}, 'YYYY-MM-DD'))
+        AND (#{endDate} IS NULL OR w.RECORDED_AT &lt;= TO_DATE(#{endDate}, 'YYYY-MM-DD') + 1)
+        ORDER BY w.RECORDED_AT DESC
+    </select>
+
+</mapper>

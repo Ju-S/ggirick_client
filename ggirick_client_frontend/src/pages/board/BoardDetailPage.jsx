@@ -6,7 +6,7 @@ import {Paperclip} from "lucide-react";
 import {boardFileDownloadAPI} from "@/api/board/boardFileAPI.js";
 import {useEffect, useState} from "react";
 import useBoardStore from "@/store/board/boardStore.js";
-import useEmployeeStore from "@/store/employee/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 import {insertCommentAPI} from "@/api/board/boardCommentAPI.js";
 import {deleteAPI} from "@/api/board/boardAPI.js";

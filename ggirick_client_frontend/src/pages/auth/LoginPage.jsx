@@ -1,5 +1,5 @@
 import { useState } from "react";
-import useEmployeeStore from "../../store/employee/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import useAuthStore from "../../store/auth/authStore.js";
 
 import GgirickLogo from '@/assets/logo/ggirick-header.svg?react';

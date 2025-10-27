@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="WorkSummaryDaily">
+
+    <!-- 전일 근무기록 집계 후 MERGE -->
+    <update id="aggregateDailyWorkSummary" parameterType="java.time.LocalDate">
+        MERGE INTO WORK_SUMMARY_DAILY s
+        USING (
+        SELECT
+        EMPLOYEE_ID,
+        TRUNC(RECORDED_AT) AS WORK_DATE,
+        MIN(RECORDED_AT) AS START_TIME,
+        MAX(RECORDED_AT) AS END_TIME,
+        ROUND(
+        (EXTRACT(DAY FROM (MAX(RECORDED_AT) - MIN(RECORDED_AT))) * 24) +
+        (EXTRACT(HOUR FROM (MAX(RECORDED_AT) - MIN(RECORDED_AT)))) +
+        (EXTRACT(MINUTE FROM (MAX(RECORDED_AT) - MIN(RECORDED_AT))) / 60),
+        2
+        ) AS TOTAL_HOURS,
+        'NORMAL' AS STATUS
+        FROM WORK_TIME_LOG
+        WHERE TRUNC(RECORDED_AT) = #{targetDate}
+        GROUP BY EMPLOYEE_ID, TRUNC(RECORDED_AT)
+        ) t
+        ON (s.EMPLOYEE_ID = t.EMPLOYEE_ID AND s.WORK_DATE = t.WORK_DATE)
+        WHEN MATCHED THEN
+        UPDATE SET
+        s.START_TIME = t.START_TIME,
+        s.END_TIME = t.END_TIME,
+        s.TOTAL_HOURS = t.TOTAL_HOURS,
+        s.STATUS = t.STATUS
+        WHEN NOT MATCHED THEN
+        INSERT (EMPLOYEE_ID, WORK_DATE, START_TIME, END_TIME, TOTAL_HOURS, STATUS)
+        VALUES (t.EMPLOYEE_ID, t.WORK_DATE, t.START_TIME, t.END_TIME, t.TOTAL_HOURS, t.STATUS)
+    </update>
+</mapper>

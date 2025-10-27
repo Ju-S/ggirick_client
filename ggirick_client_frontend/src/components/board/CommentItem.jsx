@@ -2,7 +2,7 @@ import {useState} from "react";
 import {timestampToMonthDay} from "@/utils/board/boardDateFormat.js";
 import {insertCommentAPI, updateCommentAPI, deleteCommentAPI} from "@/api/board/boardCommentAPI.js";
 import useBoardStore from "@/store/board/boardStore.js";
-import useEmployeeStore from "@/store/employee/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 
 export default function CommentItem({comment, depth = 0}) {
     const [showReply, setShowReply] = useState(false);
