@@ -3,7 +3,8 @@ import BaseModal from "@/components/common/BaseModal.jsx";
 import chatAPI from "@/api/chat/chatAPI.js";
 import useChatStore from "@/store/chat/useChatStore.js";
 
-export default function ChannelMemberModal({ open, onClose, channel }) {
+
+export default function ChannelMemberModal({ open, onClose, channel,sendSystemMessage }) {
     const {
         selectedWorkspace,
         selectedChannelMember,
@@ -41,6 +42,8 @@ export default function ChannelMemberModal({ open, onClose, channel }) {
             const memberIds = members.current.map((m) => m.employeeId);
             await chatAPI.syncChannelMembers(selectedWorkspace.id, channel.id, memberIds);
             setSelectedChannelMember(members.current);
+
+            sendSystemMessage( "채널 멤버가 업데이트되었습니다.", "CHANNEL_MEMBERS_UPDATED");
             onClose();
         } catch (err) {
             console.error("채널 멤버 동기화 실패:", err);

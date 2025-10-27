@@ -19,6 +19,7 @@ public class ChatFileDTO {
     private Long channelId;
     private Long workspaceId;
     private Timestamp createdAt;
+    private String sysName;
 
     // getter/setter
 }

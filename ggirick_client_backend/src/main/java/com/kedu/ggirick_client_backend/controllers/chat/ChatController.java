@@ -9,8 +9,10 @@ import com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ContentBlock;
 import com.kedu.ggirick_client_backend.services.chat.ChatReactionService;
 import com.kedu.ggirick_client_backend.services.chat.ChatService;
+import com.kedu.ggirick_client_backend.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.handler.annotation.DestinationVariable;
@@ -36,6 +38,8 @@ public class ChatController {
     private final ChatService chatService;
     private final ChatReactionService chatReactionService;
     private final SimpMessagingTemplate simpMessagingTemplate;
+    private final FileUtil fileUtil;
+
     /**
      * 워크스페이스 내 특정 채널에 메시지를 보냄
      *
@@ -51,12 +55,11 @@ public class ChatController {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(msg);
         UserTokenDTO userInfo = (UserTokenDTO) accessor.getSessionAttributes().get("user");
 
-
         message.setWorkspaceId(workspaceId);
         message.setChannelId(channelId);
 
         message.setSenderId(userInfo.getId());
-
+        System.out.println(message.getType());
         switch (message.getType()) {
             /**
              * message의 타입필드를 통해 메시지의 종류를 구분함
@@ -80,6 +83,7 @@ public class ChatController {
                                 chatService.saveFile(
                                         message,
                                         (String) props.get("name"),
+
                                         (String) props.get("url")
 
 
@@ -88,10 +92,7 @@ public class ChatController {
                 }
                 chatService.sendMessage(message, null);
                 break;
-//            case "system":
-//                // 시스템 메시지는 DB에 저장할 수도 있고, 단순 알림으로만 보낼 수도 있음
-//                chatService.saveSystemMessage(message);
-//                break;
+
             case "like":
                 chatReactionService.toggleLike(
                        message
@@ -99,19 +100,18 @@ public class ChatController {
                 break;
 
             case "emoji":
+
                 chatReactionService.toggleEmoji(
                         message
                 );
                 break;
 
-//
-//            case "edit":
-//                chatService.editMessage(message.getParentId(), message.getContent());
-//                break;
-//
-//            case "delete":
-//                chatService.deleteMessage(message.getParentId());
-//                break;
+
+            case "viewer":
+                chatReactionService.toggleViewer(
+                        message
+                );
+                break;
 
             default:
                 log.warn("Unknown message type: {}", message.getType());
@@ -145,6 +145,14 @@ public class ChatController {
                 chatService.getOlderMessages(workspaceId, channelId, beforeId, additionalMessageSize);
 
         return ResponseEntity.ok(messages);
+    }
+
+    @GetMapping("/chat/files/download/{sysName}")
+    public ResponseEntity<byte[]> downloadFile(@PathVariable String sysName) {
+        byte[] data = fileUtil.fileDownload(sysName);
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + sysName + "\"")
+                .body(data);
     }
 
 

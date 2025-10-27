@@ -170,7 +170,12 @@ public class ChatWorkspaceChannelController {
         return ResponseEntity.ok(role);
     }
 
-
+    /**
+     *
+     * @param workspaceId
+     * @param channelId
+     * @return 파일 목록 ㅇㅇ
+     */
     @GetMapping("/{workspaceId}/channels/{channelId}/files")
     public List<ChatFileDTO> listFiles(
             @PathVariable Long workspaceId,

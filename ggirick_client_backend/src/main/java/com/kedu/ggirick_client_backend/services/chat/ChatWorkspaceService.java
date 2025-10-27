@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -145,6 +146,7 @@ public class ChatWorkspaceService {
             List<Long> channelIds = chatChannelDAO.selectChannelIdsByWorkspaceId(workspaceId);
 
             for (Long channelId : channelIds) {
+                // 제거 처리
                 for (String employeeId : toRemove) {
                     ChatChannelParticipantDTO dto = new ChatChannelParticipantDTO();
                     dto.setChannelId(channelId);
@@ -159,9 +161,16 @@ public class ChatWorkspaceService {
                         .map(ChatChannelParticipantDTO::getEmployeeId)
                         .collect(Collectors.toList());
 
-                chatNotificationService.notifyChannelMembersUpdated(workspaceId, channelId, updatedMembers);
+                // ✅ 수정된 알림 호출 (삭제 이벤트로만)
+                chatNotificationService.notifyChannelMembersUpdated(
+                        workspaceId,
+                        channelId,
+                        Collections.emptyList(),   // 추가된 멤버 없음
+                        toRemove                   // 제거된 멤버 목록 전달
+                );
             }
         }
+
 
         return true;
     }

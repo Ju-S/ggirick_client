@@ -36,6 +36,15 @@ const FileAPI = {
         });
         return response.data;
     },
+
+    /**
+     * 파일 다운로드용 URL 생성
+     * @param {string} sysName 시스템 파일명
+     * @returns {string} 다운로드를 위한 서버 URL
+     */
+    getDownloadUrl(sysName) {
+        return `/files/download/${encodeURIComponent(sysName)}`;
+    }
 };
 
 export default FileAPI;

@@ -20,6 +20,7 @@ export default function WorkspaceAddMemberModal({ open, onClose }) {
             .filter((m) => !m.leftAt)
             .map((m) => m.employeeId);
         setSelectedMembers(ids);
+
     }, [selectedWorkspaceMember]);
 
     const handleSave = async (members) => {

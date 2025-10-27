@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from "react";
 import {
-  useCreateBlockNote,
-
+    useCreateBlockNote,
+    FilePanelController,
+    FormattingToolbar,
+    FormattingToolbarController, getFormattingToolbarItems, FileReplaceButton,
 } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/style.css";
@@ -85,6 +87,7 @@ export default function ChatInput({onSend}) {
                    <BlockNoteView
                        id="chat"
                        editor={editor}
+
                        onKeyDown={(e) => {
                            if (e.key === "Enter") {
                                if (!e.shiftKey) {
@@ -95,7 +98,9 @@ export default function ChatInput({onSend}) {
                            }
                        }}
                        className="w-full h-full p-2.5 text-sm placeholder:text-base-content/50 focus:outline-none"
-                   />
+                   >
+
+                   </BlockNoteView>
 
                </div>
 

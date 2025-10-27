@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -57,24 +58,19 @@ public class ChatChannelService {
      */
     @Transactional
     public boolean syncChannelParticipants(Long workspaceId, Long channelId, List<String> employeeIds) {
-
-        //  현재 DB에 존재하는 참여자 조회
         List<String> existingParticipants = chatChannelDAO.selectChannelParticipantsByChannelId(channelId)
                 .stream()
                 .map(ChatChannelParticipantDTO::getEmployeeId)
                 .collect(Collectors.toList());
 
-        //  삭제할 대상: DB에는 있는데 프론트에서 빠진 경우
         List<String> toRemove = existingParticipants.stream()
                 .filter(id -> !employeeIds.contains(id))
                 .collect(Collectors.toList());
 
-        //  추가할 대상: 프론트에는 있는데 DB에 없는 경우
         List<String> toAdd = employeeIds.stream()
                 .filter(id -> !existingParticipants.contains(id))
                 .collect(Collectors.toList());
 
-        //  삭제 처리
         for (String id : toRemove) {
             ChatChannelParticipantDTO dto = new ChatChannelParticipantDTO();
             dto.setChannelId(channelId);
@@ -82,7 +78,6 @@ public class ChatChannelService {
             chatChannelDAO.deleteChannelParticipant(dto);
         }
 
-        // 5추가 처리
         for (String id : toAdd) {
             ChatChannelParticipantDTO dto = new ChatChannelParticipantDTO();
             dto.setChannelId(channelId);
@@ -90,10 +85,12 @@ public class ChatChannelService {
             chatChannelDAO.insertorUpdateChannelParticipant(dto);
         }
 
-        chatNotificationService.notifyChannelMembersUpdated(workspaceId, channelId, employeeIds);
+        // 변경된 멤버 구분하여 전달
+        chatNotificationService.notifyChannelMembersUpdated(workspaceId, channelId, toAdd, toRemove);
 
         return true;
     }
+
 
     /*
     DM 채팅방 만들기
@@ -126,6 +123,15 @@ public class ChatChannelService {
                 // 이미 존재하면 무시
             }
         });
+
+        // 4. DM 채널 참여자 알림 발송
+        chatNotificationService.notifyChannelMembersUpdated(
+                workspaceId,
+                dm.getId(),
+                Arrays.asList(myId,targetId),  // 추가된 멤버
+                Collections.emptyList()   // 제거된 멤버 없음
+        );
+
 
 
         return dm;

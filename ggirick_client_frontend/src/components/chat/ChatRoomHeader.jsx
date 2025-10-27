@@ -6,7 +6,7 @@ import DeleteConfirmModal from "@/components/chat/Modal/DeleteConfirmModal.jsx";
 import chatAPI from "@/api/chat/chatAPI.js";
 import ChannelFileDrawer from "@/components/chat/ChannelFileDrawer.jsx";
 
-export default function ChatRoomHeader() {
+export default function ChatRoomHeader({sendMessage}) {
 
 
     const { selectedChannel, selectedChannelMember,selectedWorkspace, removeChannel,setSelectedChannel, selectedWorkspaceMember,loading, setLoading } = useChatStore();
@@ -15,6 +15,10 @@ export default function ChatRoomHeader() {
     const [showDeleteModal, setShowDeleteModal] = useState(false);
     const [isFileDrawerOpen, setIsFileDrawerOpen] = useState(false);
     const [channelFiles, setChannelFiles] = useState([]);
+
+    const handleSystemMessage = (text,event) =>{
+        sendMessage({type:"system", event: event})
+    }
 
     const handleDelete = async () => {
         setLoading(true);
@@ -116,6 +120,7 @@ export default function ChatRoomHeader() {
                 channel={selectedChannel}
                 channelMembers={selectedChannelMember}
                 workspaceMembers={selectedWorkspaceMember}
+                sendSystemMessage={handleSystemMessage}
             />
 
 

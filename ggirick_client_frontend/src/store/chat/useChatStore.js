@@ -9,8 +9,14 @@ function normalizeMessage(m) {
         type: m.type,
         content: JSON.parse(m.content || "[]"),
         like: m.like_count || 0,
+        likeUsers:m.likeUsers || [],
+        viewer:m.viewer || [],
         reactions: m.reactions || [],
-        time: new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+        time: new Date(m.createdAt).toLocaleTimeString([], {  year: "numeric",
+            month: "2-digit",
+            day: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit" }),
     };
 }
 
@@ -28,6 +34,17 @@ const useChatStore = create((set, get) => ({
     workspaceRole: null,
     loading: false,
     hasMoreMessages: false,
+    //채널 캐싱전략
+    channelMessages: new Map(), // { channelId: ChatMessageFromDBDTO[] }
+
+
+    setChannelMessages: (channelId, messages) =>
+        set((state) => ({
+            channelMessages: new Map(state.channelMessages).set(channelId, messages)
+        })),
+
+    getChannelMessages: (channelId) => get().channelMessages.get(channelId) || [],
+
     setWorkspaceRole: (role) => set({ workspaceRole: role }),
     setLoading: (isLoading) => set({loading: isLoading}),
     setHasMoreMessages: (hasMore) => set({ hasMoreMessages: hasMore }),
@@ -116,104 +133,157 @@ const useChatStore = create((set, get) => ({
 
     // 채널 설정 + 메시지 불러오기 + 채널 구독
     setChannel: async (channel) => {
-        const {setLoading} = get();
-        setLoading(true)
-        set({ selectedChannel:channel });
-        const {selectedWorkspace} = get();
+        const {setLoading, getChannelMessages,selectedWorkspace,} = get();
+        if(!selectedWorkspace) return;
+
+        set({selectedChannel: channel,messages:[]})
+
+        setLoading(true);
+        //캐시된 메시지 있으면 서버 호출 없이 렌더링
+        const cached = getChannelMessages(channel.id);
+        if (cached.length > 0) {
+            setTimeout(() => {
+                set({ messages: cached });
+                setLoading(false);
+            }, 100); // 100ms 딜레이로 로딩 표시 보임
+            return;
+        }
+
         set({ hasMoreMessages: true, messages: [] });
+
+
         try {
             const res = await chatAPI.fetchMessages(selectedWorkspace.id, channel.id);
-            const messages = res.data || [];
+            const messages = (res.data || []).map(normalizeMessage);
 
-            // 메시지 구조 맞추기
-            const normalized = messages.map((m) => {
+            set({ selectedChannel:channel, messages});
+            get().setChannelMessages(channel.id, messages);
 
-
-                return {id: m.id,
-                    senderId: m.senderId,
-                    senderName: m.senderName || "Unknown",
-                    type: m.type,
-                    content: JSON.parse(m.content || "[]"),
-                    like: m.like_count || 0,
-                    likeUsers: m.likeUsers,
-                    reactions: m.reactions,
-                    time: new Date(m.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                    })}
-            });
-
-            set({ messages: normalized, loading: false });
             console.log(messages);
             const members = await chatAPI.fetchChannelParticipants(selectedWorkspace.id, channel.id);
             set({ selectedChannelMember: members });
 
+
         } catch (err) {
             console.error(err);
+
+        } finally {
             setLoading(false);
         }
     },
 
     addMessage:  async(m) => {
-        const { messages, selectedChannelMember} = get();
+        const { messages, selectedChannel,selectedChannelMember,channelMessages, setChannelMessages} = get();
         switch (m.type) {
             case "user":
                 const newMsg = normalizeMessage(m);
 
-                console.log("📨 새 메시지 추가:", newMsg);
+                console.log("새 메시지 추가:", newMsg);
 
                 set((state) => ({ messages: [...state.messages, newMsg] }));
-                break;
-            case "system":
-
-                const systemMsg = {
-                    id: m.id,
-                    type: "system",
-                    content: m.content,
-                    time: new Date(m.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                };
-                set((state) => ({ messages: [...state.messages, systemMsg] }));
-
-                switch(m.event) {
-                    case "CHANNEL_DELETED":
-                        set((state) => ({
-                            channels: state.channels.filter(ch => ch.id !== m.channelId),
-                            selectedChannel: state.selectedChannel?.id === m.channelId ? null : state.selectedChannel
-                        }));
-                        break;
-
-                    case "CHANNEL_MEMBERS_UPDATED":
-                        if (m.channelId === get().selectedChannel?.id) {
-                            set({ selectedChannelMember: m.members });
-                        }
-                        break;
-
-                    case "WORKSPACE_MEMBERS_UPDATED":
-                        set({ selectedWorkspaceMember: m.members });
-                        break;
-
-                    default:
-                        console.warn("Unknown system event:", m.event);
+                if (selectedChannel) {
+                    const updated = [...(channelMessages.get(selectedChannel.id) || []), newMsg];
+                    setChannelMessages(selectedChannel.id, updated);
                 }
                 break;
+            case "system":
+                try {
+                    const content = typeof m.content === "string" ? JSON.parse(m.content) : m.content;
+                    m.content = content; // 메시지 객체에 실제 content 넣기
+
+                    set((state) => ({ messages: [...state.messages, m] }));
+
+                    if (selectedChannel) {
+                        const updated = [...(channelMessages.get(selectedChannel.id) || []), m];
+                        setChannelMessages(selectedChannel.id, updated);
+                    }
+
+                    switch (content.event) {
+                        case "CHANNEL_DELETED":
+                            set((state) => ({
+                                channels: state.channels.filter(ch => ch.id !== m.channelId),
+                                selectedChannel: state.selectedChannel?.id === m.channelId ? null : state.selectedChannel
+                            }));
+                            break;
+
+                        case "CHANNEL_MEMBERS_ADDED":
+                            console.log("멤버 추가 알림:", content.addedMemberNames);
+                            // 필요하면 상태 업데이트 가능
+                            break;
+
+                        case "CHANNEL_MEMBERS_REMOVED":
+                            console.log("멤버 제거 알림:", content.removedMemberNames);
+                            // 필요하면 상태 업데이트 가능
+                            break;
+
+                        default:
+                            break;
+                    }
+                } catch (e) {
+                    console.error("System message parse error", e);
+                }
+                break;
+
             case "like":
-                // 메시지에 좋아요 카운트 업데이트
                 console.log("👍 좋아요 이벤트 수신:", m);
 
-                // 메시지 리스트에서 해당 messageId 찾기
                 set((state) => {
                     const updatedMessages = state.messages.map((msg) => {
-                        // parentId, messageId 둘 다 지원
                         const targetId = m.parentId ?? m.messageId;
                         if (msg.id !== targetId) return msg;
 
-                        const delta = m.liked ? 1  : -1; // 서버에서 liked/unliked 둘 다 오는 경우 대응
-                        return { ...msg, like: (msg.like || 0) + delta };
+                        const delta = m.liked ? 1 : -1;
+
+                        // likeUsers 업데이트
+                        let updatedLikeUsers = Array.isArray(msg.likeUsers) ? [...msg.likeUsers] : [];
+                        if (m.liked) {
+                            if (!updatedLikeUsers.includes(m.employeeId)) {
+                                updatedLikeUsers.push(m.employeeId);
+                            }
+                        } else {
+                            updatedLikeUsers = updatedLikeUsers.filter(id => id !== m.employeeId);
+                        }
+
+                        return {
+                            ...msg,
+                            like: (msg.like || 0) + delta,
+                            likeUsers: updatedLikeUsers
+                        };
                     });
                     return { messages: updatedMessages };
                 });
-
                 break;
+            case "viewer":
+                console.log("📖 읽음 반응 이벤트 수신:", m);
+
+                set((state) => {
+                    const updatedMessages = state.messages.map((msg) => {
+                        const targetId = m.parentId ?? m.messageId;
+                        if (msg.id !== targetId) return msg;
+
+                        // 기존 viewer 배열 안전 복사
+                        const updatedViewers = Array.isArray(msg.viewer) ? [...msg.viewer] : [];
+
+                        // 읽음 여부 판별 (서버에서 liked처럼 true/false로 보내는지, 배열로 보내는지에 따라 조정)
+                        const isAdd = m.viewer?.length ? true : m.viewed ?? true; // 안전하게 처리
+
+                        if (isAdd) {
+                            if (!updatedViewers.includes(m.employeeId)) {
+                                updatedViewers.push(m.employeeId);
+                            }
+                        } else {
+                            // 제거 (예: 읽음 취소)
+                            const idx = updatedViewers.indexOf(m.employeeId);
+                            if (idx !== -1) updatedViewers.splice(idx, 1);
+                        }
+
+                        return { ...msg, viewer: updatedViewers };
+                    });
+
+                    return { messages: updatedMessages };
+                });
+                break;
+
             case "emoji":
                 console.log("😊 이모지 반응 이벤트 수신:", m);
 
@@ -279,7 +349,7 @@ const useChatStore = create((set, get) => ({
     },
 
     fetchOldMessages : async() => {
-        const { messages, selectedWorkspace,  selectedChannel,hasMoreMessages, setHasMoreMessages} = get();
+        const { messages, selectedWorkspace,  selectedChannel,hasMoreMessages, setHasMoreMessages,channelMessages,setChannelMessages} = get();
 
         setHasMoreMessages(messages.length >= 30);
 
@@ -291,6 +361,9 @@ const useChatStore = create((set, get) => ({
             const oldMessages = (res.data || []).map(normalizeMessage);
             if (oldMessages.length === 0) set({ hasMoreMessages: false });
             set((state) => ({ messages: [...oldMessages, ...state.messages] }));
+            const updated = [...oldMessages, ...(channelMessages.get(selectedChannel.id) || [])];
+            setChannelMessages(selectedChannel.id, updated);
+
         } catch (err) {
             console.error("이전 메시지 불러오기 실패:", err);
         }

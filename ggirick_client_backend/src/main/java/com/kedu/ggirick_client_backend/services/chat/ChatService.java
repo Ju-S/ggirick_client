@@ -44,9 +44,11 @@ public class ChatService {
     }
 
     public List<ChatMessageFromDBDTO> getMessages(Long workspaceId, Long channelId) {
-        List<ChatMessageFromDBDTO> message =  chatDao.selectMessagesByChannel(workspaceId, channelId);
-        Collections.reverse(message);
-        return processMessage(message);
+        List<ChatMessageFromDBDTO> messages = chatDao.selectMessagesByChannel(workspaceId, channelId);
+        if (messages.isEmpty()) return Collections.emptyList();
+
+        Collections.reverse(messages);
+        return processFastMessage(messages);
     }
 
     public List<ChatMessageFromDBDTO> getOlderMessages(Long workspaceId, Long channelId, String beforeId, int limit) {
@@ -66,7 +68,53 @@ public class ChatService {
         // DB에서는 DESC로 가져오니까 프론트 순서 맞추기
         Collections.reverse(messages);
 
-        return processMessage(messages);
+        return processFastMessage(messages);
+    }
+
+    public List<ChatMessageFromDBDTO> processFastMessage(List<ChatMessageFromDBDTO> messages){
+        List<String> messageIds = messages.stream().map(ChatMessageFromDBDTO::getId).collect(Collectors.toList());
+        if (messageIds.isEmpty()) {
+            return messages;
+        }
+
+        // 일괄 좋아요/리액션 조회
+        Map<String, Integer> likeCounts = chatDao.getLikeCounts(messageIds).stream()
+                .collect(Collectors.toMap(
+                        r -> (String) r.get("ID"),
+                        r -> ((Number) r.get("CNT")).intValue()
+                ));
+
+        Map<String, List<String>> likeUsers = chatDao.getLikeUsersMap(messageIds).stream()
+                .collect(Collectors.groupingBy(
+                        r -> (String) r.get("MESSAGE_ID"),
+                        Collectors.mapping(r -> (String) r.get("EMPLOYEE_ID"), Collectors.toList())
+                ));
+        Map<String, List<String>> viewers = chatDao.getViewersMap(messageIds).stream()
+                .collect(Collectors.groupingBy(
+                        r -> (String) r.get("MESSAGE_ID"),
+                        Collectors.mapping(r -> (String) r.get("EMPLOYEE_ID"), Collectors.toList())
+                ));
+
+        Map<String, List<ReactionDTO>> reactions = chatDao.getReactionsMap(messageIds).stream()
+                .collect(Collectors.groupingBy(
+                        r -> (String) r.get("MESSAGE_ID"),
+                        Collectors.mapping(
+                                r -> new ReactionDTO(
+                                        (String) r.get("EMOJI"),
+                                        List.of((String) r.get("EMPLOYEE_ID"))
+                                ),
+                                Collectors.toList()
+                        )
+                ));
+        // 메시지에 매핑
+        for (ChatMessageFromDBDTO m : messages) {
+            m.setLike_count(likeCounts.getOrDefault(m.getId(), 0));
+            m.setLikeUsers(likeUsers.getOrDefault(m.getId(), List.of()));
+            m.setReactions(reactions.getOrDefault(m.getId(), List.of()));
+            m.setViewer(viewers.getOrDefault(m.getId(), List.of()));
+        }
+
+        return messages;
     }
 
     public List<ChatMessageFromDBDTO> processMessage(List<ChatMessageFromDBDTO> messages) {
@@ -74,10 +122,10 @@ public class ChatService {
 
             //좋아요 세팅
             m.setLike_count(chatDao.getLikeCount(m));
-            
+
             //좋아요 한 유저 세팅
             m.setLikeUsers(chatDao.whoseLikeMessage(m));
-            
+
             //리액션 세팅
             List<Map<String, String>> reactionRows = chatDao.getReactionsForMessage(m.getId());
 
