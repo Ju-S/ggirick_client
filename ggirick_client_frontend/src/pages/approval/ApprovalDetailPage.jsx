@@ -2,26 +2,36 @@ import {timestampToMonthDay} from "@/utils/common/dateFormat.js";
 import {useNavigate, useParams} from "react-router-dom";
 import {Paperclip} from "lucide-react";
 import {boardFileDownloadAPI} from "@/api/board/boardFileAPI.js";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
 import useEmployeeStore from "@/store/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 import {deleteAPI} from "@/api/board/boardAPI.js";
 import useApprovalStore from "@/store/approval/approvalStore.js";
 import ApprovalLineCheck from "@/components/approval/ApprovalLineCheck.jsx";
+import {getTypeAPI} from "@/api/approval/approvalTypeAPI.js";
+import ApprovalAdditionalForm from "@/components/approval/ApprovalAdditionalForm.jsx";
 
 export default function ApprovalDetailPage() {
     const navigate = useNavigate();
     const {id} = useParams();
-    const {approvalDetail, approvalFilesList, approvalLineList} = useApprovalStore(state => state.approvalInfo);
+    const {
+        approvalDetail,
+        approvalFilesList,
+        approvalLineList,
+        approvalHistoryList
+    } = useApprovalStore(state => state.approvalInfo);
     const fetchApprovalInfo = useApprovalStore(state => state.fetchApprovalInfo);
 
     const {selectedEmployee, setEmployee} = useEmployeeStore();
+
+    const [approvalTypeList, setApprovalTypeList] = useState([]);
 
     useEffect(() => {
         fetchApprovalInfo(id);
         getMyInfoAPI().then(resp => {
             setEmployee(resp.data)
         });
+        getTypeAPI().then(resp => setApprovalTypeList(resp.data));
     }, []);
 
     // 파일 다운로드 핸들러
@@ -58,6 +68,8 @@ export default function ApprovalDetailPage() {
             alert("문서 삭제에 실패했습니다.");
         }
     };
+
+    if (!approvalDetail || !selectedEmployee || approvalTypeList.length === 0) return null;
 
     return (
         <div className="space-y-4 h-200 scrollbar-hide overflow-y-auto">
@@ -114,8 +126,16 @@ export default function ApprovalDetailPage() {
                                 <span
                                     className="text-xs text-base-content-500">{approvalDetail.departmentName}</span>
                             </div>
-                            {/* 조회된 결재선으로 employee를 조회하여 정보 출력 */}
                             <ApprovalLineCheck approvalId={id}/>
+                        </div>
+
+                        <div className="mb-4">
+                            <ApprovalAdditionalForm
+                                docTypeCode={approvalDetail.docTypeCode}
+                                viewMode={true}
+                                setDocData={null}
+                                docData={approvalDetail.docData}
+                            />
                         </div>
 
                         <div className="prose max-w-none whitespace-pre-wrap text-base leading-relaxed mb-6">
@@ -147,6 +167,31 @@ export default function ApprovalDetailPage() {
                     </div>
                 </div>
             )}
+            {/* 결재 기록 목록 */}
+            <div>
+                {approvalHistoryList.length > 0 ? (
+                    approvalHistoryList.map((history) => (
+                        <div className="card bg-base-100 shadow-sm mb-3" key={history.id}>
+                            <div className="card-body p-4">
+                                <div className="flex justify-between items-center text-sm text-base-600 mb-2">
+                    <span className="font-semibold">
+                        {history.name} -> {history.typeId === 1 && history.isDelegated === "Y"
+                        ? "대결"
+                        : approvalTypeList.find(e => e.id === history.typeId)?.description
+                    }
+                    </span>
+                                    <span>{timestampToMonthDay(history.recordedAt)}</span>
+                                </div>
+                                <p className="text-base-800 whitespace-pre-wrap mb-2">{history.contents}</p>
+                            </div>
+                        </div>
+                    ))
+                ) : (
+                    <div className="text-center text-base text-base-content/50">
+                        아직 기록된 결재변경이 없습니다.
+                    </div>
+                )}
+            </div>
         </div>
     );
 }

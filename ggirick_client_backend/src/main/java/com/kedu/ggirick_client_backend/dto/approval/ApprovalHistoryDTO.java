@@ -13,6 +13,7 @@ public class ApprovalHistoryDTO {
     private int id;
     private int approvalId;
     private String assigner;
+    private String name;
     private String contents;
     private int typeId;
     private Timestamp recordedAt;

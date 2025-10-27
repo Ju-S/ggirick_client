@@ -1,5 +1,6 @@
 package com.kedu.ggirick_client_backend.services.approval;
 
+import com.google.gson.Gson;
 import com.kedu.ggirick_client_backend.dao.approval.ApprovalDAO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
 import lombok.RequiredArgsConstructor;
@@ -49,7 +50,10 @@ public class ApprovalService {
 
     // 개별 문서 조회
     public ApprovalDTO getById(int approvalId) {
-        return approvalDAO.getById(approvalId);
+        ApprovalDTO approval =  approvalDAO.getById(approvalId);
+        Gson gson = new Gson();
+        approval.setDocData(gson.fromJson(approval.getDocDataJson(), Map.class));
+        return approval;
     }
 
     // 결재 문서 기안

@@ -44,6 +44,16 @@ public class ApprovalController {
         List<ApprovalDTO> approvalList = approvalService.getList(userInfo.getId(), currentPage, box, searchFilter, searchQuery);
         int totalPage = approvalService.getTotalPage(userInfo.getId(), box, searchFilter, searchQuery);
 
+        // 마지막 결재자 추가
+        approvalList = approvalList.stream()
+                .peek(e -> {
+                    List<ApprovalHistoryDTO> history = approvalHistoryService.getListByApprovalId(e.getId());
+                    if (!history.isEmpty()) {
+                        e.setLastAssigner(history.get(history.size() - 1).getAssigner());
+                    }
+                })
+                .toList();
+
         response.put("approvalList", approvalList);
         response.put("itemPerPage", ITEM_PER_PAGE);
         response.put("pagePerNav", PAGE_PER_NAV);
@@ -58,13 +68,13 @@ public class ApprovalController {
                                                        @AuthenticationPrincipal UserTokenDTO userInfo) {
         // 관계자임을 증명해야 조회 가능
         List<ApprovalLineDTO> existedLineList = approvalLineService.getList(approvalId);
+        // 대리결재할 수 있는 ID 리스트
+        List<String> delegateOriginList = approvalDelegateService.getAssignerByDelegator(userInfo.getId());
 
         boolean authorityFlag = false;
 
         for (ApprovalLineDTO existedLine : existedLineList) {
-            if (existedLine.getAssigner() != null &&
-                    (existedLine.getAssigner().equals(userInfo.getId()) ||
-                            approvalDelegateService.getAssignerByDelegator(userInfo.getId()).contains(existedLine.getAssigner()))) {
+            if (existedLine.getAssigner().equals(userInfo.getId()) || delegateOriginList.contains(existedLine.getAssigner())) {
                 authorityFlag = true;
                 break;
             }
@@ -82,6 +92,7 @@ public class ApprovalController {
             response.put("approvalFilesList", approvalFilesList);
             response.put("approvalHistoryList", approvalHistoryList);
             response.put("approvalLineList", approvalLineList);
+            response.put("delegateOriginList", delegateOriginList);
 
             return ResponseEntity.ok(response);
         }

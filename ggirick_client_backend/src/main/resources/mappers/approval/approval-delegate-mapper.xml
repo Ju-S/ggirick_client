@@ -3,14 +3,14 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="ApprovalDelegate">
-    <!-- 대리결재자 파일 등록 -->
+    <!-- 대리결재자 등록 -->
     <insert id="insert">
         INSERT INTO approval_delegate(id, assigner, delegator, start_at, end_at)
         VALUES (approval_delegate_seq.nextval, #{assigner}, #{delegator}, #{startAt}, #{endAt})
     </insert>
 
     <!-- 대리결재자 조회 -->
-    <select id="getListByDelegator" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDelegateDTO">
-        SELECT * FROM approval_delegate WHERE delegator=#{delegatorId}
+    <select id="getListByDelegator" resultType="String">
+        SELECT assigner FROM approval_delegate WHERE delegator=#{delegatorId}
     </select>
 </mapper>

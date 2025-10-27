@@ -29,31 +29,47 @@
                         )
                         AND (
                         al_current.order_line = 0
-                        <if test="box != 1">
-                            OR EXISTS (
+                        OR EXISTS (
                             SELECT 1
                             FROM approval_history ah
                             WHERE ah.approval_id = a.id
                             AND ah.assigner = (
-                            SELECT al_prev.assigner
-                            FROM approval_line al_prev
-                            WHERE al_prev.approval_id = a.id
-                            AND al_prev.order_line = al_current.order_line - 1
+                                SELECT al_prev.assigner
+                                FROM approval_line al_prev
+                                WHERE al_prev.approval_id = a.id
+                                AND al_prev.order_line = al_current.order_line - 1
                             )
                             AND ah.type_id NOT IN(3, 4)
                             AND ah.recorded_at BETWEEN a.updated_at AND sysdate
-                            )
-                        </if>
-                        <if test="box == 1">
-                            AND NOT EXISTS (
-                            SELECT 1
-                            FROM approval_history ah
-                            WHERE ah.approval_id = a.id
-                            AND ah.assigner = #{userId}
-                            AND ah.type_id NOT IN(3, 4)
-                            AND ah.recorded_at BETWEEN a.updated_at AND sysdate
-                            )
-                        </if>
+                            <choose>
+                                <!-- box == 1 : 결재 대기 중 -->
+                                <when test="box == 1">
+                                    <![CDATA[
+                                    AND NOT EXISTS (
+                                    SELECT 1
+                                    FROM approval_history ah2
+                                    WHERE ah2.approval_id = a.id
+                                    AND ah2.assigner = #{userId}
+                                    AND ah2.type_id NOT IN (3,4)
+                                    AND ah2.recorded_at BETWEEN a.updated_at AND sysdate
+                                    )
+                                    ]]>
+                                </when>
+                                <!-- box == 2 : 진행 중 (이미 결재했거나 내가 기안한 문서) -->
+                                <when test="box == 2">
+                                    <![CDATA[
+                                    AND EXISTS (
+                                    SELECT 1
+                                    FROM approval_history ah2
+                                    WHERE ah2.approval_id = a.id
+                                    AND ah2.assigner = #{userId}
+                                    AND ah2.type_id NOT IN (3,4)
+                                    AND ah2.recorded_at BETWEEN a.updated_at AND sysdate
+                                    )
+                                    ]]>
+                                </when>
+                            </choose>
+                        )
                     )
                 )
             )
@@ -121,9 +137,11 @@
         FROM (
         SELECT a_pagination.*, ROWNUM AS rn
         FROM (
-        SELECT a.*
+        SELECT a.*, e.name
         FROM approval a
-        WHERE a.writer = #{userId}
+        JOIN employee e ON a.writer=e.id
+        WHERE (
+        a.writer = #{userId}
         OR EXISTS (
         SELECT 1
         FROM approval_line al_current
@@ -151,29 +169,65 @@
         )
         AND ah.type_id NOT IN(3, 4)
         AND ah.recorded_at BETWEEN a.updated_at AND sysdate
+        <choose>
+            <!-- box == 1 : 결재 대기 중 -->
+            <when test="box == 1">
+                <![CDATA[
+                                    AND NOT EXISTS (
+                                    SELECT 1
+                                    FROM approval_history ah2
+                                    WHERE ah2.approval_id = a.id
+                                    AND ah2.assigner = #{userId}
+                                    AND ah2.type_id NOT IN (3,4)
+                                    AND ah2.recorded_at BETWEEN a.updated_at AND sysdate
+                                    )
+                                    ]]>
+            </when>
+            <!-- box == 2 : 진행 중 (이미 결재했거나 내가 기안한 문서) -->
+            <when test="box == 2">
+                <![CDATA[
+                                    AND EXISTS (
+                                    SELECT 1
+                                    FROM approval_history ah2
+                                    WHERE ah2.approval_id = a.id
+                                    AND ah2.assigner = #{userId}
+                                    AND ah2.type_id NOT IN (3,4)
+                                    AND ah2.recorded_at BETWEEN a.updated_at AND sysdate
+                                    )
+                                    ]]>
+            </when>
+        </choose>
+        )
         )
         )
         )
         <!-- 결재함(box)에 따른 조건 -->
         <choose>
+            <!-- 전체 -->
             <when test="box == 0">
                 AND a.type_id IS NULL AND a.assigned_at IS NULL
             </when>
+            <!-- 결재 대기 -->
             <when test="box == 1">
                 AND a.type_id IS NULL AND a.assigned_at IS NULL AND a.writer != #{userId}
             </when>
+            <!-- 진행중 -->
             <when test="box == 2">
-                AND a.type_id IS NULL AND a.assigned_at IS NULL AND a.writer = #{userId}
+                AND a.type_id IS NULL AND a.assigned_at IS NULL
             </when>
+            <!-- 결재된 문서 전체 -->
             <when test="box == 3">
                 AND a.assigned_at IS NOT NULL
             </when>
+            <!-- 사용자가 기안하고 승인된 문서 -->
             <when test="box == 4">
                 AND a.type_id = 1 AND a.writer = #{userId}
             </when>
+            <!-- 사용자가 승인하고 승인된 문서 -->
             <when test="box == 5">
                 AND a.type_id = 1 AND a.writer != #{userId}
             </when>
+            <!-- 반려된 문서 -->
             <when test="box == 6">
                 AND a.type_id = 2
             </when>
@@ -206,7 +260,10 @@
 
     <!-- 개별 결재문서 조회 -->
     <select id="getById" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO">
-        SELECT a.*, e.name, d.name AS department_name
+        SELECT
+        a.id, a.title, a.writer, a.content, a.type_id, a.doc_type_code, a.created_at, a.updated_at, a.assigned_at,
+        a.doc_data AS doc_data_json,
+        e.name, d.name AS department_name
         FROM approval a
         JOIN employee e ON a.writer=e.id
         JOIN employee_department ed ON ed.employee_id=e.id
@@ -216,8 +273,8 @@
 
     <!-- 파일업로드를 위한 selectKey -->
     <insert id="insert">
-        INSERT INTO approval(id, title, writer, content, created_at, doc_type_code)
-        VALUES(approval_seq.nextval, #{title}, #{writer}, #{content}, sysdate, #{docTypeCode})
+        INSERT INTO approval(id, title, writer, content, created_at, doc_type_code, doc_data)
+        VALUES(approval_seq.nextval, #{title}, #{writer}, #{content}, sysdate, #{docTypeCode}, #{docDataJson})
         <selectKey keyProperty="id" resultType="int" order="AFTER">
             SELECT approval_seq.currval FROM dual
         </selectKey>

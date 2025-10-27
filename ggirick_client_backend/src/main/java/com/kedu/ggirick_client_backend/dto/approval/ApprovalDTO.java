@@ -22,9 +22,11 @@ public class ApprovalDTO {
     private Timestamp createdAt;
     private Timestamp updatedAt; // 결재서류 수정 시간(재승인 용도)
     private Timestamp assignedAt; // 결재서류 승인 시간
+    private String lastAssigner; // 마지막 결재자
 
     // 종류에 따라 필요한 필드
     private Map<String, Object> docData;
+    private String docDataJson;
 
 //    // 휴가, 연장, 휴일근무 신청 시 필요한 시작-끝 시간
 //    private Timestamp startAt;

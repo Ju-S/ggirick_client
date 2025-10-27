@@ -1,15 +1,20 @@
 package com.kedu.ggirick_client_backend.services.approval;
 
+import com.google.gson.Gson;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
+import com.kedu.ggirick_client_backend.dto.approval.ApprovalDelegateDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO;
+import com.kedu.ggirick_client_backend.utils.approval.DocDataUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static com.kedu.ggirick_client_backend.config.ApprovalConfig.*;
 
@@ -21,6 +26,8 @@ public class ApprovalProcessService {
     private final ApprovalService approvalService;
     private final ApprovalFilesService approvalFilesService;
     private final ApprovalDelegateService approvalDelegateService;
+
+    private final DocDataUtil docDataUtil;
 
     // 결재 상태 변경 로직
     @Transactional
@@ -93,9 +100,23 @@ public class ApprovalProcessService {
 
     // 결재 문서 생성
     @Transactional
-    public void processInsertApproval(ApprovalDTO
-                                              approvalInfo, List<MultipartFile> files, List<ApprovalLineDTO> approvalLineInfoList) throws Exception {
+    public void processInsertApproval(ApprovalDTO approvalInfo, List<MultipartFile> files, List<ApprovalLineDTO> approvalLineInfoList) throws Exception {
+        Gson gson = new Gson();
+        approvalInfo.setDocDataJson(gson.toJson(approvalInfo.getDocData()));
+
         int approvalId = approvalService.insert(approvalInfo);
+        // 휴가신청일 경우, 대리결재자 등록
+        if (approvalInfo.getDocTypeCode().equals(DOC_TYPE_VACATION) && approvalInfo.getDocData().get("delegatorList") != null) {
+            for (Map<String, Object> delegator : (List<Map<String, Object>>) approvalInfo.getDocData().get("delegatorList")) {
+                approvalDelegateService.insertDelegator(
+                        ApprovalDelegateDTO.builder()
+                                .assigner((String) delegator.get("id"))
+                                .delegater(approvalInfo.getWriter())
+                                .start_at(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), true))
+                                .end_at(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), false))
+                                .build());
+            }
+        }
         if (files != null) {
             approvalFilesService.insertFileInfo(files, approvalId);
         }
