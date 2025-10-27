@@ -9,12 +9,10 @@ import java.sql.Timestamp;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class ApprovalHistoryDTO {
+public class ApprovalDelegateDTO {
     private int id;
-    private int approvalId;
     private String assigner;
-    private String contents;
-    private int typeId;
-    private Timestamp recordedAt;
-    private String isDelegated;
+    private String delegater;
+    private Timestamp start_at;
+    private Timestamp end_at;
 }

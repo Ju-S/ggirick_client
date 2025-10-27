@@ -34,6 +34,16 @@ public class ApprovalHistoryService {
         return approvalHistoryDAO.getByAssignerAndApprovalId(params);
     }
 
+    // 사용자 이전 결재 기록 조회
+    public ApprovalHistoryDTO getPrevHistory(int orderLine, int approvalId) {
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("userOrderLine", orderLine);
+        params.put("approvalId", approvalId);
+
+        return approvalHistoryDAO.getPrevHistory(params);
+    }
+
     // 결재 기록 취소(삭제)
     public void deleteByApprovalIdAndAssigner(String userId, int approvalId) {
         Map<String, Object> params = new HashMap<>();

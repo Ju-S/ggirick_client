@@ -17,7 +17,7 @@ export default function BoardPostingPage({editMode}) {
 
     useEffect(() => {
         if (editMode && id) {
-            const {boardDetail, fileList} = useBoardStore.getState().boardInfo;
+            const {boardDetail, fileList} = useBoardStore.getState().approvalInfo;
             setBoardInfos({...boardDetail, files: []});
             console.log(boardDetail);
             setFileList(fileList || []);
@@ -100,7 +100,6 @@ export default function BoardPostingPage({editMode}) {
     };
 
     const removeExistingFile = (id) => {
-        // 서버에 삭제 요청 보내고 성공하면 fileList state 갱신
         setFileList(prev =>
             prev.map(file => file.id === id ? {...file, toDelete: true} : file)
         );

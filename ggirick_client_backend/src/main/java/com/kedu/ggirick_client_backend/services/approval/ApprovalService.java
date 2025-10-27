@@ -4,7 +4,6 @@ import com.kedu.ggirick_client_backend.dao.approval.ApprovalDAO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +33,18 @@ public class ApprovalService {
         params.put("searchQuery", searchQuery);
 
         return approvalDAO.getList(params);
+    }
+
+    // 문서 총 페이지 수 조회
+    public int getTotalPage(String userId, int box, int searchFilter, String searchQuery) {
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("userId", userId);
+        params.put("box", box);
+        params.put("searchFilter", searchFilter);
+        params.put("searchQuery", searchQuery);
+
+        return approvalDAO.getTotalPage(params) / ITEM_PER_PAGE + 1;
     }
 
     // 개별 문서 조회

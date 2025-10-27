@@ -1,98 +1,113 @@
 import {useNavigate} from "react-router";
 import {useEffect, useState} from "react";
 import Dropdown from "@/components/board/Dropdown.jsx";
-import {insertAPI, putAPI} from "@/api/board/boardAPI.js";
-import useBoardGroupStore from "@/store/board/boardGroupStore.js";
-import useBoardStore from "@/store/board/boardStore.js";
+import {insertAPI, putAPI} from "@/api/approval/approvalAPI.js";
 import {useParams} from "react-router-dom";
 import {deleteBoardFileAPI} from "@/api/board/boardFileAPI.js";
+import ApprovalLineSelector from "@/components/approval/ApprovalLineSelector.jsx";
+import useApprovalDocType from "@/hooks/approval/useApprovalDocType.js";
+import useApprovalStore from "@/store/approval/approvalStore.js";
 
 export default function ApprovalPostingPage({editMode}) {
     const navigate = useNavigate();
-    const [boardInfos, setBoardInfos] = useState({});
+    const [approvalInfos, setApprovalInfos] = useState({});
     const [fileList, setFileList] = useState([]);
 
     const {id} = useParams();
-    const fetchBoard = useBoardStore(state => state.fetchBoardInfo);
+    const fetchApproval = useApprovalStore(state => state.fetchApprovalInfo);
+
+    const [approvalLine, setApprovalLine] = useState([]); // 선택된 결재자 목록
 
     useEffect(() => {
         if (editMode && id) {
-            const {boardDetail, fileList} = useBoardStore.getState().boardInfo;
-            setBoardInfos({...boardDetail, files: []});
-            console.log(boardDetail);
+            const {approvalDetail, fileList} = useApprovalStore.getState().approvalInfo;
+            setApprovalInfos({...approvalDetail, files: []});
+            console.log(approvalDetail);
             setFileList(fileList || []);
         } else {
-            setBoardInfos({
+            setApprovalInfos({
                 title: "",
                 contents: "",
-                boardGroupId: 0,
-                isNotification: false,
+                docTypeCode: "",
+                docData: {},
                 files: []
             });
             setFileList([]);
         }
-    }, [editMode, id, fetchBoard]);
+    }, [editMode, id, fetchApproval]);
 
-    const groupItems = useBoardGroupStore(state => state.list);
+    const groupItems = useApprovalDocType();
 
-    // 게시글 등록
+    // 문서 등록
     const postingHandler = () => {
+        if (approvalLine.length === 0) {
+            alert("결재자를 최소 1명 이상 선택해주세요.");
+            return;
+        }
+
         const form = new FormData();
 
-        // boardInfo를 JSON -> Blob 변환
-        const boardInfoBlob = new Blob(
+        const approvalLineData = new Blob(
+            [JSON.stringify(
+                approvalLine
+                    .map((a, idx) => ({
+                        assigner: a.id,
+                        orderLine: idx
+                    }))
+            )],
+            {type: "application/json"}
+        );
+
+
+        const approvalInfoBlob = new Blob(
             [JSON.stringify({
-                title: boardInfos.title,
-                contents: boardInfos.contents,
-                boardGroupId: Number(boardInfos.boardGroupId),
-                isNotification: boardInfos.isNotification
+                title: approvalInfos.title,
+                content: approvalInfos.contents,
+                docTypeCode: approvalInfos.docTypeCode,
             })],
             {type: "application/json"}
         );
 
-        form.append("boardInfo", boardInfoBlob);
+        form.append("approvalInfo", approvalInfoBlob);
+        form.append("approvalLine", approvalLineData);
 
-        // 파일 첨부
-        for (const file of boardInfos.files) {
+        for (const file of approvalInfos.files) {
             form.append("files", file);
         }
 
         if (editMode) {
             putAPI(form, id)
-                .then(() => navigate(`/board/${id}`))
+                .then(() => navigate(`/approval/${id}`))
                 .then(() =>
                     fileList
                         .filter(f => f.toDelete)
-                        .forEach(f => deleteBoardFileAPI(f.id)));
+                        .forEach(f => deleteBoardFileAPI(f.id))
+                );
         } else {
-            insertAPI(form).then(() => navigate(`/board?groupId=${boardInfos.boardGroupId}`));
+            insertAPI(form).then(() => navigate(`/approval`));
         }
     };
 
     const onChangeBoardInfoHandler = (e) => {
         const {name, value} = e.target;
-        setBoardInfos(prev => ({...prev, [name]: value}));
+        setApprovalInfos(prev => ({...prev, [name]: value}));
     };
 
     const onChangeBoardFileHandler = (e) => {
         // 기존 선택 파일 + 새로 선택한 파일 합치기
-        setBoardInfos(prev => ({
+        setApprovalInfos(prev => ({
             ...prev,
             files: [...prev.files, ...Array.from(e.target.files)]
         }));
     };
 
-    const onChangeBoardNotificationHandler = (e) => {
-        setBoardInfos(prev => ({...prev, isNotification: e.target.checked}));
-    };
-
     const onChangeBoardGroupHandler = (e) => {
-        setBoardInfos(prev => ({...prev, boardGroupId: e.id}));
+        setApprovalInfos(prev => ({...prev, docTypeCode: e.code}));
     };
 
     // 선택된 파일 제거
     const removeFile = (idx) => {
-        setBoardInfos(prev => {
+        setApprovalInfos(prev => {
             const newFiles = [...prev.files];
             newFiles.splice(idx, 1);
             return {...prev, files: newFiles};
@@ -100,7 +115,6 @@ export default function ApprovalPostingPage({editMode}) {
     };
 
     const removeExistingFile = (id) => {
-        // 서버에 삭제 요청 보내고 성공하면 fileList state 갱신
         setFileList(prev =>
             prev.map(file => file.id === id ? {...file, toDelete: true} : file)
         );
@@ -108,7 +122,7 @@ export default function ApprovalPostingPage({editMode}) {
 
     return (
         <div className="space-y-4 p-6 bg-base-100 shadow-md rounded-lg h-[calc(100vh-120px)] overflow-y-auto">
-            <h1 className="text-2xl font-bold mb-4">게시글 작성</h1>
+            <h1 className="text-2xl font-bold mb-4">기안서 작성</h1>
 
             {/* 제목 입력 */}
             <div>
@@ -118,35 +132,30 @@ export default function ApprovalPostingPage({editMode}) {
                     className="input input-bordered w-full"
                     placeholder="제목을 입력하세요"
                     name="title"
-                    value={boardInfos.title}
+                    value={approvalInfos.title}
                     onChange={onChangeBoardInfoHandler}
                     required
                 />
             </div>
 
-            {/* 그룹 선택 + 공지 체크박스 */}
+            {/* 결재선 추가 UI */}
+            <ApprovalLineSelector
+                approvalLine={approvalLine}
+                setApprovalLine={setApprovalLine}
+            />
+
+            {/* 문서 종류 선택 */}
             <div className="flex items-center gap-4 mt-2">
                 <div className="flex-1">
-                    <label className="block mb-2 font-semibold">그룹 선택</label>
+                    <label className="block mb-2 font-semibold">문서 종류</label>
                     <Dropdown
                         onClickHandler={onChangeBoardGroupHandler}
                         name="groupId"
-                        selectedItem={boardInfos.boardGroupId}
-                        title="그룹 선택"
+                        selectedItem={0}
+                        title="문서 종류"
                         items={groupItems}
                         disabled={editMode}
                     />
-                </div>
-                <div className="flex-1 items-center mt-6">
-                    <input
-                        type="checkbox"
-                        id="notice"
-                        checked={boardInfos.isNotification}
-                        name="isNotification"
-                        onChange={onChangeBoardNotificationHandler}
-                        className="checkbox checkbox-primary"
-                    />
-                    <label htmlFor="notice" className="ml-2 font-medium">공지</label>
                 </div>
             </div>
 
@@ -155,9 +164,9 @@ export default function ApprovalPostingPage({editMode}) {
                 <label className="block mb-2 font-semibold">내용</label>
                 <textarea
                     className="textarea textarea-bordered w-full h-90 resize-none"
-                    placeholder="게시글 내용을 입력하세요..."
+                    placeholder="문서 내용을 입력하세요..."
                     name="contents"
-                    value={boardInfos.contents}
+                    value={approvalInfos.contents}
                     onChange={onChangeBoardInfoHandler}
                     required
                 />
@@ -191,7 +200,7 @@ export default function ApprovalPostingPage({editMode}) {
                     }
 
                     {/* 새 파일 */}
-                    {boardInfos.files && boardInfos.files.map((file, idx) => (
+                    {approvalInfos.files && approvalInfos.files.map((file, idx) => (
                         <li key={`new-${idx}`} className="flex justify-between items-center bg-base-200 p-2 rounded-md">
                             <span className="truncate">{file.name}</span>
                             <button

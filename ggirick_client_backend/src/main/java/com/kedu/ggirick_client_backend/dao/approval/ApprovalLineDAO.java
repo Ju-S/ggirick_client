@@ -37,4 +37,9 @@ public class ApprovalLineDAO {
     public List<ApprovalLineDTO> getByAssignerAndApprovalId(Map<String, Object> params) {
         return mybatis.selectList("ApprovalLine.getListByAssignerAndApprovalId", params);
     }
+
+    // 마지막 결재 순번 조회
+    public int getLastOrderLine(int approvalId) {
+        return mybatis.selectOne("ApprovalLine.getLastOrderLine", approvalId);
+    }
 }

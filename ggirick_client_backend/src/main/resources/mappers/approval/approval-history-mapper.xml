@@ -9,7 +9,8 @@
     </select>
 
     <!-- assigner와 approvalId를 가지는 결재기록 조회 -->
-    <select id="getByAssignerAndApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO">
+    <select id="getByAssignerAndApprovalId"
+            resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO">
         SELECT * FROM approval_history
         WHERE approval_id=#{approvalId} AND
         assigner=#{userId} AND
@@ -20,10 +21,25 @@
         ORDER BY recorded_at DESC
     </select>
 
+    <!-- 이전 결재자의 결재기록 조회 -->
+    <select id="getPrevHistory" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO">
+        SELECT *
+        FROM approval_history ah
+        WHERE ah.assigner = (
+            SELECT al.assigner
+            FROM approval_line al
+            WHERE al.order_line = #{userOrderLine} - 1
+            AND al.approval_id = #{approvalId}
+        )
+        AND ah.approval_id = #{approvalId}
+        ORDER BY recorded_at DESC
+    </select>
+
     <!-- 결재 변경이력 기록 -->
     <insert id="insert">
-        INSERT INTO approval_history(id, approval_id, assigner, contents, type_id, recorded_at)
-        VALUES(approval_history_seq.nextval, #{approvalId}, #{assigner}, #{contents}, #{typeId}, sysdate)
+        INSERT INTO approval_history(id, approval_id, assigner, contents, type_id, recorded_at, is_delegated)
+        VALUES(approval_history_seq.nextval, #{approvalId}, #{assigner}, #{contents}, #{typeId}, sysdate,
+        #{isDelegated})
     </insert>
 
     <!-- 결재 기록 취소(삭제) -->

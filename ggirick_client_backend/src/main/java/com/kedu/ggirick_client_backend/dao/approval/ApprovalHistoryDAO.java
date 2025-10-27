@@ -28,6 +28,11 @@ public class ApprovalHistoryDAO {
         return mybatis.selectOne("ApprovalHistory.getByAssignerAndApprovalId", params);
     }
 
+    // 이전 결재 기록 조회
+    public ApprovalHistoryDTO getPrevHistory(Map<String, Object> params) {
+        return mybatis.selectOne("ApprovalHistory.getPrevHistory", params);
+    }
+
     // 결재 기록 취소(삭제)
     public void deleteByApprovalIdAndAssigner(Map<String, Object> params) {
         mybatis.delete("ApprovalHistory.deleteByApprovalIdAndAssigner", params);

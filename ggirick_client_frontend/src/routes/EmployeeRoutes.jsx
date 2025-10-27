@@ -8,6 +8,7 @@ import TaskPage from "@/pages/task/TaskPage.jsx";
 import ChatPage from "@/pages/chat/ChatPage.jsx";
 import MailPage from "@/pages/mail/MailPage.jsx";
 import ApprovalPage from "@/pages/approval/ApprovalPage.jsx";
+import ApprovalRoutes from "@/routes/ApprovalRoutes.jsx";
 
 export default function EmployeeRoutes() {
     return (
@@ -15,8 +16,8 @@ export default function EmployeeRoutes() {
             <Route path="/" element={<Dashboard/>}></Route>
             <Route path="/board/*" element={<BoardRoutes/>}/>
             <Route
-                path="/approval"
-                element={<ApprovalPage/>}
+                path="/approval/*"
+                element={<ApprovalRoutes/>}
             ></Route>
             <Route
                 path="/calendar"

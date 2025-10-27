@@ -259,13 +259,35 @@ const apiRoutes = {
     },
     approvalHistory: {
         /**
-         * 결재 상태 변경 API<br>
+         * 결재 상태 기록 API<br>
          * POST /approval/{approvalId}/history<br>
-         * body: {BoardCommentDTO}
+         * body: {ApprovalHistoryDTO}
          */
-        insert: (boardId, refId) => ({
-            url: `/board/${boardId}/comment/${refId}`,
+        insert: (approvalId) => ({
+            url: `/approval/${approvalId}/history`,
             method: "POST"
+        }),
+    },
+    approvalDoctype: {
+        /**
+         * 결재문서 양식 목록 조회 API<br>
+         * GET /approval/doctype<br>
+         * response: {ApprovalDocTypeDTO}
+         */
+        getList: () => ({
+            url: `/approval/doctype`,
+            method: "GET"
+        }),
+    },
+    approvalType: {
+        /**
+         * 결재 종류 목록 조회 API<br>
+         * GET /approval/type<br>
+         * response: {ApprovalTypeDTO}
+         */
+        getList: () => ({
+            url: `/approval/type`,
+            method: "GET"
         }),
     },
     project: {
@@ -492,12 +514,12 @@ const apiRoutes = {
             method: "GET",
         }),
 
-    // 공유주소록 소분류 부서 클릭 시 부서 내 직원 정보
-    getSharedAddresses:(code)=>({
-      url:`/address/shared/${code}`,
-      method:"GET",
-    })
-  },
+        // 공유주소록 소분류 부서 클릭 시 부서 내 직원 정보
+        getSharedAddresses: (code) => ({
+            url: `/address/shared/${code}`,
+            method: "GET",
+        })
+    },
     chat: {
         /**
          * 채팅 메시지 전송 API<br>
@@ -521,13 +543,13 @@ const apiRoutes = {
 
         oldlist: (workspaceId, channelId, oldestId) => ({
             url: `/workspace/${workspaceId}/channel/${channelId}/message/older?beforeId=${oldestId}`,
-            method:"GET"
+            method: "GET"
         }),
 
         /**
          * 워크스페이스 생성
          */
-        createWorkspace: () =>( {
+        createWorkspace: () => ({
             url: `/workspace`,
             method: "POST",
         }),
@@ -535,14 +557,14 @@ const apiRoutes = {
         /**
          * 채널 생성
          */
-        createChannel: (workspaceId) =>( {
+        createChannel: (workspaceId) => ({
             url: `/workspace/${workspaceId}/channels`,
             method: "POST",
         }),
         /**
          * 채널 제목 정보 수정
          */
-        updateChannel: (workspaceId,channelId) =>( {
+        updateChannel: (workspaceId, channelId) => ({
             url: `/workspace/${workspaceId}/channels/${channelId}`,
             method: "PATCH",
         }),
@@ -581,23 +603,23 @@ const apiRoutes = {
         /**
          * 채널 참가자 싱크 수정
          */
-        syncChannelMembers: (workspaceId,channelId) => ({
-            url:`/workspace/${workspaceId}/channels/${channelId}/members`,
-            method:"POST"
+        syncChannelMembers: (workspaceId, channelId) => ({
+            url: `/workspace/${workspaceId}/channels/${channelId}/members`,
+            method: "POST"
         }),
         /**
          * 워크스페이스 참가자 싱크 수정
          */
         syncWorkspaceMembers: (workspaceId) => ({
-            url:`/workspace/${workspaceId}/members`,
-            method:"POST"
+            url: `/workspace/${workspaceId}/members`,
+            method: "POST"
         }),
         /**
          * DM 채널 조회하거나 생성
          */
-        directChannel: (workspaceId)  =>({
-            url:`workspace/${workspaceId}/dm`,
-            method:"POST"
+        directChannel: (workspaceId) => ({
+            url: `workspace/${workspaceId}/dm`,
+            method: "POST"
         }),
 
     },

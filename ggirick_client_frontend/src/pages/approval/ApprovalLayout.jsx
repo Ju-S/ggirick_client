@@ -1,20 +1,16 @@
-import BoardSidebar from "@/components/board/BoardSidebar.jsx";
+import ApprovalSidebar from "@/components/approval/ApprovalSidebar.jsx";
+import useEmployeeStore from "@/store/employeeStore.js";
 import {useEffect} from "react";
-import useBoardGroupStore from "@/store/board/boardGroupStore.js";
+import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 
 export default function ApprovalLayout({children}) {
-    const loading = useBoardGroupStore(state => state.loading);
-    const initGroupList = useBoardGroupStore(state => state.init);
+    const {setEmployee} = useEmployeeStore();
 
     useEffect(() => {
-        initGroupList();
+        getMyInfoAPI().then(resp => {
+            setEmployee(resp.data)
+        });
     }, []);
-
-    if (loading) {
-        return (
-            <div>loading...</div>
-        );
-    }
 
     return (
         <main className="min-h-screen max-h-screen flex flex-col p-4 pt-20 md:ml-64 bg-base-200">
@@ -22,7 +18,7 @@ export default function ApprovalLayout({children}) {
                 {/* ------------------- 사이드 네비게이션 ------------------- */}
                 <aside
                     className="col-span-1 rounded-lg">
-                    <BoardSidebar/>
+                    <ApprovalSidebar/>
                 </aside>
 
                 {/* ------------------- 게시글 목록 ------------------- */}

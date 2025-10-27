@@ -1,16 +1,17 @@
 import {create} from "zustand";
 import {itemAPI} from "@/api/board/boardAPI.js";
+import {getDetailAPI} from "@/api/approval/approvalAPI.js";
 
-const useBoardStore = create((set) => ({
+const useApprovalStore = create((set) => ({
     approvalInfo: {},
     loading: false,
-    fetchBoardInfo: (id) => {
+    fetchApprovalInfo: (id) => {
         set({loading: true});
-        itemAPI(id).then(resp => {
+        getDetailAPI(id).then(resp => {
             console.log(resp.data);
             set({approvalInfo: resp.data, loading: false});
         });
     }
 }))
 
-export default useBoardStore;
+export default useApprovalStore;

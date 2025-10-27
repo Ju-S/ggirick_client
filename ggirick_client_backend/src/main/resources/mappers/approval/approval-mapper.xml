@@ -5,85 +5,213 @@
 <mapper namespace="Approval">
     <!-- 사용자가 상신한 결재문서, 승인했던 결재문서, 반려했던 결재문서, 승인했지만 위에서 반려당한 결재문서, 결재해야할 문서를 조회 -->
     <select id="getList" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO">
-        SELECT * FROM (
-        SELECT ROWNUM AS rnum, data.*
-        FROM (
-        SELECT DISTINCT a.*
-        FROM approval a
-        JOIN (
-        SELECT al.approval_id,
-        al.assigner,
-        al.next_assigner,
-        LEVEL AS lvl
-        FROM approval_line al
-        START WITH al.assigner IS NULL
-        CONNECT BY PRIOR al.next_assigner = al.assigner
-        AND PRIOR al.approval_id = al.approval_id
-        ) lineage
-        ON lineage.approval_id = a.id
-        WHERE (
-        a.writer = #{userId}
-        OR (
-        lineage.assigner = #{userId}
-        AND EXISTS (
-        SELECT 1
-        FROM approval_history ah
-        WHERE ah.approval_id = lineage.approval_id
-        AND ah.assigner = (
-        SELECT assigner
-        FROM approval_line
-        WHERE approval_id = lineage.approval_id
-        AND next_assigner = #{userId}
-        )
-        AND (ah.recorded_at BETWEEN a.updated_at AND SYSDATE OR a.updated_at IS NULL)
-        )
-        )
-        )
-
+        SELECT *
+            FROM (
+                SELECT a_pagination.*, ROWNUM AS rn
+                    FROM (
+                        SELECT a.*, e.name
+                        FROM approval a
+                        JOIN employee e ON a.writer=e.id
+                        WHERE (
+                        a.writer = #{userId}
+                        OR EXISTS (
+                            SELECT 1
+                            FROM approval_line al_current
+                            WHERE al_current.approval_id = a.id
+                            AND (
+                            al_current.assigner = #{userId}
+                            OR al_current.assigner IN (
+                                SELECT d.assigner
+                                FROM approval_delegate d
+                                WHERE d.delegator = #{userId}
+                                AND SYSDATE BETWEEN d.start_at AND d.end_at
+                            )
+                        )
+                        AND (
+                        al_current.order_line = 0
+                        <if test="box != 1">
+                            OR EXISTS (
+                            SELECT 1
+                            FROM approval_history ah
+                            WHERE ah.approval_id = a.id
+                            AND ah.assigner = (
+                            SELECT al_prev.assigner
+                            FROM approval_line al_prev
+                            WHERE al_prev.approval_id = a.id
+                            AND al_prev.order_line = al_current.order_line - 1
+                            )
+                            AND ah.type_id NOT IN(3, 4)
+                            AND ah.recorded_at BETWEEN a.updated_at AND sysdate
+                            )
+                        </if>
+                        <if test="box == 1">
+                            AND NOT EXISTS (
+                            SELECT 1
+                            FROM approval_history ah
+                            WHERE ah.approval_id = a.id
+                            AND ah.assigner = #{userId}
+                            AND ah.type_id NOT IN(3, 4)
+                            AND ah.recorded_at BETWEEN a.updated_at AND sysdate
+                            )
+                        </if>
+                    )
+                )
+            )
         <!-- 결재함(box)에 따른 조건 -->
         <choose>
+            <!-- 전체 -->
+            <when test="box == 0">
+                AND a.type_id IS NULL AND a.assigned_at IS NULL
+            </when>
+            <!-- 결재 대기 -->
             <when test="box == 1">
-                AND a.type_id is null     <!-- 결재대기 -->
+                AND a.type_id IS NULL AND a.assigned_at IS NULL AND a.writer != #{userId}
             </when>
+            <!-- 진행중 -->
             <when test="box == 2">
-                AND a.type_id = 1    <!-- 승인완료 -->
+                AND a.type_id IS NULL AND a.assigned_at IS NULL
             </when>
+            <!-- 결재된 문서 전체 -->
             <when test="box == 3">
-                AND a.type_id = 2    <!-- 반려함 -->
+                AND a.assigned_at IS NOT NULL
             </when>
-            <!-- box == 0이면 전체 -->
+            <!-- 사용자가 기안하고 승인된 문서 -->
+            <when test="box == 4">
+                AND a.type_id = 1 AND a.writer = #{userId}
+            </when>
+            <!-- 사용자가 승인하고 승인된 문서 -->
+            <when test="box == 5">
+                AND a.type_id = 1 AND a.writer != #{userId}
+            </when>
+            <!-- 반려된 문서 -->
+            <when test="box == 6">
+                AND a.type_id = 2
+            </when>
         </choose>
 
         <!-- 검색 필터 -->
         <if test="searchQuery != null and searchQuery != ''">
             <choose>
-                <when test="searchFilter == 0">
+                <when test="searchFilter == null || searchFilter == 0">
                     AND (a.title LIKE '%' || #{searchQuery} || '%'
                     OR a.content LIKE '%' || #{searchQuery} || '%'
-                    OR a.writer LIKE '%' || #{searchQuery} || '%')
+                    OR e.name LIKE '%' || #{searchQuery} || '%')
                 </when>
                 <when test="searchFilter == 1">
                     AND a.title LIKE '%' || #{searchQuery} || '%'
                 </when>
                 <when test="searchFilter == 2">
-                    AND a.writer LIKE '%' || #{searchQuery} || '%'
+                    AND e.name LIKE '%' || #{searchQuery} || '%'
                 </when>
                 <when test="searchFilter == 3">
                     AND a.content LIKE '%' || #{searchQuery} || '%'
                 </when>
             </choose>
         </if>
-
         ORDER BY a.created_at DESC
-        ) data
-        WHERE ROWNUM &lt;= #{to}
+        ) a_pagination
+        WHERE ROWNUM &lt;=#{to}
         )
-        WHERE rnum &gt;= #{from}
+        WHERE rn &gt;=#{from}
     </select>
+
+
+    <select id="getTotalPage" resultType="int">
+        SELECT COUNT(*)
+        FROM (
+        SELECT a_pagination.*, ROWNUM AS rn
+        FROM (
+        SELECT a.*
+        FROM approval a
+        WHERE a.writer = #{userId}
+        OR EXISTS (
+        SELECT 1
+        FROM approval_line al_current
+        WHERE al_current.approval_id = a.id
+        AND (
+        al_current.assigner = #{userId}
+        OR al_current.assigner IN (
+        SELECT d.assigner
+        FROM approval_delegate d
+        WHERE d.delegator = #{userId}
+        AND SYSDATE BETWEEN d.start_at AND d.end_at
+        )
+        )
+        AND (
+        al_current.order_line = 0
+        OR EXISTS (
+        SELECT 1
+        FROM approval_history ah
+        WHERE ah.approval_id = a.id
+        AND ah.assigner = (
+        SELECT al_prev.assigner
+        FROM approval_line al_prev
+        WHERE al_prev.approval_id = a.id
+        AND al_prev.order_line = al_current.order_line - 1
+        )
+        AND ah.type_id NOT IN(3, 4)
+        AND ah.recorded_at BETWEEN a.updated_at AND sysdate
+        )
+        )
+        )
+        <!-- 결재함(box)에 따른 조건 -->
+        <choose>
+            <when test="box == 0">
+                AND a.type_id IS NULL AND a.assigned_at IS NULL
+            </when>
+            <when test="box == 1">
+                AND a.type_id IS NULL AND a.assigned_at IS NULL AND a.writer != #{userId}
+            </when>
+            <when test="box == 2">
+                AND a.type_id IS NULL AND a.assigned_at IS NULL AND a.writer = #{userId}
+            </when>
+            <when test="box == 3">
+                AND a.assigned_at IS NOT NULL
+            </when>
+            <when test="box == 4">
+                AND a.type_id = 1 AND a.writer = #{userId}
+            </when>
+            <when test="box == 5">
+                AND a.type_id = 1 AND a.writer != #{userId}
+            </when>
+            <when test="box == 6">
+                AND a.type_id = 2
+            </when>
+        </choose>
+
+        <!-- 검색 필터 -->
+        <if test="searchQuery != null and searchQuery != ''">
+            <choose>
+                <when test="searchFilter == null || searchFilter == 0">
+                    AND (a.title LIKE '%' || #{searchQuery} || '%'
+                    OR a.content LIKE '%' || #{searchQuery} || '%'
+                    OR e.name LIKE '%' || #{searchQuery} || '%')
+                </when>
+                <when test="searchFilter == 1">
+                    AND a.title LIKE '%' || #{searchQuery} || '%'
+                </when>
+                <when test="searchFilter == 2">
+                    AND e.name LIKE '%' || #{searchQuery} || '%'
+                </when>
+                <when test="searchFilter == 3">
+                    AND a.content LIKE '%' || #{searchQuery} || '%'
+                </when>
+            </choose>
+        </if>
+        ORDER BY a.created_at DESC
+        ) a_pagination
+        )
+    </select>
+
 
     <!-- 개별 결재문서 조회 -->
     <select id="getById" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO">
-        SELECT * FROM approval WHERE id=#{id}
+        SELECT a.*, e.name, d.name AS department_name
+        FROM approval a
+        JOIN employee e ON a.writer=e.id
+        JOIN employee_department ed ON ed.employee_id=e.id
+        JOIN department d ON ed.department_code=d.code
+        WHERE a.id=#{id}
     </select>
 
     <!-- 파일업로드를 위한 selectKey -->

@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.kedu.ggirick_client_backend.config.ApprovalConfig.*;
@@ -19,12 +20,22 @@ public class ApprovalProcessService {
     private final ApprovalLineService approvalLineService;
     private final ApprovalService approvalService;
     private final ApprovalFilesService approvalFilesService;
+    private final ApprovalDelegateService approvalDelegateService;
 
     // 결재 상태 변경 로직
     @Transactional
     public void processApproval(ApprovalHistoryDTO approvalHistoryInfo, String userId) throws Exception {
-        // 요청사용자의 id를 next_assigner로 가지고 approvalId를 approval_id로 가지는 approval_line을 조회
-        List<ApprovalLineDTO> approvalLineList = approvalLineService.getByNextAssignerAndApprovalId(userId, approvalHistoryInfo.getApprovalId());
+        // 사용자 아이디 및 대리결재 해야할 다른사람 id 포함
+        List<String> assignerList = approvalDelegateService.getAssignerByDelegator(userId);
+        assignerList.add(userId);
+
+        List<ApprovalLineDTO> approvalLineList = new ArrayList<>();
+        for (String id : assignerList) {
+            for (ApprovalLineDTO approvalLine : approvalLineService.getByAssignerAndApprovalId(id, approvalHistoryInfo.getApprovalId())) {
+                approvalLine.setAssigner(id);
+                approvalLineList.add(approvalLine);
+            }
+        }
 
         // 사용자에 대한 결재선이 없거나 문서가 이미 승인또는반려된 경우 throws
         if (approvalLineList.isEmpty() || approvalService.getById(approvalHistoryInfo.getApprovalId()).getAssignedAt() != null) {
@@ -34,12 +45,13 @@ public class ApprovalProcessService {
         // 조회된 approval_line의 assigner와 approvalId에 해당하는 approval_history를 조회
         // 조회된 내용이 있거나 approval_line의 assigner가 null인 경우, 결재 상태 변경
         // 단, 조회된 내용의 type_id가 CANCLE(취소)상태라면 결재 상태 변경을 허용하지 않는다
-        // 조회 시, 대리결재자가 있을 수 있으므로 List로 조회하여 비교
         for (ApprovalLineDTO approvalLine : approvalLineList) {
-            if (approvalLine.getAssigner() == null ||
-                    (approvalHistoryService.getByAssignerAndApprovalId(approvalLine.getAssigner(), approvalHistoryInfo.getApprovalId()) != null &&
-                            approvalHistoryService.getByAssignerAndApprovalId(approvalLine.getAssigner(), approvalHistoryInfo.getApprovalId()).getTypeId() != TYPE_CANCEL)) {
-                approvalHistoryInfo.setAssigner(userId);
+            ApprovalHistoryDTO prevHistory = approvalHistoryService.getPrevHistory(approvalLine.getOrderLine(), approvalHistoryInfo.getApprovalId());
+            if (approvalLine.getOrderLine() == 0 ||
+                    (prevHistory != null && prevHistory.getTypeId() != TYPE_CANCEL && prevHistory.getTypeId() != TYPE_COMMENT)) {
+                // 대리결재인 경우 컬럼 Y로
+                approvalHistoryInfo.setAssigner(approvalLine.getAssigner());
+                approvalHistoryInfo.setIsDelegated(approvalLine.getAssigner().equals(userId) ? "N" : "Y");
                 approvalHistoryService.insert(approvalHistoryInfo);
 
                 // 결재 상태 변경이 반려인 경우, 결재문서의 상태를 반려로 변경
@@ -47,37 +59,42 @@ public class ApprovalProcessService {
                     approvalService.updateType(TYPE_REJECT, approvalHistoryInfo.getApprovalId());
                 }
 
-                // 만약 요청사용자의 id를 assigner로 가지는 approval_line의 next_assigner가 null인 경우, 최종 결재자를 뜻함
                 // 결재 상태 변경이 의견 또는 취소가 아닌 경우, 결재문서의 상태를 승인로 변경
-                // 결재 대리인은 결재선에 이미 포함된 인원은 설정할 수 없다는 전제
-                if (approvalHistoryInfo.getTypeId() == TYPE_APPROVE) {
-                    List<ApprovalLineDTO> nextApprovalLineLit = approvalLineService.getByAssignerAndApprovalId(userId, approvalHistoryInfo.getApprovalId());
-                    for (ApprovalLineDTO nextApprovalLine : nextApprovalLineLit) {
-                        if (nextApprovalLine.getNextAssigner() == null) {
-                            approvalService.updateType(TYPE_APPROVE, approvalHistoryInfo.getApprovalId());
+                if (approvalHistoryInfo.getTypeId() == TYPE_APPROVE &&
+                        approvalLineService.getLastOrderLine(approvalHistoryInfo.getApprovalId()) == approvalLine.getOrderLine()) {
+                    approvalService.updateType(TYPE_APPROVE, approvalHistoryInfo.getApprovalId());
 
-                            // 문서 승인 후, 문서 종류에 따라 다른 로직 수행
-                            // TODO: 문서 종류에 대한 처리 - config/ApprovalConfig에 정의
-                            switch (approvalService.getById(approvalHistoryInfo.getApprovalId()).getDocTypeCode()) {
-                                case DOC_TYPE_CONTACT -> {
-                                    break;
-                                }
-                                case DOC_TYPE_VACATION -> {
-                                    break;
-                                }
-                            }
+                    // 문서 승인 후, 문서 종류에 따라 다른 로직 수행
+                    // 대리결재자가 필요한 경우, 대리결재자 등록 service 사용 필요
+                    // TODO: 문서 종류에 대한 처리 - config/ApprovalConfig에 정의
+                    switch (approvalService.getById(approvalHistoryInfo.getApprovalId()).getDocTypeCode()) {
+                        case DOC_TYPE_CONTACT -> {
+                            break;
+                        }
+                        case DOC_TYPE_VACATION -> {
+                            break;
+                        }
+                        case DOC_TYPE_HOLIDAY -> {
+                            break;
+                        }
+                        case DOC_TYPE_OVERTIME -> {
+                            break;
+                        }
+                        case DOC_TYPE_WORK_CHECK -> {
+                            break;
                         }
                     }
                 }
                 return;
             }
+            throw new Exception();
         }
-        throw new Exception();
     }
 
     // 결재 문서 생성
     @Transactional
-    public void processInsertApproval(ApprovalDTO approvalInfo, List<MultipartFile> files, List<ApprovalLineDTO> approvalLineInfoList) throws Exception {
+    public void processInsertApproval(ApprovalDTO
+                                              approvalInfo, List<MultipartFile> files, List<ApprovalLineDTO> approvalLineInfoList) throws Exception {
         int approvalId = approvalService.insert(approvalInfo);
         if (files != null) {
             approvalFilesService.insertFileInfo(files, approvalId);
@@ -87,7 +104,9 @@ public class ApprovalProcessService {
 
     // 결재 문서 수정
     @Transactional
-    public void processUpdateApproval(ApprovalDTO approvalInfo, List<MultipartFile> files, List<ApprovalLineDTO> approvalLineInfoList, int approvalId, String userId) throws Exception {
+    public void processUpdateApproval(ApprovalDTO
+                                              approvalInfo, List<MultipartFile> files, List<ApprovalLineDTO> approvalLineInfoList, int approvalId, String
+                                              userId) throws Exception {
         ApprovalDTO selectedApproval = approvalService.getById(approvalId);
 
         if (selectedApproval.getWriter().equals(userId)

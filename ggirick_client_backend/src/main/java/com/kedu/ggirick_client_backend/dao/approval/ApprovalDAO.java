@@ -19,6 +19,10 @@ public class ApprovalDAO {
         return mybatis.selectList("Approval.getList", params);
     }
 
+    public int getTotalPage(Map<String, Object> params) {
+        return mybatis.selectOne("Approval.getTotalPage", params);
+    }
+
     // 결재 문서 개별 조회
     public ApprovalDTO getById(int approvalId) {
         return mybatis.selectOne("Approval.getById", approvalId);

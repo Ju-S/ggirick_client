@@ -2,11 +2,11 @@ import {useNavigate} from "react-router-dom";
 import {useEffect, useState} from "react";
 import AddGroupModal from "@/components/board/AddGroupModal.jsx";
 import useBoardGroupStore from "@/store/board/boardGroupStore.js";
-import OrganizationMemberPickerModal from "@/components/common/modals/OrganizationMemberModal.jsx";
 import {boardGroupMemberListAPI, deleteGroupAPI, putGroupMemberAPI} from "@/api/board/boardGroupAPI.js";
 import useEmployeeStore from "@/store/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 import ModifyGroupModal from "@/components/board/ModifyGroupModal.jsx";
+import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";
 
 export default function BoardSidebar() {
     const navigate = useNavigate();
@@ -56,7 +56,7 @@ export default function BoardSidebar() {
 
             {/* 그룹 버튼 */}
             <div
-                className="flex justify-between items-center p-2 border-b border-base-300 rounded hover:bg-base-200 cursor-pointer relative"
+                className="flex justify-between items-center p-2 border-b border-base-300 rounded hover:bg-base-300 cursor-pointer relative"
                 onClick={() => setIsGroupOpen(prev => !prev)}
             >
                 <span>그룹</span>
@@ -80,7 +80,7 @@ export default function BoardSidebar() {
                             .map(group => (
                                 <div
                                     key={group.id}
-                                    className="flex justify-between items-center p-2 rounded hover:bg-base-200 cursor-pointer group"
+                                    className="flex justify-between items-center p-2 rounded hover:bg-base-300 cursor-pointer group"
                                     onClick={() => navigate(`/board?groupId=${group.id}`)}
                                 >
                                     {/* 그룹명 */}
@@ -173,16 +173,20 @@ export default function BoardSidebar() {
             />
 
             {/* 조직도 그룹구성원 추가 모달 */}
-            <OrganizationMemberPickerModal
-                onClose={() => setIsOrgModalOpen(false)}
-                selectedMemberIds={boardGroupMembers}
-                open={isOrgModalOpen}
-                onSave={(e) => {
-                    putGroupMemberAPI(e, selectedGroup).then(() => {
-                        setIsOrgModalOpen(false);
-                    });
-                }}
-            />
+            {selectedEmployee &&
+                <FilteredOrganizationMemberModal
+                    onClose={() => setIsOrgModalOpen(false)}
+                    selectedMemberIds={boardGroupMembers}
+                    selectedOrganizationCodes={selectedEmployee.organizationCode}
+                    exclusiveMemberIds={selectedEmployee.id}
+                    open={isOrgModalOpen}
+                    onSave={(e) => {
+                        putGroupMemberAPI(e.map(item => item.id), selectedGroup).then(() => {
+                            setIsOrgModalOpen(false);
+                        });
+                    }}
+                />
+            }
         </div>
     );
 }

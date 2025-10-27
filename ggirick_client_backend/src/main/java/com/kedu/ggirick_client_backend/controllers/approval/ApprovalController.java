@@ -13,7 +13,6 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +29,7 @@ public class ApprovalController {
     private final ApprovalFilesService approvalFilesService;
     private final ApprovalHistoryService approvalHistoryService;
     private final ApprovalProcessService approvalProcessService;
+    private final ApprovalDelegateService approvalDelegateService;
 
     // 결재 목록 조회
     // 사용자가 상신한 결재문서, 승인했던 결재문서, 반려했던 결재문서, 승인했지만 위에서 반려당한 결재문서, 결재해야할 문서를 조회
@@ -42,10 +42,12 @@ public class ApprovalController {
         Map<String, Object> response = new HashMap<>();
         // box = 0(전체), 1(대기), 2(승인), 3(반려) 보관함 선택
         List<ApprovalDTO> approvalList = approvalService.getList(userInfo.getId(), currentPage, box, searchFilter, searchQuery);
+        int totalPage = approvalService.getTotalPage(userInfo.getId(), box, searchFilter, searchQuery);
 
         response.put("approvalList", approvalList);
         response.put("itemPerPage", ITEM_PER_PAGE);
         response.put("pagePerNav", PAGE_PER_NAV);
+        response.put("totalPage", totalPage);
 
         return ResponseEntity.ok(response);
     }
@@ -55,28 +57,33 @@ public class ApprovalController {
     public ResponseEntity<Map<String, Object>> getItem(@PathVariable int approvalId,
                                                        @AuthenticationPrincipal UserTokenDTO userInfo) {
         // 관계자임을 증명해야 조회 가능
-        List<ApprovalLineDTO> existedLineList = new ArrayList<>();
-        existedLineList.addAll(approvalLineService.getByNextAssignerAndApprovalId(userInfo.getId(), approvalId));
-        existedLineList.addAll(approvalLineService.getByAssignerAndApprovalId(userInfo.getId(), approvalId));
+        List<ApprovalLineDTO> existedLineList = approvalLineService.getList(approvalId);
+
+        boolean authorityFlag = false;
 
         for (ApprovalLineDTO existedLine : existedLineList) {
             if (existedLine.getAssigner() != null &&
                     (existedLine.getAssigner().equals(userInfo.getId()) ||
-                            approvalService.getById(approvalId).getWriter().equals(userInfo.getId()))) {
-                Map<String, Object> response = new HashMap<>();
-
-                ApprovalDTO approvalInfo = approvalService.getById(approvalId);
-                List<ApprovalFilesDTO> approvalFilesList = approvalFilesService.getListByApprovalId(approvalId);
-                List<ApprovalHistoryDTO> approvalHistoryList = approvalHistoryService.getListByApprovalId(approvalId);
-                List<ApprovalLineDTO> approvalLineList = approvalLineService.getList(approvalId);
-
-                response.put("approvalInfo", approvalInfo);
-                response.put("approvalFilesList", approvalFilesList);
-                response.put("approvalHistoryList", approvalHistoryList);
-                response.put("approvalLineList", approvalLineList);
-
-                return ResponseEntity.ok(response);
+                            approvalDelegateService.getAssignerByDelegator(userInfo.getId()).contains(existedLine.getAssigner()))) {
+                authorityFlag = true;
+                break;
             }
+        }
+
+        if (approvalService.getById(approvalId).getWriter().equals(userInfo.getId()) || authorityFlag) {
+            Map<String, Object> response = new HashMap<>();
+
+            ApprovalDTO approvalInfo = approvalService.getById(approvalId);
+            List<ApprovalFilesDTO> approvalFilesList = approvalFilesService.getListByApprovalId(approvalId);
+            List<ApprovalHistoryDTO> approvalHistoryList = approvalHistoryService.getListByApprovalId(approvalId);
+            List<ApprovalLineDTO> approvalLineList = approvalLineService.getList(approvalId);
+
+            response.put("approvalDetail", approvalInfo);
+            response.put("approvalFilesList", approvalFilesList);
+            response.put("approvalHistoryList", approvalHistoryList);
+            response.put("approvalLineList", approvalLineList);
+
+            return ResponseEntity.ok(response);
         }
 
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

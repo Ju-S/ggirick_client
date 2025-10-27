@@ -22,4 +22,8 @@ public class EmployeeDTO {
     private String departmentCode;  // 부서코드
     private String organizationCode;   // 조직코드
     private String jobCode;   // 직급코드
+
+    private String departmentName; // 부서 이름
+    private String organizationName; // 조직 이름
+    private String jobName; // 직급 이름
 }

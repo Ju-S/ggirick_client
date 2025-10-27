@@ -1,19 +1,21 @@
 import {useSearchParams} from "react-router-dom";
 import {useBoardList} from "@/hooks/board/useBoardList.js";
-import BoardList from "@/components/board/BoardList.jsx";
-import Pagination from "@/components/board/Pagination.jsx";
+import Pagination from "@/components/approval/Pagination.jsx";
 import React, {useState} from "react";
-import Dropdown from "@/components/board/Dropdown.jsx";
+import Dropdown from "@/components/approval/Dropdown.jsx";
+import ApprovalList from "@/components/approval/ApprovalList.jsx";
+import {useApprovalList} from "@/hooks/approval/useApprovalList.js";
+import useEmployeeStore from "@/store/employeeStore.js";
 
 export default function ApprovalPage() {
     const [searchParams, setSearchParams] = useSearchParams();
     const currentPage = parseInt(searchParams.get("currentPage")) || 1;
-    const groupId = parseInt(searchParams.get("groupId")) || 1;
+    const box = parseInt(searchParams.get("box")) || 0;
 
     const [searchQuery, setSearchQuery] = useState("");
     const [searchFilter, setSearchFilter] = useState(0);
 
-    const boardInfos = useBoardList(currentPage, groupId, searchFilter, searchQuery);
+    const approvalInfos = useApprovalList(currentPage, box, searchFilter, searchQuery);
 
     const searchFilterItems = [
         {name: "제목+내용+작성자", value: 0},
@@ -26,9 +28,9 @@ export default function ApprovalPage() {
         setSearchQuery(e.target.value);
 
         // 검색어가 바뀌면 currentPage를 1로 리셋, groupId 유지
-        const groupIdParam = searchParams.get("groupId") || 1;
+        const groupIdParam = searchParams.get("box") || 1;
         setSearchParams({
-            groupId: groupIdParam,
+            box: groupIdParam,
             currentPage: 1,
             searchQuery: e.target.value
         });
@@ -41,7 +43,7 @@ export default function ApprovalPage() {
 
     return (
         <div className="space-y-6">
-            {boardInfos && (
+            {approvalInfos && (
                 <>
                     <div
                         className="flex flex-col sm:flex-row items-center justify-between">
@@ -72,7 +74,7 @@ export default function ApprovalPage() {
                             <input
                                 type="text"
                                 className="focus:ring-primary-500 focus:border-primary-500 block w-full rounded-lg border border-base-300 bg-base-100 p-2.5 pl-10 text-sm text-base-content-900"
-                                placeholder="게시글 검색"
+                                placeholder="결재문서 검색"
                                 onChange={onSearchQueryChangeHandler}
                                 value={searchQuery}
                             />
@@ -80,16 +82,16 @@ export default function ApprovalPage() {
                     </div>
 
                     {/* 게시판 리스트 */}
-                    <BoardList boardInfos={boardInfos}/>
+                    <ApprovalList approvalInfos={approvalInfos}/>
 
                     {/* 페이지네이션 */}
                     <Pagination
                         currentPage={currentPage}
-                        groupId={groupId}
+                        box={box}
                         searchQuery={searchQuery}
                         searchFilter={searchFilter}
-                        totalPage={boardInfos.totalPage}
-                        pagePerNav={boardInfos.pagePerNav}
+                        totalPage={approvalInfos.totalPage}
+                        pagePerNav={approvalInfos.pagePerNav}
                     />
                 </>
             )}

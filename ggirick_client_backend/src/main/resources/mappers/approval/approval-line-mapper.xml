@@ -5,32 +5,29 @@
 <mapper namespace="ApprovalLine">
     <!-- 결재선 생성 -->
     <insert id="insert">
-        INSERT INTO approval_line(id, approval_id, assigner, next_assigner)
-        VALUES(approval_line_seq.nextval, #{approvalId}, #{assigner, jdbcType=VARCHAR},
-        #{nextAssigner, jdbcType=VARCHAR})
+        INSERT INTO approval_line(id, approval_id, assigner, order_line)
+        VALUES(approval_line_seq.nextval, #{approvalId}, #{assigner, jdbcType=VARCHAR}, #{orderLine})
     </insert>
 
     <!-- 결재선 조회 -->
-    <!-- 트리구조로 순서대로 출력하면 됨 -->
     <select id="getListByApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO">
-        SELECT assigner FROM (SELECT DISTINCT
-        al.assigner,
-        LEVEL AS lvl
+        SELECT al.*, e.name, d.name AS department_name
         FROM approval_line al
-        WHERE al.approval_id = #{approvalId}
-        START WITH al.assigner IS NULL
-        CONNECT BY PRIOR al.next_assigner = al.assigner
-        ORDER BY lvl) WHERE lvl > 1
-    </select>
-
-    <!-- userId를 next_assigner로 가지고 approvalId를 approval_id로 가지는 approval_line 조회 -->
-    <select id="getListByNextAssignerAndApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO">
-        SELECT * FROM approval_line WHERE next_assigner=#{userId} AND approval_id=#{approvalId}
+        JOIN employee e ON al.assigner=e.id
+        JOIN employee_department ed ON ed.employee_id=e.id
+        JOIN department d ON d.code=ed.department_code
+        WHERE approval_id = #{approvalId}
+        ORDER BY order_line
     </select>
 
     <!-- userId를 assigner로 가지고 approvalId를 approval_id로 가지는 approval_line 조회 -->
     <select id="getListByAssignerAndApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO">
         SELECT * FROM approval_line WHERE assigner=#{userId} AND approval_id=#{approvalId}
+    </select>
+
+    <!-- approvalId를 approval_id로 가지는 approval_line의 마지막 order_line 조회 -->
+    <select id="getLastOrderLine" resultType="int">
+        SELECT COUNT(*)-1 FROM approval_line WHERE approval_id=#{approvalId}
     </select>
 
     <!-- 결재선 삭제 -->

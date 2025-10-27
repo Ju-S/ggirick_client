@@ -53,4 +53,9 @@ public class ApprovalLineService {
 
         return approvalLineDAO.getByAssignerAndApprovalId(params);
     }
+
+    // 마지막 결재 순번 조회
+    public int getLastOrderLine(int approvalId) {
+        return approvalLineDAO.getLastOrderLine(approvalId);
+    }
 }
