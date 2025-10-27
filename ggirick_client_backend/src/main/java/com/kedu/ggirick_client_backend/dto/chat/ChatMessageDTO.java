@@ -1,6 +1,7 @@
 package com.kedu.ggirick_client_backend.dto.chat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.*;
 
 import java.sql.Timestamp;
@@ -24,4 +25,8 @@ public class ChatMessageDTO {
      //(이모지 반응용)
     private String emoji;
     // getter/setter
+
+    //파일 첨부 확인용
+    @JsonProperty("hasFile")
+    private boolean hasFile;
 }

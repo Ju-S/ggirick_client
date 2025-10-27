@@ -4,7 +4,7 @@ import { BlockActions } from "@/components/chat/BlockAction.jsx";
 import React from "react";
 import useChatStore from "@/store/chat/useChatStore.js";
 
-export function Message({ msg, like, viewer, reactions, onAddReaction, sendMessage }) {
+export function Message({ msg,  viewer, reactions, sendMessage }) {
     const { addReaction,selectedWorkspace,selectedChannel} = useChatStore();
 
     // 메시지 전용 읽기 전용 editor 인스턴스 생성
@@ -17,6 +17,11 @@ export function Message({ msg, like, viewer, reactions, onAddReaction, sendMessa
 
         sendMessage({ type: "like", parentId: msg.id })
     };
+
+    //읽음 클릭
+    const handleViewer = () => {
+        sendMessage({type:"viewer", parentId: msg.id})
+    }
 
     // 복사 기능
     const handleCopy = (contentToCopy) => {
@@ -45,25 +50,29 @@ export function Message({ msg, like, viewer, reactions, onAddReaction, sendMessa
 
             {/* BlockNote 읽기 전용 렌더링 */}
             <div className="w-full blocknote-content">
-                <BlockNoteView editor={editor} className="w-full" editable={false} />
+                <BlockNoteView editor={editor}
+                               className="w-full"
+                               editable={false}
+                />
             </div>
 
             <BlockActions
                 onLike={handleLike}
                 onCopy={handleCopy}
-                like={like || 0}
-                viewer={viewer || []}
+                onViewer={handleViewer}
+                like={msg.like || 0}
+                likeUsers = {msg.likeUsers || []}
+                viewer={msg.viewer || []}
                 reactions={reactions || []}
                 content={msg.content || []}
                 onAddReaction={(emoji) => {
-                    console.log("이모지 선택"+msg.id+" "+emoji)
                     sendMessage({
                         type: "emoji",
                         parentId: msg.id,
-                        emoji: emoji,
-                    })
-                }
-                }
+                        emoji,
+                    });
+                }}
+
             />
         </div>
     );

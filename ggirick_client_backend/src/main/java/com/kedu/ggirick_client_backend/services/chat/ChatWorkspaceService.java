@@ -2,14 +2,17 @@ package com.kedu.ggirick_client_backend.services.chat;
 
 import com.kedu.ggirick_client_backend.dao.chat.ChatChannelDAO;
 import com.kedu.ggirick_client_backend.dao.chat.ChatWorkspaceDAO;
+import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatChannelDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatChannelParticipantDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatWorkspaceMemberDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,16 +23,14 @@ import static com.kedu.ggirick_client_backend.config.ChatConfig.MAX_CHANNELS;
 @RequiredArgsConstructor
 public class ChatWorkspaceService {
 
-    private final Long WORKSPACE_ADMIN_CODE = 1L;
-    private final  Long WORKSPACE_MANAGER_CODE = 2L;
+    private final Long WORKSPACE_OWNER_CODE = 1L;
+    private final  Long WORKSPACE_ADMIN_CODE = 2L;
     private final  Long WORKSPACE_MEMBER_CODE = 3L;
-
-
-
-
 
     private final ChatWorkspaceDAO chatWorkspaceDAO;
     private final ChatChannelDAO  chatChannelDAO;
+    @Autowired
+    private ChatNotificationService chatNotificationService;
 
     //로그인한 사용자의 워크스페이스 가져오기 
     public List<ChatWorkspaceDTO> getWorkspacesByUser(String employeeId) {
@@ -42,6 +43,7 @@ public class ChatWorkspaceService {
     }
 
     //워크스페이스 만들기
+    @Transactional
     public void createWorkspace(ChatWorkspaceDTO workspace, String createdBy) {
        //워크 스페이스를 만든 사용자 아이디 설정
         workspace.setCreatedBy(createdBy);
@@ -51,13 +53,13 @@ public class ChatWorkspaceService {
         ChatWorkspaceMemberDTO memberDTO = new ChatWorkspaceMemberDTO();
         memberDTO.setWorkspaceId(workspaceId);
         memberDTO.setEmployeeId(createdBy);
-        memberDTO.setRoleId(WORKSPACE_ADMIN_CODE);
+        memberDTO.setRoleId(WORKSPACE_OWNER_CODE);
 
         //워크스페이스 멤버로 등록
         chatWorkspaceDAO.insertWorkspaceMember(memberDTO);
 
     }
-
+    @Transactional
     public void createChannel(Long workspaceId, ChatChannelDTO channel,String createdBy, int channelType) {
         // 🔸 DM 채널이 아니라면 개수 제한 확인
         if (channelType != CHANNEL_DIRECT_CODE) {
@@ -138,7 +140,110 @@ public class ChatWorkspaceService {
             chatWorkspaceDAO.insertorUpdateWorkspaceMember(dto);
         }
 
+        // 6️⃣ 채널 멤버 싱크: 워크스페이스 탈퇴자는 모든 채널에서 자동 제거
+        if (!toRemove.isEmpty()) {
+            // 워크스페이스 내 모든 채널 조회
+            List<Long> channelIds = chatChannelDAO.selectChannelIdsByWorkspaceId(workspaceId);
+
+            for (Long channelId : channelIds) {
+                // 제거 처리
+                for (String employeeId : toRemove) {
+                    ChatChannelParticipantDTO dto = new ChatChannelParticipantDTO();
+                    dto.setChannelId(channelId);
+                    dto.setEmployeeId(employeeId);
+                    chatChannelDAO.deleteChannelParticipant(dto);
+                }
+
+                // 각 채널의 현재 멤버 목록 다시 조회하여 알림 발송
+                List<String> updatedMembers = chatChannelDAO
+                        .selectChannelParticipantsByChannelId(channelId)
+                        .stream()
+                        .map(ChatChannelParticipantDTO::getEmployeeId)
+                        .collect(Collectors.toList());
+
+                // ✅ 수정된 알림 호출 (삭제 이벤트로만)
+                chatNotificationService.notifyChannelMembersUpdated(
+                        workspaceId,
+                        channelId,
+                        Collections.emptyList(),   // 추가된 멤버 없음
+                        toRemove                   // 제거된 멤버 목록 전달
+                );
+            }
+        }
+
+
         return true;
     }
 
+    /**
+     * 워크스페이스 삭제 (Soft Delete)
+     * 워크스페이스 삭제 시 하위 채널과 메시지도 Soft Delete
+     */
+    @Transactional
+    public void deleteWorkspace(Long workspaceId, String requestUserId) {
+        
+        //요청 한 유저가 1어드민 권한을 가지고 있는지 확인
+
+        List<ChatWorkspaceMemberDTO> members = chatWorkspaceDAO.getMembers(workspaceId);
+        boolean isAdmin = members.stream()
+                .anyMatch(m -> m.getEmployeeId().equals(requestUserId) && m.getRoleId().equals(WORKSPACE_OWNER_CODE));
+
+        if (!isAdmin) {
+            throw new IllegalStateException("워크스페이스 삭제 권한이 없습니다.");
+        }
+
+        // 1. 워크스페이스 삭제
+        chatWorkspaceDAO.deleteWorkspace(workspaceId);
+
+        // 2. 해당 워크스페이스 채널 모두 Soft Delete
+        List<ChatChannelDTO> channels = chatWorkspaceDAO.selectChannelsByWorkspaceId(workspaceId, requestUserId);
+        for (ChatChannelDTO channel : channels) {
+            deleteChannel(workspaceId, channel.getId());
+        }
+    }
+
+    /**
+     * 채널 삭제 (Soft Delete)
+     * 메시지도 함께 Soft Delete
+     */
+    @Transactional
+    public void deleteChannel(Long workspaceId, Long channelId) {
+        // 1. 채널 삭제
+        chatWorkspaceDAO.deleteChannel(channelId);
+
+        // 2. 채널에 속한 메시지 Soft Delete
+        chatWorkspaceDAO.deleteMessagesByChannelId(channelId);
+
+
+        chatNotificationService.notifyChannelDeleted(workspaceId, channelId);
+    }
+
+    /*
+    해당 워크스페이스에서 내역할 확인
+     */
+    public String getUserRoleInWorkspace(Long workspaceId, String id) {
+
+        String roleName = chatWorkspaceDAO.selectWorkspaceRoleNameById(workspaceId, id);
+
+        return roleName != null ? roleName : "NONE"; }
+
+    //워크스페이스 정보 수정
+    public ChatWorkspaceDTO updateWorkspace(Long workspaceId, ChatWorkspaceDTO updatedWorkspace) {
+        //기존 워크스페이스 정보 가져오기
+        ChatWorkspaceDTO existing = chatWorkspaceDAO.selectWorkspaceById(workspaceId);
+        if (existing == null) {
+            throw new RuntimeException("채널을 찾을 수 없습니다.");
+        }
+
+        //수정 가능한 필드만 적용
+        existing.setName(updatedWorkspace.getName());
+        existing.setDescription(updatedWorkspace.getDescription());
+
+        //DB 업데이트
+
+        chatWorkspaceDAO.updateWorkspace(existing);
+
+        return existing;
+    }
 }
+

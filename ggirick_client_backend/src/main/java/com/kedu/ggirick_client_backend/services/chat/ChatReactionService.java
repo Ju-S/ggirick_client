@@ -67,4 +67,18 @@ public class ChatReactionService{
         );
     }
 
+    public void toggleViewer(ChatMessageDTO m) {
+        log.info("워크스페이스"+m.getWorkspaceId()+"채널"+m.getWorkspaceId()+"해당 메시지"+m.getParentId());
+        boolean viewed = chatDao.existsViewed(m);
+        try{
+            if(viewed) chatDao.deleteView(m);
+            else chatDao.insertView(m);
+
+        }catch (DuplicateKeyException e){
+            log.warn("[WARN] Duplicate view ignored: " + viewed);
+        }
+
+        messagingTemplate.convertAndSend("/subscribe/workspace/" + m.getWorkspaceId() + "/channel/" + m.getChannelId(),
+                Map.of("type", "viewer", "parentId", m.getParentId(), "employeeId", m.getSenderId(), "viewed", !viewed));
+    }
 }

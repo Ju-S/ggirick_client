@@ -4,7 +4,7 @@ import useChatStore from "@/store/chat/useChatStore.js";
 import chatAPI from "@/api/chat/chatAPI.js";
 
 export default function ChannelCreateModal({ open, onClose }) {
-    const { createChannel, isLoading, selectedWorkspace } = useChatStore();
+    const {  fetchChannels, isLoading, selectedWorkspace, setSelectedChannel } = useChatStore();
     const [form, setForm] = useState({ name: "", description: "" });
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
@@ -44,7 +44,11 @@ export default function ChannelCreateModal({ open, onClose }) {
         const success = await chatAPI.createChannel(selectedWorkspace.id, form);
         setSubmitting(false);
 
-        if (success) onClose();
+        if (success) {
+
+            onClose();
+            await  fetchChannels();
+        }
     };
 
     const handleKeyDown = (e) => {
@@ -65,7 +69,7 @@ export default function ChannelCreateModal({ open, onClose }) {
                         value={form.name}
                         onChange={handleChange}
                         onKeyDown={handleKeyDown}
-                        className="w-full border border-base-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        className="w-full text-base-content bg-base-100 border border-base-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         placeholder="예: 개발팀-공지"
                         disabled={submitting || isLoading}
                     />

@@ -570,6 +570,14 @@ const apiRoutes = {
         }),
 
         /**
+         * 채널 제목 정보 수정
+         */
+        updateWorkspace: (workspaceId) =>( {
+            url: `/workspace/${workspaceId}`,
+            method: "PATCH",
+        }),
+
+        /**
          * 워크스페이스 목록 조회
          */
         listWorkspaces: () => ({

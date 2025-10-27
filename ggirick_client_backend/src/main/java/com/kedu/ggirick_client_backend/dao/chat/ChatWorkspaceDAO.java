@@ -73,4 +73,43 @@ public class ChatWorkspaceDAO {
         map.put("excludedTypeId",excludedTypeId);
         return mybatis.selectOne("ChatWorkspaceChannel.countChannelsByWorkspaceIdAndNotType", map);
     }
+
+    /**
+     * 워크스페이스 Soft Delete
+     * deleted_at에 현재 시각 기록
+     */
+    public boolean deleteWorkspace(Long workspaceId) {
+        return mybatis.update("ChatWorkspaceChannel.deleteWorkspace", workspaceId) > 0;
+    }
+
+    /**
+     * 채널 Soft Delete
+     * deleted_at에 현재 시각 기록
+     */
+    public boolean deleteChannel(Long channelId) {
+        return mybatis.update("ChatWorkspaceChannel.deleteChannel", channelId) > 0;
+    }
+
+    /**
+     * 채널에 속한 메시지 Soft Delete
+     */
+    public boolean deleteMessagesByChannelId(Long channelId) {
+        return mybatis.update("ChatWorkspaceChannel.deleteMessagesByChannelId", channelId) > 0;
+    }
+
+    public String selectWorkspaceRoleNameById(Long workspaceId,String userId) {
+        Map<String,Object> map = new HashMap<>();
+        map.put("workspaceId",workspaceId);
+        map.put("employeeId",userId);
+        return mybatis.selectOne("ChatWorkspaceChannel.selectWorkspaceRoleNameByUser",map);
+    }
+
+    //아이디ㅣ로 워크스페이스 검색하기
+    public ChatWorkspaceDTO selectWorkspaceById(Long workspaceId) {
+         return mybatis.selectOne("ChatWorkspaceChannel.selectWorkspaceById", workspaceId);
+        }
+
+    public void updateWorkspace(ChatWorkspaceDTO existing) {
+        mybatis.update("ChatWorkspaceChannel.updateWorkspace", existing);
+    }
 }
