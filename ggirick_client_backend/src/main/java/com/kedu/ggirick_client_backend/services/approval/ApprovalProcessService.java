@@ -76,7 +76,7 @@ public class ApprovalProcessService {
                     // TODO: 문서 종류에 대한 처리 - config/ApprovalConfig에 정의
                     switch (approvalService.getById(approvalHistoryInfo.getApprovalId()).getDocTypeCode()) {
                         case DOC_TYPE_CONTACT -> {
-                            break;
+
                         }
                         case DOC_TYPE_VACATION -> {
                             ApprovalDTO approvalInfo = approvalService.getById(approvalHistoryInfo.getApprovalId());
@@ -92,16 +92,15 @@ public class ApprovalProcessService {
                                                     .build());
                                 }
                             }
-                            break;
                         }
                         case DOC_TYPE_HOLIDAY -> {
-                            break;
+
                         }
                         case DOC_TYPE_OVERTIME -> {
-                            break;
+
                         }
                         case DOC_TYPE_WORK_CHECK -> {
-                            break;
+
                         }
                     }
                 }
