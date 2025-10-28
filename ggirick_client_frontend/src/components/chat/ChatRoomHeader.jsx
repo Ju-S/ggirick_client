@@ -5,6 +5,8 @@ import ChannelMemberModal from "@/components/chat/Modal/ChannelMemberModal.jsx";
 import DeleteConfirmModal from "@/components/chat/Modal/DeleteConfirmModal.jsx";
 import chatAPI from "@/api/chat/chatAPI.js";
 import ChannelFileDrawer from "@/components/chat/ChannelFileDrawer.jsx";
+import {Link} from "react-router-dom";
+
 
 export default function ChatRoomHeader({sendMessage}) {
 
@@ -61,6 +63,12 @@ export default function ChatRoomHeader({sendMessage}) {
             </div>
         ));
     }, [selectedChannelMember]);
+    const handleVideoMeetingPage  = () => {
+
+        if(!selectedWorkspace || !selectedChannel) return;
+
+
+    }
 
 
     return (
@@ -76,7 +84,15 @@ export default function ChatRoomHeader({sendMessage}) {
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-4">
+                <div className=" flex items-center space-x-4">
+                    <Link to="/videomeeting">
+                        <button
+                            onClick={handleVideoMeetingPage}
+                            className={`btn btn-lg bg-accent text-accent-content rounded-full hidden md:inline-flex`}
+                        >
+                            📸화상회의
+                        </button>
+                    </Link>
                     <button
                         className="text-sm text-red-500 hover:underline transition-colors"
                         onClick={() => setShowDeleteModal(true)}

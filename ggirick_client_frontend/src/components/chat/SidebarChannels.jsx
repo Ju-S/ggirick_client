@@ -7,7 +7,7 @@ import chatAPI from "@/api/chat/chatAPI.js";
 import useEmployeeStore from "@/store/employeeStore.js";
 import { getMyInfoAPI } from "@/api/mypage/employeeAPI.js";
 import WorkspaceSettingModal from "@/components/chat/Modal/WorkspaceSettingModal.jsx";
-
+import { useVideoMeetingStore } from "@/store/chat/useVideoMeetingStore.js";
 export default function SidebarChannels() {
     const CHANNEL_TYPE_DIRECT = "DIRECT";
     const CHANNEL_TYPE_DIRECT_CODE = 3;
@@ -70,6 +70,7 @@ export default function SidebarChannels() {
             alert("서버 오류가 발생했습니다.");
         }
     }, [selectedWorkspace, setChannel]);
+
 
     /** 채널 생성 핸들러 */
     const handleCreateChannel = useCallback(() => {
@@ -152,11 +153,7 @@ export default function SidebarChannels() {
                                     onClick={() => setChannel(ch)}
                                 >
                                     <span># {ch.name}</span>
-                                    <button
-                                        className={`btn btn-xs rounded-full hidden md:inline-flex ${isSelected ? "btn-accent" : "btn-secondary"}`}
-                                    >
-                                        화상회의
-                                    </button>
+
                                 </li>
                             );
                         })}

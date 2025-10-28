@@ -11,6 +11,10 @@ export default defineConfig({
     server: {
       host: '0.0.0.0',
       allowedHosts: ["ggirick.site", "www.ggirick.site"],
+        hmr: {
+            host: 'dev.ggirick.local',
+            port: 5173, // 클라이언트 포트
+        },
     },
     resolve: {
         alias: {
