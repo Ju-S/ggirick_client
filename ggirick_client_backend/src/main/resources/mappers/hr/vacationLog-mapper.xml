@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="VacationLog">
+
+    <!-- 휴가 사용 로그 등록 -->
+    <insert id="insertVacationLog">
+        INSERT INTO vacation_log (
+        id, employee_id, approval_id, start_date, end_date,
+        days_used, vacation_type, created_at
+        ) VALUES (
+        vacation_log_seq.NEXTVAL,
+        #{employeeId},
+        #{approvalId},
+        #{startDate},
+        #{EndDate},
+        #{daysUsed},
+        #{vacationType},
+        SYSDATE
+        )
+    </insert>
+
+    <!-- 휴가 로그 삭제 -->
+    <delete id="deleteVacationLog">
+        DELETE FROM vacation_log WHERE id = #{usageId}
+    </delete>
+
+</mapper>

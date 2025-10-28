@@ -6,10 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
+import java.sql.Date;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
-// 매일 오전 2시 30분에 전일 근무기록을 요약하여 WORK_SUMMARY_DAILY에 반영
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -17,20 +17,26 @@ public class WorkSummaryScheduler {
 
     private final WorkSummaryDailyService workSummaryDailyService;
 
-    // 매일 오전 2시 30분 실행
+    // 매일 오전 2시 30분 실행 (운영용)
     // cron = "초 분 시 일 월 요일"
-    //@Scheduled(cron = "0 30 2 * * *", zone = "Asia/Seoul")
-    @Scheduled(fixedRate = 10 * 60 * 1000) // 테스트용 10분마다 실행 (밀리초 단위)
-    public void generateDailySummary() {
-        LocalDate targetDate = LocalDate.now().minusDays(1); // 전일 기준
-        // 시스템 로그 남기기
-        log.info("[WorkSummaryScheduler] {} 기준 근무요약 데이터 생성 시작",
-                targetDate.format(DateTimeFormatter.ISO_DATE));
+    // @Scheduled(cron = "0 30 2 * * *", zone = "Asia/Seoul")
 
+    // 테스트용: 1분마다 실행
+    @Scheduled(fixedRate = 60 * 1000)
+    public void generateDailySummary() {
+        // 전일 기준 Date 계산
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DAY_OF_MONTH, -1);
+        Date targetDate = new Date(cal.getTimeInMillis());
+
+        // 로그용 포맷
+        String yyyyMMdd = new SimpleDateFormat("yyyy-MM-dd").format(targetDate);
+
+        log.info("[WorkSummaryScheduler] {} 기준 근무요약 데이터 생성 시작", yyyyMMdd);
+
+        // 서비스 호출 (서비스도 Date 시그니처)
         workSummaryDailyService.aggregateDailyWorkSummary(targetDate);
 
-        log.info("WorkSummaryScheduler] {} 근무요약 데이터 생성 완료",
-                targetDate.format(DateTimeFormatter.ISO_DATE));
+        log.info("[WorkSummaryScheduler] {} 근무요약 데이터 생성 완료", yyyyMMdd);
     }
 }
-

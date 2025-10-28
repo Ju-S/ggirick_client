@@ -1,11 +1,15 @@
 package com.kedu.ggirick_client_backend.dao.workmanagement;
 
+import com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkSearchConditionDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Date;
+import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -49,4 +53,10 @@ public class WorkTimeLogDAO {
     public List<WorkTimeLogDTO> getWorkTimeLogsByCondition(WorkSearchConditionDTO condition) {
         return mybatis.selectList("WorkTimeLog.getWorkTimeLogsByCondition", condition);
     }
+
+    // 특정 날짜의 모든 직원 근무기록 조회
+    public List<WorkTimeLogDTO> getAllLogsByDate(Date targetDate) {
+        return mybatis.selectList("WorkTimeLog.getAllLogsByDate", targetDate);
+    }
+
 }

@@ -6,34 +6,70 @@
 <mapper namespace="WorkSummaryDaily">
 
     <!-- 전일 근무기록 집계 후 MERGE -->
-    <update id="aggregateDailyWorkSummary" parameterType="java.time.LocalDate">
+    <update id="merge" parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDailyDTO">
         MERGE INTO WORK_SUMMARY_DAILY s
         USING (
-        SELECT
-        EMPLOYEE_ID,
-        TRUNC(RECORDED_AT) AS WORK_DATE,
-        MIN(RECORDED_AT) AS START_TIME,
-        MAX(RECORDED_AT) AS END_TIME,
-        ROUND(
-        (EXTRACT(DAY FROM (MAX(RECORDED_AT) - MIN(RECORDED_AT))) * 24) +
-        (EXTRACT(HOUR FROM (MAX(RECORDED_AT) - MIN(RECORDED_AT)))) +
-        (EXTRACT(MINUTE FROM (MAX(RECORDED_AT) - MIN(RECORDED_AT))) / 60),
-        2
-        ) AS TOTAL_HOURS,
-        'NORMAL' AS STATUS
-        FROM WORK_TIME_LOG
-        WHERE TRUNC(RECORDED_AT) = #{targetDate}
-        GROUP BY EMPLOYEE_ID, TRUNC(RECORDED_AT)
+        SELECT #{employeeId} AS EMPLOYEE_ID,
+        TRUNC(#{workDate}) AS WORK_DATE   <!-- 파라미터도 날짜만 -->
+        FROM dual
         ) t
-        ON (s.EMPLOYEE_ID = t.EMPLOYEE_ID AND s.WORK_DATE = t.WORK_DATE)
+        ON (
+        s.EMPLOYEE_ID = t.EMPLOYEE_ID
+        AND TRUNC(s.WORK_DATE) = t.WORK_DATE     <!-- 좌측도 TRUNC 비교 -->
+        )
         WHEN MATCHED THEN
         UPDATE SET
-        s.START_TIME = t.START_TIME,
-        s.END_TIME = t.END_TIME,
-        s.TOTAL_HOURS = t.TOTAL_HOURS,
-        s.STATUS = t.STATUS
+        s.START_TIME      = #{startTime, jdbcType=TIMESTAMP},
+        s.END_TIME        = #{endTime, jdbcType=TIMESTAMP},
+        s.TOTAL_HOURS     = #{totalHours, jdbcType=NUMERIC},
+        s.OVERTIME_HOURS  = #{overtimeHours, jdbcType=NUMERIC},
+        s.NIGHT_HOURS     = #{nightHours, jdbcType=NUMERIC},
+        s.LEAVE_HOURS     = #{leaveHours, jdbcType=NUMERIC},
+        s.STATUS          = #{status, jdbcType=VARCHAR}
         WHEN NOT MATCHED THEN
-        INSERT (EMPLOYEE_ID, WORK_DATE, START_TIME, END_TIME, TOTAL_HOURS, STATUS)
-        VALUES (t.EMPLOYEE_ID, t.WORK_DATE, t.START_TIME, t.END_TIME, t.TOTAL_HOURS, t.STATUS)
+        INSERT (
+        EMPLOYEE_ID, WORK_DATE, START_TIME, END_TIME,
+        TOTAL_HOURS, OVERTIME_HOURS, NIGHT_HOURS, LEAVE_HOURS, STATUS
+        )
+        VALUES (
+        #{employeeId},
+        TRUNC(#{workDate}),                     <!-- 저장도 날짜만 -->
+        #{startTime, jdbcType=TIMESTAMP},
+        #{endTime, jdbcType=TIMESTAMP},
+        #{totalHours, jdbcType=NUMERIC},
+        #{overtimeHours, jdbcType=NUMERIC},
+        #{nightHours, jdbcType=NUMERIC},
+        #{leaveHours, jdbcType=NUMERIC},
+        #{status, jdbcType=VARCHAR}
+        )
     </update>
+
+    <!-- 통합 근무요약 (일간 / 주간 / 연간 / 직접 기간) -->
+    <select id="getWorkSummary"
+            parameterType="map"
+            resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDTO">
+
+        SELECT
+        NVL(SUM(CASE WHEN s.STATUS = 'LATE' THEN 1 ELSE 0 END), 0) late_count,
+        NVL(SUM(CASE WHEN s.STATUS = 'EARLY_LEAVE' THEN 1 ELSE 0 END), 0) early_leave_count,
+        NVL(SUM(CASE WHEN s.STATUS = 'MISSING_OUT' THEN 1 ELSE 0 END), 0) missing_out_count,
+        NVL(SUM(CASE WHEN s.STATUS = 'ABSENT' THEN 1 ELSE 0 END), 0) absent_count,
+
+        NVL(SUM(CASE WHEN s.STATUS != 'ABSENT' THEN 1 ELSE 0 END), 0) work_days,
+        ROUND(NVL(SUM(s.TOTAL_HOURS), 0), 1) total_hours,           -- 🔹 총 근무시간 소수점 1자리
+        ROUND(NVL(AVG(NVL(s.TOTAL_HOURS, 0)), 0), 1) avg_hours,     -- 🔹 평균 근무시간 소수점 1자리
+        NVL(MAX(g.remaining_vacation), 0) remaining_vacation
+
+        FROM WORK_SUMMARY_DAILY s
+        LEFT JOIN (
+        SELECT employee_id, SUM(days_granted - days_used) remaining_vacation
+        FROM ANNUAL_LEAVE_GRANT
+        WHERE expire_date >= SYSDATE
+        GROUP BY employee_id
+        ) g ON g.employee_id = s.employee_id
+
+        WHERE s.employee_id = #{employeeId}
+        AND s.work_date BETWEEN #{startDate} AND #{endDate}
+
+    </select>
 </mapper>

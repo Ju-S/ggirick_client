@@ -1,13 +1,15 @@
 package com.kedu.ggirick_client_backend.services.workmanagement;
 
 import com.kedu.ggirick_client_backend.dao.workmanagement.WorkTimeLogDAO;
+import com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkSearchConditionDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
+import java.sql.Date;
+import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -56,9 +58,8 @@ public class WorkTimeLogService {
         return workTimeLogDAO.getLastWorkTimeLogByType(params);
     }
 
-    // 조건 조회용 - 통합버전 (기간 + 조직/부서 등)
+    // 로그 리스트 조건 조회용 - 통합버전 (기간 + 조직/부서 등)
     public List<WorkTimeLogDTO> getWorkTimeLogsByCondition(WorkSearchConditionDTO condition) {
         return workTimeLogDAO.getWorkTimeLogsByCondition(condition);
     }
-
 }

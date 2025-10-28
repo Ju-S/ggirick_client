@@ -1,15 +1,18 @@
 package com.kedu.ggirick_client_backend.controllers.workmanagement;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
+import com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkSearchConditionDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO;
 import com.kedu.ggirick_client_backend.services.workmanagement.WorkTimeLogService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -58,7 +61,7 @@ public class WorkTimeLogController {
         return ResponseEntity.ok(list);
     }
 
-    // 조건 조회용 - (기간 + 조직/부서)
+    // 로그 리스트 조건 조회용 - (기간 + 조직/부서)
     @PostMapping("/search")
     public ResponseEntity<List<WorkTimeLogDTO>> getWorkTimeLogsByCondition(
             @RequestBody WorkSearchConditionDTO condition,

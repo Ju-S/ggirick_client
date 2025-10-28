@@ -66,7 +66,7 @@
         FETCH FIRST 1 ROWS ONLY
     </select>
 
-    <!-- 조건 조회용 - 통합버전 (기간 + 조직/부서 등) -->
+    <!-- 로그 리스트용 : 조건 조회용 - 통합버전 (기간 + 조직/부서 등) -->
     <select id="getWorkTimeLogsByCondition"
             parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkSearchConditionDTO"
             resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO">
@@ -81,4 +81,16 @@
         ORDER BY w.RECORDED_AT DESC
     </select>
 
+    <!-- 특정 날짜 전체 근무기록 조회 -->
+    <select id="getAllLogsByDate"
+            parameterType="java.sql.Date"
+            resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO">
+        SELECT
+        employee_id,
+        type,
+        recorded_at
+        FROM work_time_log
+        WHERE TRUNC(recorded_at) = #{targetDate}
+        ORDER BY employee_id, recorded_at
+    </select>
 </mapper>
