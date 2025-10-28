@@ -14,7 +14,7 @@
         SELECT * FROM board_file WHERE board_id=#{boardId}
     </select>
 
-    <!-- 게시글 파일 목록 조회 -->
+    <!-- 게시글 파일 조회 -->
     <select id="getFileById" resultType="com.kedu.ggirick_client_backend.dto.board.BoardFileDTO">
         SELECT * FROM board_file WHERE id=#{id}
     </select>

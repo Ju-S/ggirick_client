@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ApprovalFiles">
+    <!-- 결재문서 파일 등록 -->
+    <insert id="insert">
+        INSERT INTO approval_files(id, name, url, approval_id)
+        VALUES (approval_files_seq.nextval, #{name}, #{url}, #{approvalId})
+    </insert>
+
+    <!-- 결재문서 파일 목록 조회 -->
+    <select id="getListByApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalFilesDTO">
+        SELECT * FROM approval_files WHERE approval_id=#{approvalId}
+    </select>
+
+    <!-- 결재문서 파일 조회 -->
+    <select id="getFileById" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalFilesDTO">
+        SELECT * FROM approval_files WHERE id=#{id}
+    </select>
+
+    <!-- 결재문서 파일 삭제 -->
+    <delete id="delete">
+        DELETE FROM approval_files WHERE id=#{id}
+    </delete>
+</mapper>

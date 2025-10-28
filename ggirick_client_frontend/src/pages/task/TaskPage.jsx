@@ -46,7 +46,7 @@ export default function TaskPage() {
             }
         };
 
-        loadProjects();
+        loadProjects()
     }, []);
 
     //  프로젝트 선택 갱신
@@ -78,10 +78,6 @@ export default function TaskPage() {
         );
     }
 
-    if (!selectedProject) {
-        return <div className="flex h-screen items-center justify-center text-gray-400">프로젝트를 선택 중입니다...</div>;
-    }
-
     // 🔹 에러 상태
     if (error) {
         return (
@@ -107,7 +103,7 @@ export default function TaskPage() {
                     </div>
                 </main>
 
-                {/* ✅ 항상 최상단에 모달 유지 */}
+                {/* 항상 최상단에 모달 유지 */}
                 <ProjectCreateModal
                     open={isProjectModalOpen}
                     onClose={() => setProjectModalOpen(false)}
@@ -116,6 +112,9 @@ export default function TaskPage() {
         );
     }
 
+    if (!selectedProject) {
+        return <div className="flex h-screen items-center justify-center bg-base-100 text-base-content">프로젝트를 선택 중입니다...</div>;
+    }
 
     // 🔹 뷰 렌더링 함수
     const renderView = () => {
@@ -132,7 +131,7 @@ export default function TaskPage() {
                 return <GanttView />;
             default:
                 return (
-                    <div className="p-6 text-gray-400 text-center h-96 flex items-center justify-center">
+                    <div className="p-6 bg-base-100 text-base-content text-center h-96 flex items-center justify-center">
                         (선택된 뷰 표시)
                     </div>
                 );
@@ -149,6 +148,7 @@ export default function TaskPage() {
                         <div>
                             <h1 className="text-2xl font-bold" onClick={() => setProjectInfoModalOpen(true)}>{selectedProject.name}</h1>
                             <p className="text-sm opacity-80 mt-1">{selectedProject.description}</p>
+                            <p className="text-sm opacity-80 mt-1">프로젝트 주인: {selectedProject.createdByEmployeeName} </p>
                         </div>
 
                         <div className="flex items-center gap-6 text-sm">

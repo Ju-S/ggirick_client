@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="ApprovalLine">
+    <!-- 결재선 생성 -->
+    <insert id="insert">
+        INSERT INTO approval_line(id, approval_id, assigner, order_line)
+        VALUES(approval_line_seq.nextval, #{approvalId}, #{assigner, jdbcType=VARCHAR}, #{orderLine})
+    </insert>
+
+    <!-- 결재선 조회 -->
+    <select id="getListByApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO">
+        SELECT al.*, e.name, d.name AS department_name
+        FROM approval_line al
+        JOIN employee e ON al.assigner=e.id
+        JOIN employee_department ed ON ed.employee_id=e.id
+        JOIN department d ON d.code=ed.department_code
+        WHERE approval_id = #{approvalId}
+        ORDER BY order_line
+    </select>
+
+    <!-- userId를 assigner로 가지고 approvalId를 approval_id로 가지는 approval_line 조회 -->
+    <select id="getListByAssignerAndApprovalId" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO">
+        SELECT * FROM approval_line WHERE assigner=#{userId} AND approval_id=#{approvalId}
+    </select>
+
+    <!-- approvalId를 approval_id로 가지는 approval_line의 마지막 order_line 조회 -->
+    <select id="getLastOrderLine" resultType="int">
+        SELECT COUNT(*)-1 FROM approval_line WHERE approval_id=#{approvalId}
+    </select>
+
+    <!-- 결재선 삭제 -->
+    <!-- 결재문서에 관한 모든 결재선을 삭제하고 수정된 결재선으로 재생성할 예정 -->
+    <delete id="deleteByApprovalId">
+        DELETE FROM approval_line WHERE approval_id=#{approval_id}
+    </delete>
+</mapper>

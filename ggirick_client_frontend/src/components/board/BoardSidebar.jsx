@@ -2,11 +2,11 @@ import {useNavigate} from "react-router-dom";
 import {useEffect, useState} from "react";
 import AddGroupModal from "@/components/board/AddGroupModal.jsx";
 import useBoardGroupStore from "@/store/board/boardGroupStore.js";
-import OrganizationMemberPickerModal from "@/components/common/modals/OrganizationMemberModal.jsx";
 import {boardGroupMemberListAPI, deleteGroupAPI, putGroupMemberAPI} from "@/api/board/boardGroupAPI.js";
 import useEmployeeStore from "@/store/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 import ModifyGroupModal from "@/components/board/ModifyGroupModal.jsx";
+import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";
 
 export default function BoardSidebar() {
     const navigate = useNavigate();
@@ -56,7 +56,7 @@ export default function BoardSidebar() {
 
             {/* 그룹 버튼 */}
             <div
-                className="flex justify-between items-center p-2 border-b border-base-300 rounded hover:bg-base-200 cursor-pointer relative"
+                className="flex justify-between items-center p-2 border-b border-base-300 rounded hover:bg-base-300 cursor-pointer relative"
                 onClick={() => setIsGroupOpen(prev => !prev)}
             >
                 <span>그룹</span>
@@ -80,7 +80,7 @@ export default function BoardSidebar() {
                             .map(group => (
                                 <div
                                     key={group.id}
-                                    className="flex justify-between items-center p-2 rounded hover:bg-base-200 cursor-pointer group"
+                                    className="flex justify-between items-center p-2 rounded hover:bg-base-300 cursor-pointer group"
                                     onClick={() => navigate(`/board?groupId=${group.id}`)}
                                 >
                                     {/* 그룹명 */}
@@ -94,7 +94,7 @@ export default function BoardSidebar() {
                                             <>
                                                 {/* 구성원 추가 버튼 */}
                                                 <button
-                                                    className="btn btn-xs btn-outline btn-primary"
+                                                    className="btn btn-xs btn-outline btn-primary p-2"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         boardGroupMemberListAPI(group.id)
@@ -111,7 +111,6 @@ export default function BoardSidebar() {
                                                     className="btn btn-xs btn-outline btn-error"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
-                                                        // TODO: 삭제 확인 및 API 호출
                                                         if (confirm(`"${group.name}" 그룹을 삭제하시겠습니까?`)) {
                                                             console.log("그룹 삭제:", group.id);
                                                             deleteGroupAPI(group.id).then(() => {
@@ -126,7 +125,7 @@ export default function BoardSidebar() {
 
                                                 {/* 수정 버튼 */}
                                                 <button
-                                                    className="btn btn-xs btn-outline btn-info"
+                                                    className="btn btn-xs btn-outline btn-info p-1"
                                                     onClick={(e) => {
                                                         e.stopPropagation();
                                                         setModifyGroupInfo({
@@ -136,7 +135,14 @@ export default function BoardSidebar() {
                                                         });
                                                     }}
                                                 >
-                                                    수정
+                                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                         viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                         stroke-width="1" stroke-linecap="round" stroke-linejoin="round"
+                                                         className="lucide lucide-settings-icon lucide-settings">
+                                                        <path
+                                                            d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/>
+                                                        <circle cx="12" cy="12" r="3"/>
+                                                    </svg>
                                                 </button>
                                             </>
                                         )}
@@ -167,16 +173,20 @@ export default function BoardSidebar() {
             />
 
             {/* 조직도 그룹구성원 추가 모달 */}
-            <OrganizationMemberPickerModal
-                onClose={() => setIsOrgModalOpen(false)}
-                selectedMemberIds={boardGroupMembers}
-                open={isOrgModalOpen}
-                onSave={(e) => {
-                    putGroupMemberAPI(e, selectedGroup).then(() => {
-                        setIsOrgModalOpen(false);
-                    });
-                }}
-            />
+            {selectedEmployee &&
+                <FilteredOrganizationMemberModal
+                    onClose={() => setIsOrgModalOpen(false)}
+                    selectedMemberIds={boardGroupMembers}
+                    selectedOrganizationCodes={selectedEmployee.organizationCode}
+                    exclusiveMemberIds={selectedEmployee.id}
+                    open={isOrgModalOpen}
+                    onSave={(e) => {
+                        putGroupMemberAPI(e.map(item => item.id), selectedGroup).then(() => {
+                            setIsOrgModalOpen(false);
+                        });
+                    }}
+                />
+            }
         </div>
     );
 }

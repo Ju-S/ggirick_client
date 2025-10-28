@@ -1,4 +1,4 @@
-import {timestampToMonthDay} from "@/utils/board/boardDateFormat.js";
+import {timestampToMonthDay} from "@/utils/common/dateFormat.js";
 import CommentItem from "@/components/board/CommentItem.jsx";
 import {useNavigate, useParams} from "react-router-dom";
 import {buildCommentTree} from "@/utils/board/buildCommentTree.js";
@@ -14,7 +14,7 @@ import {deleteAPI} from "@/api/board/boardAPI.js";
 export default function BoardDetailPage() {
     const navigate = useNavigate();
     const {id} = useParams();
-    const {boardDetail, commentList, fileList} = useBoardStore(state => state.boardInfo);
+    const {boardDetail, commentList, fileList} = useBoardStore(state => state.approvalInfo);
     const fetchBoardInfo = useBoardStore(state => state.fetchBoardInfo);
     const treeComments = buildCommentTree(commentList || []);
 
