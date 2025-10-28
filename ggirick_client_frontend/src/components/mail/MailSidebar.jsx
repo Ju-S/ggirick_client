@@ -1,7 +1,7 @@
 import React from "react";
 import { Inbox, Star, Send, FileText, AlertCircle, Trash2, Mail } from "lucide-react";
 
-export default function MailSidebar({ onSelectFolder }) {
+export default function MailSidebar({ onSelectFolder,onCompose }) {
   const folders = [
     { id: "all", name: "전체메일함", icon: <Inbox size={16} className="text-primary" /> },
     { id: "inbox", name: "받은메일함", icon: <Mail size={16} className="text-primary"/> },
@@ -22,7 +22,7 @@ export default function MailSidebar({ onSelectFolder }) {
             <Inbox size={25} className="text-primary"/> Mail
           </h2>
         </div>
-        <button className="btn btn-primary w-full mt-3">
+        <button className="btn btn-primary w-full mt-3" onClick={onCompose}>
           메일 쓰기
         </button>
       </div>
