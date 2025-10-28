@@ -2,7 +2,7 @@ import React, {useState} from "react";
 import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";
 import useEmployeeStore from "@/store/employeeStore.js";
 
-export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocData, viewMode=false }) {
+export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocData, viewMode=false, approvalLine }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const {selectedEmployee} = useEmployeeStore();
 
@@ -10,6 +10,12 @@ export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocDat
         setDocData({...docData, delegatorList: data.map(e => ({id: e.id, name: e.name}))});
         setIsModalOpen(false);
     }
+
+    // 대리결재자 삭제 함수
+    const handleRemoveDelegator = (id) => {
+        const updatedList = docData.delegatorList.filter(e => e.id !== id);
+        setDocData({...docData, delegatorList: updatedList});
+    };
 
     if (docTypeCode === "CON" || !docTypeCode) return null; // 업무연락
 
@@ -21,13 +27,26 @@ export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocDat
             <div className="mt-4 grid grid-cols-2 gap-4">
                 <div className="col-span-2">
                     <label className="block mb-2 font-semibold">대리결재자</label>
-                    <button className="btn btn-base btn-xs" onClick={() => setIsModalOpen(true)}>추가</button>
-                    {docData?.delegatorList && docData?.delegatorList.map(e => (
-                        <div>
-                            {e.name}
-                            {e.id}
-                        </div>
-                    ))}
+                    {!viewMode && <button className="btn btn-base btn-xs" onClick={() => setIsModalOpen(true)}>추가</button>}
+                    <div className="flex flex-wrap gap-2 mt-3">
+                        {docData?.delegatorList?.map(e => (
+                            <div
+                                key={e.id}
+                                className="flex items-center gap-1 bg-base-300 px-2 py-1 rounded-full text-sm"
+                            >
+                                <span>{e.name}</span>
+                                {!viewMode && (
+                                    <button
+                                        type="button"
+                                        className="text-base hover:text-error"
+                                        onClick={() => handleRemoveDelegator(e.id)}
+                                    >
+                                        ×
+                                    </button>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
                 <div>
                     <label className="block mb-2 font-semibold">시작일</label>
@@ -78,10 +97,7 @@ export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocDat
                 <FilteredOrganizationMemberModal
                     selectedOrganizationCodes={selectedEmployee.organizationCode}
                     selectedMemberIds={docData?.delegatorList?.map(e => e.id) || []}
-                    exclusiveMemberIds={[
-                        selectedEmployee.id,
-                        ...(docData?.delegatorList?.map(e => e.id) || [])
-                    ]}
+                    exclusiveMemberIds={selectedEmployee.id}
                     title="대리결재자 선택"
                     open={isModalOpen}
                     onClose={() => setIsModalOpen(false)}

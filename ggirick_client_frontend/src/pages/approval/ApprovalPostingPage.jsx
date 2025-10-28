@@ -16,7 +16,7 @@ export default function ApprovalPostingPage({ editMode }) {
 
     const [approvalInfos, setApprovalInfos] = useState({
         title: "",
-        contents: "",
+        content: "",
         docTypeCode: "",
         docData: {},
         files: []
@@ -28,17 +28,22 @@ export default function ApprovalPostingPage({ editMode }) {
 
     useEffect(() => {
         if (editMode && id) {
-            const { approvalDetail, fileList } = useApprovalStore.getState().approvalInfo;
+            const { approvalDetail, fileList, approvalLineList } = useApprovalStore.getState().approvalInfo;
+            setApprovalLine(approvalLineList.map(({ assigner, ...rest }) => ({
+                ...rest,
+                id: assigner
+            })));
             setApprovalInfos({ ...approvalDetail, files: [] });
             setFileList(fileList || []);
         } else {
             setApprovalInfos({
                 title: "",
-                contents: "",
+                content: "",
                 docTypeCode: "",
                 docData: {},
                 files: []
             });
+            setApprovalLine([]);
             setFileList([]);
         }
     }, [editMode, id, fetchApproval]);
@@ -124,7 +129,7 @@ export default function ApprovalPostingPage({ editMode }) {
         const approvalInfoBlob = new Blob(
             [JSON.stringify({
                 title: approvalInfos.title,
-                content: approvalInfos.contents,
+                content: approvalInfos.content,
                 docTypeCode: approvalInfos.docTypeCode,
                 docData: approvalInfos.docData
             })],
@@ -153,7 +158,7 @@ export default function ApprovalPostingPage({ editMode }) {
 
     return (
         <div className="space-y-4 p-6 bg-base-100 shadow-md rounded-lg h-[calc(100vh-120px)] overflow-y-auto">
-            <h1 className="text-2xl font-bold mb-4">기안서 작성</h1>
+            <h1 className="text-2xl font-bold mb-4">기안서 {editMode ? "수정" : "작성"}</h1>
 
             {/* 제목 입력 */}
             <div>
@@ -205,8 +210,8 @@ export default function ApprovalPostingPage({ editMode }) {
                 <textarea
                     className="textarea textarea-bordered w-full h-90 resize-none"
                     placeholder="문서 내용을 입력하세요..."
-                    name="contents"
-                    value={approvalInfos.contents}
+                    name="content"
+                    value={approvalInfos.content}
                     onChange={onChangeBoardInfoHandler}
                     required
                 />

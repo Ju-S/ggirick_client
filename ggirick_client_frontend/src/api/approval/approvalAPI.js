@@ -5,7 +5,7 @@ export function insertAPI(data) {
     return api({...apiRoutes.approval.insert(), data: data});
 }
 
-export function putAPI(approvalId, data) {
+export function putAPI(data, approvalId) {
     return api({...apiRoutes.approval.put(approvalId), data: data});
 }
 

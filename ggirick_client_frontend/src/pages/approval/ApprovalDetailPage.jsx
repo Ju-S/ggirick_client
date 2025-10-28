@@ -91,7 +91,7 @@ export default function ApprovalDetailPage() {
 
                             <div className="flex items-center gap-3">
                                 {/* 수정/삭제 버튼 — 작성자 본인만 */}
-                                {selectedEmployee.id === approvalDetail.writer && (
+                                {selectedEmployee.id === approvalDetail.writer && approvalDetail.assignedAt == null && (
                                     <div className="flex gap-2">
                                         <button
                                             className="btn btn-xs btn-outline btn-primary"

@@ -44,14 +44,20 @@ export default function ApprovalLineCheck({approvalId}) {
                     className="relative flex flex-col items-center justify-center border rounded-xl p-3 min-w-[100px] min-h-[110px] shadow-sm">
                     {/* 결재 상태 원형 워터마크 */}
                     {(() => {
-                        const history = approvalHistoryList.find(h => h.assigner === e.assigner);
-                        if (!history) return null;
+                        // 해당 assigner의 history만 가져오기
+                        const histories = approvalHistoryList
+                            .filter(h => h.assigner === e.assigner)
+                            .sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt)); // 최신 순 정렬
+
+                        const latest = histories[0]; // 최신 기록
+                        if (!latest) return null;
+                        if (new Date(latest?.recordedAt) < new Date(approvalDetail.updatedAt)) return null;
                         let text = "";
                         let bgColor = "";
 
-                        switch (history.typeId) {
+                        switch (latest.typeId) {
                             case 1:
-                                text = history.isDelegated === "Y" ? "대결" : "승인";
+                                text = latest.isDelegated === "Y" ? "대결" : "승인";
                                 bgColor = "bg-success";
                                 break;
                             case 2:
@@ -80,7 +86,9 @@ export default function ApprovalLineCheck({approvalId}) {
                         const latest = histories[0]; // 최신 기록
 
                         // 최신 기록이 typeId 1이면 버튼 숨김
-                        if (latest?.typeId === 1) return null;
+                        if (latest?.typeId === 1 && new Date(latest?.recordedAt) > new Date(approvalDetail.updatedAt)){
+                            return null;
+                        }
 
                         return (
                             <div className="mt-2 flex justify-end">
@@ -88,7 +96,7 @@ export default function ApprovalLineCheck({approvalId}) {
                                     className="btn btn-xs btn-primary"
                                     onClick={() => setIsModalOpen(true)}
                                 >
-                                    {latest?.typeId === 3 ? "협의 중" : "결재"}
+                                    {(latest?.typeId === 3 && new Date(latest?.recordedAt) > new Date(approvalDetail.updatedAt)) ? "협의 중" : "결재"}
                                 </button>
                             </div>
                         );

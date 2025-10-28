@@ -25,7 +25,7 @@ public class ApprovalLineDAO {
 
     // 결재선 삭제(approvalId에 따라)
     public void deleteByApprovalId(int approvalId) {
-        mybatis.delete("ApprovalLine.delete", approvalId);
+        mybatis.delete("ApprovalLine.deleteByApprovalId", approvalId);
     }
 
     // next_assigner와 approvalId를 가지는 결재선 조회
