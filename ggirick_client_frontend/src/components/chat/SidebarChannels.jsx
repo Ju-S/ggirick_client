@@ -4,7 +4,7 @@ import useChatStore from "@/store/chat/useChatStore.js";
 import ChannelCreateModal from "@/components/chat/Modal/ChannelCreateModal.jsx";
 import WorkspaceAddMemberModal from "@/components/chat/Modal/WorkspaceAddMemberModal.jsx";
 import chatAPI from "@/api/chat/chatAPI.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import { getMyInfoAPI } from "@/api/mypage/employeeAPI.js";
 import WorkspaceSettingModal from "@/components/chat/Modal/WorkspaceSettingModal.jsx";
 

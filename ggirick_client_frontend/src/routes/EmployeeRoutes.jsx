@@ -1,6 +1,7 @@
 import { Route, Routes } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 import "flowbite/dist/flowbite.css";
+import WorkDashboard from "@/pages/workmanagement/WorkDashboard.jsx";
 
 // Lazy 로드
 const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard.jsx"));
@@ -29,7 +30,7 @@ export default function EmployeeRoutes() {
                 <Route path="/board/*" element={<BoardRoutes />} />
                 <Route path="/approval/*" element={<ApprovalRoutes/>} />
                 <Route path="/calendar" element={<>calendar</>} />
-                <Route path="/workmanagement" element={<>workmanagement</>} />
+                <Route path="/workmanagement" element={<WorkDashboard/>} />
                 <Route path="/reservation" element={<ReservationPage />} />
                 <Route path="/task" element={<TaskPage />} />
                 <Route path="/mail" element={<MailPage />} />
