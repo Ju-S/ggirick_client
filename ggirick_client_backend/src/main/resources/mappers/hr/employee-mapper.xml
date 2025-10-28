@@ -205,4 +205,14 @@
         SET password = #{password}
         WHERE ID = #{id}
     </update>
+    <!--아이디 리스트로 이름 가져오기 -->
+    <select id="selectEmployeeNamesByIds" parameterType="list" resultType="string">
+        SELECT name
+        FROM employee
+        WHERE id IN
+        <foreach item="id" collection="list" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
 </mapper>

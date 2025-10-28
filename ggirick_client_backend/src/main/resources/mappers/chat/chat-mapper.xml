@@ -1,0 +1,311 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Chat">
+
+    <insert id="insertMessage" useGeneratedKeys="true" >
+        INSERT INTO chat_message
+        (id,workspace_id, channel_id, sender_id, type, content, created_at)
+        VALUES
+        (#{id},#{workspaceId}, #{channelId}, #{senderId}, #{type},#{content}, #{createdAt})
+    </insert>
+
+    <!-- 기본 메시지 30개만 가져옴-->
+    <select id="selectMessagesByChannel" parameterType="map" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO">
+        SELECT *
+        FROM (
+        SELECT
+        cm.*,
+        e.name AS sender_name
+        FROM
+        chat_message cm
+        LEFT JOIN employee e ON cm.sender_id = e.id
+        WHERE
+        cm.workspace_id = #{workspaceId}
+        AND cm.channel_id = #{channelId}
+        ORDER BY
+        cm.created_at DESC
+        )
+        WHERE ROWNUM &lt;= #{offset}
+    </select>
+    <!--대상 메시지의 생성일 조회 -->
+    <select id="getMessageCreatedAt" parameterType="String" resultType="java.time.LocalDateTime">
+        SELECT created_at
+        FROM chat_message
+        WHERE id = #{messageId}
+    </select>
+
+    <!-- 기준 시간 이전의 메시지 가져오기 -->
+    <select id="selectOlderMessages" parameterType="map" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO">
+        SELECT *
+        FROM (
+        SELECT
+        cm.*,
+        e.name AS sender_name
+        FROM
+        chat_message cm
+        LEFT JOIN employee e ON cm.sender_id = e.id
+        WHERE
+        cm.workspace_id = #{workspaceId}
+        AND cm.channel_id = #{channelId}
+        AND cm.created_at &lt; #{beforeTime}
+        ORDER BY cm.created_at DESC
+        )
+        WHERE ROWNUM &lt;= #{limit}
+    </select>
+
+    <!-- 좋아요 확인 -->
+    <select id="existsLike" resultType="int" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
+        SELECT COUNT(*)
+        FROM CHAT_MESSAGE_LIKE
+        WHERE MESSAGE_ID = #{parentId}
+        AND EMPLOYEE_ID = #{senderId}
+        AND workspace_id = #{workspaceId}
+        and channel_id = #{channelId}
+    </select>
+
+    <!-- 메시지 id로 좋아요 갯수 알아오기-->
+      <select id="countLike" resultType="int" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO">
+          SELECT COUNT(*)
+          FROM CHAT_MESSAGE_LIKE
+          WHERE MESSAGE_ID = #{id}
+          AND workspace_id = #{workspaceId}
+          and channel_id = #{channelId}
+      </select>
+
+    <!-- 메시지 id로 좋아요 한 유저 알아오기 -->
+    <select id="whoseLikeMessage" resultType="String" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO">
+        SELECT employee_id
+        FROM CHAT_MESSAGE_LIKE
+        WHERE MESSAGE_ID = #{id}
+        AND workspace_id = #{workspaceId}
+        and channel_id = #{channelId}
+    </select>
+
+      <!-- 좋아요 추가 -->
+    <insert id="insertLike" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
+        INSERT INTO CHAT_MESSAGE_LIKE (
+        ID, MESSAGE_ID, EMPLOYEE_ID, workspace_id,
+        channel_id, CREATED_AT
+        ) VALUES (
+        SEQ_CHAT_MESSAGE_LIKE.NEXTVAL,
+        #{parentId},
+        #{senderId},
+        #{workspaceId},
+        #{channelId},
+        SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- 좋아요 삭제 -->
+    <delete id="deleteLike" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
+        DELETE FROM CHAT_MESSAGE_LIKE
+        WHERE MESSAGE_ID = #{parentId}
+        AND EMPLOYEE_ID = #{senderId}
+        AND workspace_id = #{workspaceId}
+        and channel_id = #{channelId}
+    </delete>
+    <!-- 메시지 id로 읽었음 갯수 알아오기-->
+    <select id="existsView" resultType="int" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO">
+        SELECT COUNT(*)
+        FROM CHAT_MESSAGE_VIEWER
+        WHERE MESSAGE_ID = #{parentId}
+        AND workspace_id = #{workspaceId}
+        and channel_id = #{channelId}
+    </select>
+
+    <!-- 메시지 id로 읽었음 한 유저 알아오기 -->
+    <select id="getViewersMap" parameterType="list" resultType="map">
+        SELECT MESSAGE_ID, EMPLOYEE_ID
+        FROM CHAT_MESSAGE_VIEWER
+        WHERE MESSAGE_ID IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <!-- 읽었음 추가 -->
+    <insert id="insertView" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
+        INSERT INTO CHAT_MESSAGE_VIEWER (
+        ID, MESSAGE_ID, EMPLOYEE_ID, workspace_id,
+        channel_id, CREATED_AT
+        ) VALUES (
+        CHAT_MESSAGE_VIEWER_SEQ.NEXTVAL,
+        #{parentId},
+        #{senderId},
+        #{workspaceId},
+        #{channelId},
+        SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- 읽었음 삭제 -->
+    <delete id="deleteView" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
+        DELETE FROM CHAT_MESSAGE_VIEWER
+        WHERE MESSAGE_ID = #{parentId}
+        AND EMPLOYEE_ID = #{senderId}
+        AND workspace_id = #{workspaceId}
+        and channel_id = #{channelId}
+    </delete>
+
+    <!--  이모지 반응 -->
+    <select id="existsReaction"  resultType="int" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
+        SELECT COUNT(*)
+        FROM CHAT_MESSAGE_REACTION
+        WHERE MESSAGE_ID = #{parentId}
+        AND EMPLOYEE_ID = #{senderId}
+        AND workspace_id = #{workspaceId}
+        and channel_id = #{channelId}
+        and emoji = #{emoji}
+    </select>
+
+    <select id="getReactionsForMessage" resultType="map" parameterType="String">
+        SELECT EMOJI, EMPLOYEE_ID
+        FROM CHAT_MESSAGE_REACTION
+        WHERE MESSAGE_ID = #{messageId}
+    </select>
+
+    <insert id="insertReaction" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
+        INSERT INTO CHAT_MESSAGE_REACTION (
+        id,
+        MESSAGE_ID,
+        EMPLOYEE_ID,
+        workspace_id,
+        channel_id,
+        EMOJI,
+        CREATED_AT
+        )
+        VALUES (
+        CHAT_MESSAGE_REACTION_SEQ.nextval,
+        #{parentId},
+        #{senderId},
+        #{workspaceId},
+        #{channelId},
+        #{emoji},
+        SYSTIMESTAMP
+        )
+    </insert>
+
+    <!-- 이모지 반응 삭제 -->
+    <delete id="deleteReaction" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
+        DELETE FROM CHAT_MESSAGE_REACTION
+        WHERE MESSAGE_ID = #{parentId}
+        AND EMPLOYEE_ID = #{senderId}
+        AND workspace_id = #{workspaceId}
+        and channel_id = #{channelId}
+        AND EMOJI = #{emoji}
+    </delete>
+
+    <!-- 파일 첨부 정보 저장 -->
+    <insert id="insertFile" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO">
+        INSERT INTO chat_file (
+        ID,
+        MESSAGE_ID,
+        FILENAME,
+        FILEURL,
+        channel_id,
+        workspace_id,
+        CREATED_AT
+        ) VALUES (
+        chat_file_seq.nextval,
+        #{messageId},
+        #{filename},
+        #{fileUrl},
+        #{channelId},
+        #{workspaceId},
+        SYSTIMESTAMP
+        )
+    </insert>
+   <!-- 채널 별 파일 조회-->
+    <select id="selectFilesByChannel" parameterType="map" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO">
+        SELECT *
+        FROM chat_file
+        WHERE workspace_id = #{workspaceId}
+        AND channel_id = #{channelId}
+        ORDER BY created_at DESC
+    </select>
+    <!-- 워크스페이스 별 파일 조회-->
+    <select id="selectFilesByWorkspace" parameterType="long" resultType="com.kedu.ggirick_client_backend.dto.chat.ChatFileDTO">
+        SELECT *
+        FROM chat_file
+        WHERE workspace_id = #{workspaceId}
+        ORDER BY created_at DESC
+    </select>
+
+    <select id="getLikeCounts" parameterType="list" resultType="map">
+        SELECT MESSAGE_ID as id, COUNT(*) as CNT
+        FROM CHAT_MESSAGE_LIKE
+        WHERE MESSAGE_ID IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+        GROUP BY MESSAGE_ID
+    </select>
+
+    <select id="getLikeUsersMap" parameterType="list" resultType="map">
+        SELECT MESSAGE_ID, EMPLOYEE_ID
+        FROM CHAT_MESSAGE_LIKE
+        WHERE MESSAGE_ID IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+
+    <select id="getReactionsMap" parameterType="list" resultType="map">
+        SELECT MESSAGE_ID, EMOJI, EMPLOYEE_ID
+        FROM CHAT_MESSAGE_REACTION
+        WHERE MESSAGE_ID IN
+        <foreach collection="list" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+    </select>
+    <!-- 한번에 많이 불러오면 좀 더 빠르지 않을까 싶어서 합쳐봤는데 비슷하더라 속도는-->
+    <select id="selectMessagesByChannelUltimate"
+            parameterType="map"
+            resultType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO">
+        SELECT *
+        FROM (
+        SELECT
+        cm.id,
+        cm.workspace_id,
+        cm.channel_id,
+        cm.sender_id,
+        e.name AS sender_name,
+        cm.type,
+        cm.parent_id,
+
+        cm.content,
+        cm.created_at,
+
+        -- 좋아요 수
+        (SELECT COUNT(*)
+        FROM chat_message_like cl
+        WHERE cl.message_id = cm.id) AS like_count,
+
+        -- 좋아요한 사람
+        (SELECT LISTAGG(cl.employee_id, ',') WITHIN GROUP (ORDER BY cl.employee_id)
+        FROM chat_message_like cl
+        WHERE cl.message_id = cm.id) AS likeUsers,
+
+        -- 읽은 사람
+        (SELECT LISTAGG(cv.employee_id, ',') WITHIN GROUP (ORDER BY cv.employee_id)
+        FROM chat_message_viewer cv
+        WHERE cv.message_id = cm.id) AS viewer,
+
+        -- 이모지 반응
+        (SELECT LISTAGG(cr.emoji || ':' || cr.employee_id, ',') WITHIN GROUP (ORDER BY cr.emoji)
+        FROM chat_message_reaction cr
+        WHERE cr.message_id = cm.id) AS reactions
+
+        FROM chat_message cm
+        LEFT JOIN employee e
+        ON cm.sender_id = e.id
+        WHERE cm.workspace_id = #{workspaceId}
+        AND cm.channel_id = #{channelId}
+        ORDER BY cm.created_at DESC
+        )
+        WHERE ROWNUM &lt;= #{offset}
+
+    </select>
+</mapper>

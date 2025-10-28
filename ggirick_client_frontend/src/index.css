@@ -6,7 +6,11 @@
 }
 @source "../.flowbite-react/class-list.json";
 
-
+.bn-editor {
+    background-color: transparent !important;
+    border-radius: 0 !important;
+    color: inherit !important;
+}
 /* 타이틀 (예: 2025년 10월) */
 .fc-toolbar-title {
     @apply text-lg font-bold text-base-content;
@@ -48,12 +52,18 @@
 .fc-event {
     @apply bg-primary text-primary-content border-none rounded-md px-1 py-0.5;
 }
-
-
-.bn-editor {
-    @apply bg-base-100
+.bn-container {
+    @apply bg-base-100 text-base-content w-full max-w-full;
 }
 
+.bn-editor {
+    @apply bg-base-100 p-2.5 w-full max-w-full
+    sm:max-w-screen-sm md:max-w-screen-md lg:max-w-screen-lg;
+}
+
+.chat-input .bn-editor {
+    @apply bg-base-100 p-2.5 max-h-40 overflow-y-auto;
+}
 .bn-inline-content {
     @apply text-base-content hover:bg-base-200;
 
@@ -69,6 +79,3 @@ pre .bn-inline-content{
     /* DaisyUI에서 사용하는 방식으로 가정: (h s l) 값이 변수에 들어있음 */
 }
 
-.bn-inline-content input-checkbox{
-
-}
