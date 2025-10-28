@@ -184,14 +184,18 @@ export default function ApprovalPostingPage({ editMode }) {
             <div className="flex items-center gap-4 mt-2">
                 <div className="flex-1">
                     <label className="block mb-2 font-semibold">문서 종류</label>
-                    <Dropdown
-                        onClickHandler={onChangeBoardGroupHandler}
-                        name="groupId"
-                        selectedItem={0}
-                        title="문서 종류"
-                        items={groupItems}
-                        disabled={editMode}
-                    />
+                    <select className="select" required disabled={editMode}>
+                        <option disabled selected>문서 종류</option>
+                        {groupItems && groupItems.map(e =>
+                            <option
+                                className={e.code === approvalInfos.docTypeCode ? "active:bg-base-300 active:shadow-none bg-primary text-primary-content" : "active:bg-base-300 active:shadow-none bg-base text-base-content"}
+                                onClick={() => onChangeBoardGroupHandler(e)}
+                                selected={e.code === approvalInfos.docTypeCode}
+                            >
+                                {e.name}
+                            </option>
+                        )}
+                    </select>
                 </div>
             </div>
 
