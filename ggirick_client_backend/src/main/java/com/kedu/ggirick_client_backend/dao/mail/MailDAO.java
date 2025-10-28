@@ -13,4 +13,8 @@ public class MailDAO {
     public int addMail(MailDTO mailDTO){
         return mybatis.insert("Mail.addMail", mailDTO);
     }
+
+    public boolean existsByUid(String uid){
+        return mybatis.selectOne("Mail.existsByUid", uid) != null;
+    }
 }
