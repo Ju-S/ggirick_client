@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { timestampToMonthDay } from "../../utils/board/boardDateFormat.js";
+import { timestampToMonthDay } from "../../utils/common/dateFormat.js";
 
 export default function BoardList({ boardInfos }) {
     const navigate = useNavigate();

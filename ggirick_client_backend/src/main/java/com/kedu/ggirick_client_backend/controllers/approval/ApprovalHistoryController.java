@@ -1,0 +1,41 @@
+package com.kedu.ggirick_client_backend.controllers.approval;
+
+import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
+import com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO;
+import com.kedu.ggirick_client_backend.services.approval.ApprovalHistoryService;
+import com.kedu.ggirick_client_backend.services.approval.ApprovalLineService;
+import com.kedu.ggirick_client_backend.services.approval.ApprovalProcessService;
+import com.kedu.ggirick_client_backend.services.approval.ApprovalService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/approval/{approvalId}/history")
+@RequiredArgsConstructor
+public class ApprovalHistoryController {
+    private final ApprovalProcessService approvalProcessService;
+
+    // 결재 상태 변경
+    @PostMapping
+    public ResponseEntity<Void> insert(@RequestBody ApprovalHistoryDTO approvalHistoryInfo,
+                                       @PathVariable int approvalId,
+                                       @AuthenticationPrincipal UserTokenDTO userInfo) {
+        try {
+            approvalHistoryInfo.setApprovalId(approvalId);
+            approvalProcessService.processApproval(approvalHistoryInfo, userInfo.getId());
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+    }
+
+    @ExceptionHandler
+    public ResponseEntity<Void> error(Exception e) {
+        e.printStackTrace();
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+}
