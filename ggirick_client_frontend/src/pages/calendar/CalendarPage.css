@@ -1,0 +1,14 @@
+.rbc-selected-cell {
+    background-color: var(--color-primary) !important;
+    opacity: 20% !important;
+    border-left: 1px solid #ddd !important;
+}
+
+.rbc-off-range-bg {
+    background-color: var(--color-base-300);
+}
+
+.rbc-today {
+    background-color: var(--color-primary);
+    opacity: 10%;
+}

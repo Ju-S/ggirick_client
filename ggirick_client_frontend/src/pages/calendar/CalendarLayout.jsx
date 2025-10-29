@@ -1,11 +1,10 @@
-import BoardSidebar from "@/components/board/BoardSidebar.jsx";
 import {useEffect} from "react";
-import useBoardGroupStore from "@/store/board/boardGroupStore.js";
 import CalendarSidebar from "@/components/calendar/CalendarSidebar.jsx";
+import useCalendarGroupStore from "@/store/calendar/useCalendarGroupStore.js";
 
 export default function CalendarLayout({children}) {
-    const loading = useBoardGroupStore(state => state.loading);
-    const initGroupList = useBoardGroupStore(state => state.init);
+    const loading = useCalendarGroupStore(state => state.loading);
+    const initGroupList = useCalendarGroupStore(state => state.init);
 
     useEffect(() => {
         initGroupList();
