@@ -97,7 +97,10 @@
         SYSTIMESTAMP
         )
     </insert>
-
+    <delete id="deleteFile" >
+        delete from chat_file
+        where id= #{id}
+    </delete>
     <!-- 좋아요 삭제 -->
     <delete id="deleteLike" parameterType="com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO">
         DELETE FROM CHAT_MESSAGE_LIKE
@@ -204,6 +207,7 @@
         MESSAGE_ID,
         FILENAME,
         FILEURL,
+        SYSNAME,
         channel_id,
         workspace_id,
         CREATED_AT
@@ -212,6 +216,7 @@
         #{messageId},
         #{filename},
         #{fileUrl},
+        #{sysName},
         #{channelId},
         #{workspaceId},
         SYSTIMESTAMP

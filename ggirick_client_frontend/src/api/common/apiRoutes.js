@@ -630,6 +630,11 @@ const apiRoutes = {
             method: "POST"
         }),
 
+        deleteFile: () =>( {
+            url:'chat/delete',
+            method:"DELETE"
+        })
+
     },
     file: {
         /**
@@ -645,12 +650,16 @@ const apiRoutes = {
 
         /**
          * 파일 삭제 API<br>
-         * DELETE /file/{sysName}<br>
+         * DELETE /file/delete?file= {sysName}<br>
          */
         delete: (sysName) => ({
-            url: `/file/${sysName}`,
+            url:  `/file/delete`,
             method: "DELETE",
         }),
+        download: (sysName) => ({
+            url:`/file/download?file=${sysName}`,
+            method:"GET"
+        })
     },
 };
 

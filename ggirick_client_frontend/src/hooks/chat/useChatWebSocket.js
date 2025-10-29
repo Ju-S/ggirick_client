@@ -1,6 +1,6 @@
 import { useEffect, useRef, useCallback } from "react";
 import { Client } from "@stomp/stompjs";
-
+import { IP_ADDRESS } from "@/api/common/ipaddress.js"
 /**
  * useChatWebSocket
  * 워크스페이스 단위 STOMP client 재사용 hook
@@ -23,7 +23,7 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
 
         const token = sessionStorage.getItem("token");
         const client = new Client({
-            brokerURL: "ws://10.5.5.1:8081/ws",
+            brokerURL: `ws://${IP_ADDRESS}/ws`,
             reconnectDelay: 5000,
             debug: (str) => console.log("[STOMP]", str),
             connectHeaders: { Authorization: "Bearer " + token },
@@ -80,7 +80,7 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
         };
     }, [workspaceId, channelId]);
 
-    const sendMessage = useCallback(({ type, content, parentId, emoji, senderId, senderName, viewer }) => {
+    const sendMessage = useCallback(({files, type, content, parentId, emoji, senderId, senderName, viewer }) => {
 
         if (!clientRef.current || !clientRef.current?.connected || !channelId) return;
 
@@ -93,9 +93,7 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
             parentId,
             emoji,
             viewer,
-            hasFile: Array.isArray(content)
-                ? content.some(block => ["audio", "video", "image", "file"].includes(block.type))
-                : false,
+            files,
             content: JSON.stringify(content),
             createdAt: new Date()
         };

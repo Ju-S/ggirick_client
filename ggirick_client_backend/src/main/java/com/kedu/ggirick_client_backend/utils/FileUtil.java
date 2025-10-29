@@ -5,13 +5,16 @@ import com.google.cloud.storage.BlobId;
 import com.google.cloud.storage.BlobInfo;
 import com.google.cloud.storage.Storage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.InputStream;
+import java.util.Map;
 import java.util.UUID;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class FileUtil {
@@ -47,6 +50,22 @@ public class FileUtil {
         return getPublicUrl(objectName);
     }
 
+    // 파일 업로드 후 실제 저장된 파일명(sysName)과 공개 URL을 함께 반환
+    public Map<String, String> uploadFileAndGetInfo(String oriName, String path, MultipartFile file) throws Exception {
+
+        String sysName = fileUpload(oriName, path, file);
+
+
+        String url = getPublicUrl(sysName);
+
+
+        return Map.of(
+                "oriName",oriName,
+                "sysName", sysName,  // 실제 저장된 파일명 (GCS 내 object 이름)
+                "url", url            // 공개 접근 가능한 URL
+        );
+    }
+
     // 파일 다운로드
     public byte[] fileDownload(String sysName) {
         Blob blob = storage.get(bucketName, sysName);
@@ -68,6 +87,10 @@ public class FileUtil {
     // 파일 삭제
     public void deleteFile(String sysName) {
         BlobId blobId = BlobId.of(bucketName, sysName);
-        storage.delete(blobId);
+        log.info("Deleting: {}", sysName);
+        boolean result = storage.delete(blobId);
+        log.info("Deleted? {}", result);
     }
+
+
 }

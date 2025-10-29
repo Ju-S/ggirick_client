@@ -7,6 +7,9 @@ import useChatStore from "@/store/chat/useChatStore.js";
 export function Message({ msg,  viewer, reactions, sendMessage }) {
     const { addReaction,selectedWorkspace,selectedChannel} = useChatStore();
 
+
+
+
     // 메시지 전용 읽기 전용 editor 인스턴스 생성
     const editor = useCreateBlockNote({
         initialContent: msg.content || [{ type: "paragraph", content: [] }],
@@ -63,8 +66,8 @@ export function Message({ msg,  viewer, reactions, sendMessage }) {
                 like={msg.like || 0}
                 likeUsers = {msg.likeUsers || []}
                 viewer={msg.viewer || []}
-                reactions={reactions || []}
-                content={msg.content || []}
+                reactions={msg.reactions || []}
+                content={msg.content ||  [{ type: "paragraph", content: [{ type: "text", text: "" }] }]}
                 onAddReaction={(emoji) => {
                     sendMessage({
                         type: "emoji",

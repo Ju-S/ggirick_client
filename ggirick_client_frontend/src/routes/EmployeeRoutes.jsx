@@ -2,6 +2,7 @@ import { Route, Routes } from "react-router-dom";
 import { Suspense, lazy, useEffect } from "react";
 import "flowbite/dist/flowbite.css";
 
+
 // Lazy 로드
 const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard.jsx"));
 const BoardRoutes = lazy(() => import("./BoardRoutes.jsx"));
@@ -12,7 +13,7 @@ const MailPage = lazy(() => import("@/pages/mail/MailPage.jsx"));
 const AddressPage = lazy(() => import("@/pages/address/AddressPage.jsx"));
 const ApprovalPage = lazy(() => import("@/pages/approval/ApprovalPage.jsx"));
 const ApprovalRoutes = lazy(() => import("@/routes/ApprovalRoutes.jsx"));
-
+const VideoMeetingPage = lazy(() => import("@/pages/chat/VideoMeetingPage.jsx"));
 export default function EmployeeRoutes() {
     // ✨ prefetch hook
     useEffect(() => {
@@ -35,10 +36,11 @@ export default function EmployeeRoutes() {
                 <Route path="/mail" element={<MailPage />} />
                 <Route path="/address" element={<AddressPage />} />
                 <Route path="/chat" element={<ChatPage />} />
-                <Route path="/videomeeting" element={<>videomeeting</>} />
+                <Route path="/videomeeting" element={<VideoMeetingPage/>} />
                 <Route path="/drive" element={<>drive</>} />
                 <Route path="/organization" element={<>organization</>} />
                 <Route path="*" element={<>error</>} />
+
             </Routes>
         </Suspense>
     );

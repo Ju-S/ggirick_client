@@ -134,4 +134,8 @@ public class ChatDAO {
 
         return mybatis.selectList("Chat.selectMessagesByChannelUltimate", params);
     }
+
+    public boolean deleteFile(int id) {
+        return mybatis.delete("Chat.deleteFile", id) > 0;
+    }
 }
