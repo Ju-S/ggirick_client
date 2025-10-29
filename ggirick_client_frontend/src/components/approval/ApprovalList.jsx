@@ -1,7 +1,7 @@
 import {useNavigate} from "react-router-dom";
 import {timestampToMonthDay} from "@/utils/common/dateFormat.js";
 import useApprovalDocType from "@/hooks/approval/useApprovalDocType.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 
 export default function ApprovalList({approvalInfos}) {
     const navigate = useNavigate();

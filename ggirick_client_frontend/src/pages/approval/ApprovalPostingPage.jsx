@@ -1,17 +1,16 @@
 // ApprovalPostingPage.jsx
-import { useNavigate, useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
-import Dropdown from "@/components/board/Dropdown.jsx";
-import { insertAPI, putAPI } from "@/api/approval/approvalAPI.js";
-import { deleteBoardFileAPI } from "@/api/board/boardFileAPI.js";
+import {useNavigate, useParams} from "react-router-dom";
+import {useEffect, useState} from "react";
+import {insertAPI, putAPI} from "@/api/approval/approvalAPI.js";
+import {deleteBoardFileAPI} from "@/api/board/boardFileAPI.js";
 import ApprovalLineSelector from "@/components/approval/ApprovalLineSelector.jsx";
 import useApprovalDocType from "@/hooks/approval/useApprovalDocType.js";
 import useApprovalStore from "@/store/approval/approvalStore.js";
 import ApprovalAdditionalForm from "@/components/approval/ApprovalAdditionalForm.jsx";
 
-export default function ApprovalPostingPage({ editMode }) {
+export default function ApprovalPostingPage({editMode}) {
     const navigate = useNavigate();
-    const { id } = useParams();
+    const {id} = useParams();
     const fetchApproval = useApprovalStore(state => state.fetchApprovalInfo);
 
     const [approvalInfos, setApprovalInfos] = useState({
@@ -28,12 +27,12 @@ export default function ApprovalPostingPage({ editMode }) {
 
     useEffect(() => {
         if (editMode && id) {
-            const { approvalDetail, fileList, approvalLineList } = useApprovalStore.getState().approvalInfo;
-            setApprovalLine(approvalLineList.map(({ assigner, ...rest }) => ({
+            const {approvalDetail, fileList, approvalLineList} = useApprovalStore.getState().approvalInfo;
+            setApprovalLine(approvalLineList.map(({assigner, ...rest}) => ({
                 ...rest,
                 id: assigner
             })));
-            setApprovalInfos({ ...approvalDetail, files: [] });
+            setApprovalInfos({...approvalDetail, files: []});
             setFileList(fileList || []);
         } else {
             setApprovalInfos({
@@ -49,8 +48,8 @@ export default function ApprovalPostingPage({ editMode }) {
     }, [editMode, id, fetchApproval]);
 
     const onChangeBoardInfoHandler = (e) => {
-        const { name, value } = e.target;
-        setApprovalInfos(prev => ({ ...prev, [name]: value }));
+        const {name, value} = e.target;
+        setApprovalInfos(prev => ({...prev, [name]: value}));
     };
 
     const onChangeBoardFileHandler = (e) => {
@@ -61,20 +60,20 @@ export default function ApprovalPostingPage({ editMode }) {
     };
 
     const onChangeBoardGroupHandler = (e) => {
-        setApprovalInfos(prev => ({ ...prev, docTypeCode: e.code }));
+        setApprovalInfos(prev => ({...prev, docTypeCode: e.code}));
     };
 
     const removeFile = (idx) => {
         setApprovalInfos(prev => {
             const newFiles = [...prev.files];
             newFiles.splice(idx, 1);
-            return { ...prev, files: newFiles };
+            return {...prev, files: newFiles};
         });
     };
 
     const removeExistingFile = (id) => {
         setFileList(prev =>
-            prev.map(file => file.id === id ? { ...file, toDelete: true } : file)
+            prev.map(file => file.id === id ? {...file, toDelete: true} : file)
         );
     };
 
@@ -86,7 +85,7 @@ export default function ApprovalPostingPage({ editMode }) {
 
         // 휴가 관련 문서일 경우 docData 검사
         if (["VAC"].includes(approvalInfos.docTypeCode)) {
-            const { startDate, startTime, endDate, endTime } = approvalInfos.docData;
+            const {startDate, startTime, endDate, endTime} = approvalInfos.docData;
 
             if (!startDate || !startTime || !endDate || !endTime) {
                 alert("시작일시와 종료일시는 반드시 입력해야 합니다.");
@@ -101,7 +100,7 @@ export default function ApprovalPostingPage({ editMode }) {
 
         // 근무 관련 문서일 경우 docData 검사
         if (["HWR", "OWR"].includes(approvalInfos.docTypeCode)) {
-            const { startDateTime, endDateTime } = approvalInfos.docData;
+            const {startDateTime, endDateTime} = approvalInfos.docData;
 
             if (!startDateTime || !endDateTime) {
                 alert("시작일시와 종료일시는 반드시 입력해야 합니다.");
@@ -123,7 +122,7 @@ export default function ApprovalPostingPage({ editMode }) {
                     orderLine: idx
                 }))
             )],
-            { type: "application/json" }
+            {type: "application/json"}
         );
 
         const approvalInfoBlob = new Blob(
@@ -133,7 +132,7 @@ export default function ApprovalPostingPage({ editMode }) {
                 docTypeCode: approvalInfos.docTypeCode,
                 docData: approvalInfos.docData
             })],
-            { type: "application/json" }
+            {type: "application/json"}
         );
 
         form.append("approvalInfo", approvalInfoBlob);
@@ -204,7 +203,7 @@ export default function ApprovalPostingPage({ editMode }) {
                 docTypeCode={approvalInfos.docTypeCode}
                 docData={approvalInfos.docData}
                 setDocData={(newData) =>
-                    setApprovalInfos(prev => ({ ...prev, docData: newData }))
+                    setApprovalInfos(prev => ({...prev, docData: newData}))
                 }
             />
 
@@ -240,7 +239,8 @@ export default function ApprovalPostingPage({ editMode }) {
                                 className="flex justify-between items-center bg-base-200 p-2 rounded-md">
                                 <span className="truncate">{file.name}</span>
                                 <button type="button" className="btn btn-xs btn-error"
-                                        onClick={() => removeExistingFile(file.id)}>X</button>
+                                        onClick={() => removeExistingFile(file.id)}>X
+                                </button>
                             </li>
                         ))
                     }

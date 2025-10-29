@@ -15,6 +15,9 @@ public class WorkSummaryDTO {
     private double overtimeHours;  // 연장근무시간 합계
     private double nightHours;     // 야간근무시간 합계
 
+    private Integer plannedHours; // 하루 근무 계획 시간
+    private Integer totalPlannedHours; // 계획 시간 합계
+
     private int remainingVacation;
 
     private String periodType; // "daily", "weekly", "annual"

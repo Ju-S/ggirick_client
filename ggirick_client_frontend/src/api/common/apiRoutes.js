@@ -1,5 +1,3 @@
-import {getRemainingVacationAPI} from "@/api/workmanagement/workManagementAPI.js";
-
 const apiRoutes = {
     auth: {
         /**
@@ -747,6 +745,12 @@ const apiRoutes = {
          */
         getRemainingVacation: {url:`/workmanagement/vacation/remaining`, method: "GET"},
 
+        /**
+         * 기간별 근무 계획 조회 API<br>
+         * GET /workmanagement/plan/list<br>
+         * response: WorkPlanDTO
+         */
+        getWorkPlanByPeriod: {url:`/workmanagement/plan/list`, method: "GET"},
     },
 
 

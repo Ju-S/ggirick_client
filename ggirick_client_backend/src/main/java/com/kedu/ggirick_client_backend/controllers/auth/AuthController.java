@@ -4,6 +4,7 @@ import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO;
 
 import com.kedu.ggirick_client_backend.services.AuthService;
+import com.kedu.ggirick_client_backend.services.hr.EmployeeService;
 import com.kedu.ggirick_client_backend.utils.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -20,7 +21,7 @@ import java.util.Map;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final com.kedu.ggirick_client_backend.services.employee.EmployeeService employeeService;
+    private final EmployeeService employeeService;
     private final JWTUtil jwt;
     private final AuthService authService;
 

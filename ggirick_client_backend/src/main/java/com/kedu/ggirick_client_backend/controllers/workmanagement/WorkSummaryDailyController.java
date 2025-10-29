@@ -23,12 +23,12 @@ public class WorkSummaryDailyController {
     // 통합 근무요약 API (일간 / 주간 / 연간 / 직접 기간)
     @GetMapping("/summary")
     public ResponseEntity<WorkSummaryDTO> getWorkSummary(
-            @RequestParam(defaultValue = "daily") String period,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
             @AuthenticationPrincipal UserTokenDTO userInfo
     ) {
-        WorkSummaryDTO summary = workSummaryDailyService.getWorkSummary(userInfo.getId(), period, startDate, endDate);
+        WorkSummaryDTO summary = workSummaryDailyService.getWorkSummary(userInfo.getId(), startDate, endDate);
         return ResponseEntity.ok(summary);
     }
+
 }

@@ -1,4 +1,4 @@
-package com.kedu.ggirick_client_backend.services.employee;
+package com.kedu.ggirick_client_backend.services.hr;
 
 import com.kedu.ggirick_client_backend.dao.hr.EmployeeDAO;
 import com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO;

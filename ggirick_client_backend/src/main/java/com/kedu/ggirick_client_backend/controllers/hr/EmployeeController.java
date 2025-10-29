@@ -2,7 +2,7 @@ package com.kedu.ggirick_client_backend.controllers.hr;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO;
-import com.kedu.ggirick_client_backend.services.employee.EmployeeService;
+import com.kedu.ggirick_client_backend.services.hr.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

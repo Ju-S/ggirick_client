@@ -47,7 +47,7 @@ public class EmployeeDAO {
         return mybatis.update("Employee.updatePassword", dto) != 0;
     }
 
-    //아이디 리스트로 이름 목록 검색
+    // 아이디 리스트로 이름 목록 검색
     public List<String> selectEmployeeNamesByIds(List<String> idLists) {
         return mybatis.selectList("hr.employee.selectEmployeeNamesByIds", idLists);
     }

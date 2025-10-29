@@ -21,8 +21,8 @@ public class WorkSummaryScheduler {
     // cron = "초 분 시 일 월 요일"
     // @Scheduled(cron = "0 30 2 * * *", zone = "Asia/Seoul")
 
-    // 테스트용: 1분마다 실행
-    @Scheduled(fixedRate = 60 * 1000)
+    // 테스트용: 60분마다 실행
+    @Scheduled(fixedRate = 60 * 60 * 1000)
     public void generateDailySummary() {
         // 전일 기준 Date 계산
         Calendar cal = Calendar.getInstance();

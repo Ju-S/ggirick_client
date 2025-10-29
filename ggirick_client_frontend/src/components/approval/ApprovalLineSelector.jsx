@@ -1,6 +1,6 @@
 import {useState} from "react";
 import {DragDropContext, Draggable, Droppable} from "@hello-pangea/dnd";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";
 
 export default function ApprovalLineSelector({

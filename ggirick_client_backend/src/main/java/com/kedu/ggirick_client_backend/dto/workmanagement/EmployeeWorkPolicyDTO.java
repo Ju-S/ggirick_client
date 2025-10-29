@@ -1,7 +1,8 @@
 package com.kedu.ggirick_client_backend.dto.workmanagement;
 
 import lombok.*;
-import java.time.LocalTime;
+
+import java.time.LocalDateTime;
 
 /**
  * EmployeeWorkPolicyDTO
@@ -19,6 +20,6 @@ public class EmployeeWorkPolicyDTO {
     private String employeeId;     // 직원 ID
     private Integer policyId;      // 정책 ID
     private String policyName;     // 정책 이름 (예: NORMAL, FLEXIBLE)
-    private LocalTime workStartTime;   // 근무 시작시간
-    private LocalTime workEndTime;     // 근무 종료시간
+    private LocalDateTime workStartTime;   // 근무 시작시간
+    private LocalDateTime workEndTime;     // 근무 종료시간
 }
