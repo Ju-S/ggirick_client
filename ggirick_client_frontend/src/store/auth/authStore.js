@@ -12,7 +12,7 @@ const useAuthStore = create(set => ({
         set({token: token, authority: authority, isLogin: true});
     },
     logout: () => {
-        sessionStorage.removeItem("token");
+        sessionStorage.clear();
         set({token: "", authority: "", isLogin: false});
     },
 }));

@@ -2,9 +2,11 @@ package com.kedu.ggirick_client_backend.dto.chat;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.kedu.ggirick_client_backend.dto.common.FileDTO;
 import lombok.*;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Getter
 @Setter
@@ -27,6 +29,5 @@ public class ChatMessageDTO {
     // getter/setter
 
     //파일 첨부 확인용
-    @JsonProperty("hasFile")
-    private boolean hasFile;
+    private List<FileDTO> files;//JSON
 }

@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo } from "react";
 import CustomDrawer from "../common/Drawer";
 import chatAPI from "@/api/chat/chatAPI.js";
+import FileAPI from "@/api/common/FileAPI.js";
+import {boardFileDownloadAPI} from "@/api/board/boardFileAPI.js";
 
 // 확장자별 아이콘
 const typeIcons = {
@@ -35,6 +37,7 @@ export default function ChannelFileDrawer({ isOpen, onClose, workspaceId, channe
             try {
                 const data = await chatAPI.listFiles(workspaceId, channelId);
                 setFiles(data);
+
             } catch (err) {
                 console.error(err);
                 setError("파일 목록을 불러오는 데 실패했습니다.");
@@ -60,6 +63,43 @@ export default function ChannelFileDrawer({ isOpen, onClose, workspaceId, channe
         }
         return result;
     }, [files, search, sortBy]);
+
+
+    async function handleDelete(file){
+        try{
+            // 서버에 삭제 요청
+             await FileAPI.deleteFile(file.sysName);
+
+            // 삭제 성공하면 상태에서 해당 파일 제거
+            setFiles(prevFiles => prevFiles.filter(f => f.sysName !== file.sysName));
+
+            await chatAPI.deleteFile(file.id);
+
+        }catch (err){
+            console.error("파일 삭제 실패", err);
+            alert("파일 삭제 실패");
+        }
+    }
+
+    async function handleDownload(file) {
+        try {
+
+            boardFileDownloadAPI(file.filename,file.sysName).then(resp => {
+                const blobUrl = window.URL.createObjectURL(new Blob([resp.data]));
+                const link = document.createElement("a");
+                link.href = blobUrl;
+                link.setAttribute("download", file.filename); // 파일명 지정
+                document.body.appendChild(link);
+                link.click();
+                link.remove();
+            });
+
+        } catch (err) {
+            console.error("파일 다운로드 실패", err);
+            alert("파일 다운로드 실패");
+        }
+    }
+
 
     return (
         <CustomDrawer isOpen={isOpen} onClose={onClose} title="채널 파일함">
@@ -126,7 +166,7 @@ export default function ChannelFileDrawer({ isOpen, onClose, workspaceId, channe
                                 {/* 카드형에서만 미리보기 */}
                                 {viewMode === "grid" && (
                                     <>
-                                        {["jpg", "jpeg", "png", "gif"].includes(ext) && (
+                                        {["jpg", "jpeg", "png", "gif","jfif"].includes(ext) && (
                                             <img
                                                 src={file.fileUrl}
                                                 alt={file.filename}
@@ -156,16 +196,22 @@ export default function ChannelFileDrawer({ isOpen, onClose, workspaceId, channe
                                         )}
                                     </>
                                 )}
-
+                                {/* 파ㅏ일 삭제*/}
+                                <button
+                                    onClick={()=> handleDelete(file)}
+                                    rel="noopener noreferrer"
+                                    className="btn btn-xs btn-outline mt-2 self-end"
+                                >
+                                    파일 삭제
+                                </button>
                                 {/* 다운로드 버튼 */}
-                                <a
-                                    href={file.fileUrl}
-                                    target="_blank"
+                                <button
+                                   onClick={()=> handleDownload(file)}
                                     rel="noopener noreferrer"
                                     className="btn btn-xs btn-outline mt-2 self-end"
                                 >
                                     다운로드
-                                </a>
+                                </button>
                             </div>
                         );
                     })}

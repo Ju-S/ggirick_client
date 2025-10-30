@@ -194,8 +194,10 @@
         UPDATE employee SET
         phone = #{phone},
         extension = #{extension},
-        email = #{email, jdbcType=VARCHAR},
-        profile_url = #{profileUrl, jdbcType=VARCHAR}
+        email = #{email, jdbcType=VARCHAR}
+        <if test="profileUrl != null and profileUrl != ''">
+            ,profile_url = #{profileUrl, jdbcType=VARCHAR}
+        </if>
         WHERE id = #{id}
     </update>
 

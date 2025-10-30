@@ -18,6 +18,7 @@ import useEmployeeStore from "@/store/hr/employeeStore.js";
 export default function ChatInput({onSend}) {
 
     const {sendMessage} = useChatStore();
+    const [uploadedFiles, setUploadedFiles] = useState([]);
     const [content, setContent] = useState([]);
     const {selectedEmployee, setEmployee} = useEmployeeStore();
   const editor = useCreateBlockNote({
@@ -31,7 +32,13 @@ export default function ChatInput({onSend}) {
       uploadFile: async (file) => {
           try {
               const folder = getUploadFolder(file, "chat"); // chat, task, board 등 변경 가능
+
               const data = await FileAPI.uploadFile(file, folder);
+              console.log("파일 업로드 데이터:" ,data);
+              setUploadedFiles((prev) => [
+                  ...prev,
+                  {  oriName:data.oriName, sysName: data.sysName, url: data.url },
+              ]);
               return data.url;
           } catch (err) {
               console.error("파일 업로드 실패:", err);
@@ -57,14 +64,19 @@ export default function ChatInput({onSend}) {
 
       try {
             console.log(selectedEmployee);
-          onSend({
-              type: "user",
-              senderId:selectedEmployee.id,
-              senderName:selectedEmployee.name,
-              content: editor.document
-          });
-          editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
 
+            const payload = {
+                type: "user",
+                senderId:selectedEmployee.id,
+                senderName:selectedEmployee.name,
+                content: editor.document,
+                files:uploadedFiles,
+            }
+
+            console.log("입력창 페이로드:"+payload);
+          onSend( payload);
+          editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
+          setUploadedFiles([])
 
       } catch (err) {
           console.error("메시지 전송 실패:", err);

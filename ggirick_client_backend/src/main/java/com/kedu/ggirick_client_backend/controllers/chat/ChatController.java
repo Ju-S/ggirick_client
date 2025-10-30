@@ -7,6 +7,7 @@ import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatMessageFromDBDTO;
 import com.kedu.ggirick_client_backend.dto.chat.ContentBlock;
+import com.kedu.ggirick_client_backend.dto.common.FileDTO;
 import com.kedu.ggirick_client_backend.services.chat.ChatReactionService;
 import com.kedu.ggirick_client_backend.services.chat.ChatService;
 import com.kedu.ggirick_client_backend.utils.FileUtil;
@@ -23,10 +24,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 
 import static com.kedu.ggirick_client_backend.config.ChatConfig.additionalMessageSize;
 
@@ -69,29 +67,10 @@ public class ChatController {
             case "user":
                 message.setId(UUID.randomUUID().toString());
 
-                if (message.isHasFile()) {
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    List<ContentBlock> contentBlocks = objectMapper.readValue(
-                            message.getContent(),
-                            new TypeReference<List<ContentBlock>>() {}
-                    );
 
-                    contentBlocks.stream()
-                            .filter(block -> Arrays.asList("audio", "video", "image","file").contains(block.getType()))
-                            .forEach(block -> {
-                                Map<String, Object> props = block.getProps();
-                                chatService.saveFile(
-                                        message,
-                                        (String) props.get("name"),
-
-                                        (String) props.get("url")
-
-
-                                );
-                            });
-                }
-                chatService.sendMessage(message, null);
+                chatService.sendMessage(message);
                 break;
+
 
             case "like":
                 chatReactionService.toggleLike(
@@ -153,6 +132,14 @@ public class ChatController {
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + sysName + "\"")
                 .body(data);
+    }
+
+    @DeleteMapping("/chat/delete")
+    public ResponseEntity<Map<String, Boolean>> deleteFile(@RequestParam int fileId){
+        boolean success = chatService.deleteFile(fileId);
+        Map<String, Boolean> response = new HashMap<>();
+        response.put("deleted",success);
+        return ResponseEntity.ok(response);
     }
 
 

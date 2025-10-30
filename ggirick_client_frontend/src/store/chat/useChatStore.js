@@ -7,10 +7,11 @@ function normalizeMessage(m) {
         senderId: m.senderId,
         senderName: m.senderName || "Unknown",
         type: m.type,
-        content: JSON.parse(m.content || "[]"),
+        content: JSON.parse(m.content || []),
         like: m.like_count || 0,
         likeUsers:m.likeUsers || [],
         viewer:m.viewer || [],
+        files: m.files,
         reactions: m.reactions || [],
         time: new Date(m.createdAt).toLocaleTimeString([], {  year: "numeric",
             month: "2-digit",
@@ -289,7 +290,7 @@ const useChatStore = create((set, get) => ({
 
                 set((state) => ({
                     messages: state.messages.map((msg) => {
-                        if (msg.id !== m.messageId) return msg;
+                        if (msg.id !== (m.messageId ?? m.parentId ?? m.id)) return msg;
 
                         const reactions = [...(msg.reactions || [])];
                         const idx = reactions.findIndex((r) => r.emoji === m.emoji);

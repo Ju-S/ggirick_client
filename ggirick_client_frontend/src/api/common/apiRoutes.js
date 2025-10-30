@@ -290,6 +290,108 @@ const apiRoutes = {
             method: "GET"
         }),
     },
+    calendar: {
+        /**
+         * 개인일정 목록 조회 API<br>
+         * GET /calendar<br>
+         * response: {List<CalendarDTO>}
+         */
+        getList: () => ({
+            url: `/calendar`,
+            method: "GET"
+        }),
+        /**
+         * 개인일정 생성 API<br>
+         * POST /calendar<br>
+         * body: {CalendarDTO}
+         */
+        insert: () => ({
+            url: `/calendar`,
+            method: "POST"
+        }),
+        /**
+         * 개인일정 수정 API<br>
+         * GET /calendar/{calendarId}<br>
+         * body: {CalendarDTO}
+         */
+        update: (calendarId) => ({
+            url: `/calendar/${calendarId}`,
+            method: "PUT"
+        }),
+        /**
+         * 개인일정 삭제 API<br>
+         * DELETE /calendar/{calendarId}<br>
+         */
+        delete: (calendarId) => ({
+            url: `/calendar/${calendarId}`,
+            method: "DELETE"
+        }),
+    },
+    calendarGroup: {
+        /**
+         * 그룹일정 목록 조회 API<br>
+         * GET /calendar/group/{groupId}<br>
+         * response: {List<CalendarDTO>}
+         */
+        getCalendarList: (groupId) => ({
+            url: `/calendar/group/${groupId}`,
+            method: "GET"
+        }),
+        /**
+         * 일정 그룹 목록 조회 API<br>
+         * GET /calendar/group/<br>
+         * response: {List<CalendarGroupDTO>}
+         */
+        getGroupList: () => ({
+            url: `/calendar/group`,
+            method: "GET"
+        }),
+        /**
+         * 일정 그룹 생성 API<br>
+         * POST /calendar/group<br>
+         * body: {CalendarGroupDTO}
+         */
+        insert: () => ({
+            url: `/calendar/group`,
+            method: "POST"
+        }),
+        /**
+         * 일정 그룹 수정 API<br>
+         * GET /calendar/group/{groupId}<br>
+         * body: {CalendarGroupDTO}
+         */
+        update: (groupId) => ({
+            url: `/calendar/group/${groupId}`,
+            method: "PUT"
+        }),
+        /**
+         * 일정 그룹 삭제 API<br>
+         * DELETE /calendar/group/{groupId}<br>
+         */
+        delete: (groupId) => ({
+            url: `/calendar/group/${groupId}`,
+            method: "DELETE"
+        }),
+
+        /**
+         * 일정 그룹 구성원 목록 API<br>
+         * GET /board/group/{groupId}/members<br>
+         * response: {List<String>}
+         */
+        members: (groupId) => ({
+            url: `/calendar/group/${groupId}/members`,
+            method: "GET"
+        }),
+
+        /**
+         * 일정 그룹 구성원 수정 API<br>
+         * PUT /calendar/group/{groupId}/members<br>
+         */
+        putMembers: (groupId) => ({
+            url: `/calendar/group/${groupId}/members`,
+            method: "PUT"
+        }),
+    },
     project: {
         /**
          * 자신이 속한 업무 프로젝트 리스트를 가져오는 API<br>
@@ -441,6 +543,15 @@ const apiRoutes = {
             url: `/employee/${empId}`,
             method: "GET",
         }),
+
+        /**
+         * 이메일용 아이디 중복확인 API<br>
+         * GET /employee/duplcheck?email={email}<br>
+         */
+        duplcheck: (email, phone) => ({
+            url: `/employee/duplcheck?email=${email}&phone=${phone}`,
+            method: "GET",
+        }),
     },
     hrMeta: {
         /**
@@ -497,7 +608,7 @@ const apiRoutes = {
         }),
 
         // 주소록 수정
-        updateAddress: (addressId, updatedData) => ({
+        updateAddress: (addressId) => ({
             method: "put",
             url: `/address/update-address/${addressId}`,
         }),
@@ -572,7 +683,7 @@ const apiRoutes = {
         /**
          * 채널 제목 정보 수정
          */
-        updateWorkspace: (workspaceId) =>( {
+        updateWorkspace: (workspaceId) => ({
             url: `/workspace/${workspaceId}`,
             method: "PATCH",
         }),
@@ -630,6 +741,11 @@ const apiRoutes = {
             method: "POST"
         }),
 
+        deleteFile: () => ({
+            url: 'chat/delete',
+            method: "DELETE"
+        })
+
     },
     file: {
         /**
@@ -645,12 +761,16 @@ const apiRoutes = {
 
         /**
          * 파일 삭제 API<br>
-         * DELETE /file/{sysName}<br>
+         * DELETE /file/delete?file= {sysName}<br>
          */
         delete: (sysName) => ({
-            url: `/file/${sysName}`,
+            url: `/file/delete`,
             method: "DELETE",
         }),
+        download: (sysName) => ({
+            url: `/file/download?file=${sysName}`,
+            method: "GET"
+        })
     },
 
     // 근무 관리

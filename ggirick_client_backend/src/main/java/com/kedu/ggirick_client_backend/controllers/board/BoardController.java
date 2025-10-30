@@ -39,7 +39,7 @@ public class BoardController {
                                                        @RequestParam(defaultValue = "0") int searchFilter,
                                                        @RequestParam(defaultValue = "", required = false) String searchQuery,
                                                        @AuthenticationPrincipal UserTokenDTO userInfo) {
-        if (boardGroupService.getGroupEmployeeList(groupId).contains(userInfo.getId())) {
+        if (boardGroupService.getGroupEmployeeList(groupId).contains(userInfo.getId()) || groupId == 1) {
             Map<String, Object> response = new HashMap<>();
 
             List<BoardDTO> boardNotificationList = boardService.getNotificationList(groupId);
@@ -65,7 +65,7 @@ public class BoardController {
         Map<String, Object> response = new HashMap<>();
         BoardDTO selectedItem = boardService.getById(id);
 
-        if (boardGroupService.getGroupEmployeeList(selectedItem.getBoardGroupId()).contains(userInfo.getId())) {
+        if (boardGroupService.getGroupEmployeeList(selectedItem.getBoardGroupId()).contains(userInfo.getId()) || selectedItem.getBoardGroupId() == 1) {
             List<BoardCommentDTO> commentList = boardCommentService.getList(id);
             List<BoardFileDTO> fileList = boardFileService.getFileList(id);
 
@@ -86,7 +86,7 @@ public class BoardController {
     public ResponseEntity<Void> posting(@RequestPart("boardInfo") BoardDTO dto,
                                         @RequestPart(value = "files", required = false) List<MultipartFile> files,
                                         @AuthenticationPrincipal UserTokenDTO userInfo) throws Exception {
-        if (boardGroupService.getGroupEmployeeList(dto.getBoardGroupId()).contains(userInfo.getId())) {
+        if (boardGroupService.getGroupEmployeeList(dto.getBoardGroupId()).contains(userInfo.getId()) || dto.getBoardGroupId() == 1) {
             dto.setWriter(userInfo.getId());
             boardService.posting(dto, files);
             return ResponseEntity.ok().build();

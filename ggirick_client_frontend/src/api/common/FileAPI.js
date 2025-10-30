@@ -30,9 +30,11 @@ const FileAPI = {
      */
     async deleteFile(sysName) {
         const route = apiRoutes.file.delete(sysName);
+        console.log(route.url)
         const response = await api.request({
             url: route.url,
             method: route.method,
+            params: {file: sysName}
         });
         return response.data;
     },
@@ -42,8 +44,13 @@ const FileAPI = {
      * @param {string} sysName 시스템 파일명
      * @returns {string} 다운로드를 위한 서버 URL
      */
-    getDownloadUrl(sysName) {
-        return `/files/download/${encodeURIComponent(sysName)}`;
+    async downloadFile(sysName) {
+        const route = apiRoutes.file.download(sysName);
+        return await api.request({
+            url: route.url,
+            method: route.method,
+            responseType: "blob"
+        });
     }
 };
 

@@ -136,6 +136,17 @@ const chatAPI = {
         const response =  await api({ url: route.url, method: route.method });
         return response.data;
 
+    },
+    deleteFile: async (fileId) =>{
+
+        const route =apiRoutes.chat.deleteFile();
+        console.log(route.url)
+        const response = await api.request({
+            url: route.url,
+            method: route.method,
+            params: {fileId: fileId}
+        });
+        return response.data;
     }
 };
 

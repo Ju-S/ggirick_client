@@ -28,14 +28,13 @@ public class ChatService {
     private SimpMessagingTemplate messagingTemplate;
 
 
-    public void sendMessage(ChatMessageDTO message, List<ChatFileDTO> files) {
+    public void sendMessage(ChatMessageDTO message) {
         chatDao.saveMessage(message) ;
 
-        if (files != null) {
-            for (ChatFileDTO file : files) {
-                file.setMessageId(message.getId());
-                 chatDao.saveFile(file);
-            }
+        if (message.getFiles()!= null) {
+            message.getFiles().forEach(file -> {
+              saveFile(message, file.getOriName(), file.getSysName(), file.getUrl());
+            });
         }
         messagingTemplate.convertAndSend(
                 "/subscribe/workspace/" + message.getWorkspaceId() + "/channel/" + message.getChannelId(),
@@ -147,15 +146,16 @@ public class ChatService {
         }).collect(Collectors.toList());
     };
 
-    public void saveFile(ChatMessageDTO chatDto, String fileName, String fileUrl) {
-        if (fileUrl == null || fileName == null) {
+    public void saveFile(ChatMessageDTO chatDto, String oriName,String sysName, String fileUrl) {
+        if (fileUrl == null || sysName == null) {
             log.warn("파일 정보가 유효하지 않아 저장하지 않습니다. messageId={}", chatDto.getId());
             return;
         }
 
         ChatFileDTO fileDTO = new ChatFileDTO();
         fileDTO.setMessageId(chatDto.getId());
-        fileDTO.setFilename(fileName);
+        fileDTO.setFilename(oriName);
+        fileDTO.setSysName(sysName);
         fileDTO.setFileUrl(fileUrl);
         fileDTO.setChannelId(chatDto.getChannelId());
         fileDTO.setWorkspaceId(chatDto.getWorkspaceId());
@@ -163,6 +163,10 @@ public class ChatService {
         chatDao.insertChatFile(fileDTO);
 
         log.info("파일 저장 완료: {}", fileDTO);
+    }
+
+    public boolean deleteFile(int id) {
+       return chatDao.deleteFile(id);
     }
 
 //    // 시스템 메시지 저장

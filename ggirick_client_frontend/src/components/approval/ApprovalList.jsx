@@ -22,7 +22,7 @@ export default function ApprovalList({approvalInfos}) {
             >
                 <td className="truncate">
                     <div
-                        class="badge badge-sm bg-base-300 mr-2">{docType.filter(type => type.code === e.docTypeCode).map(result => result.name)}
+                        className="badge badge-sm bg-base-300 mr-2">{docType.filter(type => type.code === e.docTypeCode).map(result => result.name)}
                     </div>
                     {e.title}
                 </td>
