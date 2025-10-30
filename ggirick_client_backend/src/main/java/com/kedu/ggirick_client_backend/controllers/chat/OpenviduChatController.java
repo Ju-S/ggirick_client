@@ -1,12 +1,19 @@
 package com.kedu.ggirick_client_backend.controllers.chat;
 
 
-import io.openvidu.java.client.*;
+import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
+import com.kedu.ggirick_client_backend.services.hr.EmployeeService;
+import io.livekit.server.AccessToken;
+import io.livekit.server.RoomJoin;
+import io.livekit.server.RoomName;
+import io.livekit.server.WebhookReceiver;
+import livekit.LivekitWebhook;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
 
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -17,88 +24,48 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequestMapping("/openvidu")
 public class OpenviduChatController {
 
+    @Value("${LIVEKIT_API_KEY}")
+    private String apiKey;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    @Value("${LIVEKIT_API_SECRET}")
+    private String apiSecret;
 
-    private static final String OPENVIDU_URL = "http://10.5.5.1:4443/openvidu/api";
-    private static final String SECRET = "MY_SECRET";
+    @Autowired
+    private EmployeeService employeeService;
 
-    // Basic Auth 헤더 생성
-    private HttpHeaders createHeaders() {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        String auth = "OPENVIDUAPP:" + SECRET;
-        String encodedAuth = Base64.getEncoder().encodeToString(auth.getBytes(StandardCharsets.UTF_8));
-        headers.set("Authorization", "Basic " + encodedAuth);
-        return headers;
-    }
 
-    /** ✅ 1️⃣ 세션 생성 (존재하면 그대로 사용) */
-    @PostMapping("/sessions")
-    public ResponseEntity<Map<String, Object>> createSession() {
-        HttpHeaders headers = createHeaders();
-        HttpEntity<Map<String, Object>> request = new HttpEntity<>(Map.of(), headers);
 
-        ResponseEntity<Map> response;
-        try {
-            response = restTemplate.exchange(
-                    OPENVIDU_URL + "/sessions",
-                    HttpMethod.POST,
-                    request,
-                    Map.class
-            );
-        } catch (HttpClientErrorException.Conflict e) {
-            // 이미 존재하는 세션이면 그대로 사용
-            Map<String, Object> conflictBody = Map.of("message", "Session already exists");
-            return new ResponseEntity<>(conflictBody, HttpStatus.OK);
+    @PostMapping(value = "/token")
+    public ResponseEntity<Map<String, String>> createToken(@RequestBody Map<String, String> params, @AuthenticationPrincipal UserTokenDTO userInfo) {
+        String roomName = params.get("roomName");
+        String participantName = employeeService.getEmployeeInfo(userInfo.getId()).getName();
+
+        if (roomName == null || participantName == null) {
+            return ResponseEntity.badRequest().body(Map.of("errorMessage", "roomName and participantName are required"));
         }
 
-        Map<String, Object> result = new HashMap<>();
-        result.put("sessionId", response.getBody().get("id"));
-        return ResponseEntity.ok(result);
+        AccessToken token = new AccessToken(apiKey, apiSecret);
+        token.setName(participantName);
+        token.setIdentity(participantName);
+        token.addGrants(new RoomJoin(true), new RoomName(roomName));
+
+        log.info("Creating token for {}", participantName);
+
+        return ResponseEntity.ok(Map.of("token", token.toJwt()));
     }
 
-    /** ✅ 2️⃣ 세션 존재 확인 */
-    @GetMapping("/sessions/{sessionId}")
-    public ResponseEntity<?> getSession(@PathVariable String sessionId) {
-        HttpHeaders headers = createHeaders();
-        HttpEntity<Void> request = new HttpEntity<>(headers);
-
+    @PostMapping(value = "/livekit/webhook", consumes = "application/webhook+json")
+    public ResponseEntity<String> receiveWebhook(@RequestHeader("Authorization") String authHeader, @RequestBody String body) {
+        WebhookReceiver webhookReceiver = new WebhookReceiver(apiKey, apiSecret);
         try {
-            ResponseEntity<Map> response = restTemplate.exchange(
-                    OPENVIDU_URL + "/sessions/" + sessionId,
-                    HttpMethod.GET,
-                    request,
-                    Map.class
-            );
-            return ResponseEntity.ok(response.getBody());
-        } catch (HttpClientErrorException.NotFound e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Session not found"));
+            LivekitWebhook.WebhookEvent event = webhookReceiver.receive(body, authHeader);
+            System.out.println("LiveKit Webhook: " + event.toString());
+        } catch (Exception e) {
+            System.err.println("Error validating webhook event: " + e.getMessage());
         }
+        return ResponseEntity.ok("ok");
     }
 
-    /** ✅ 3️⃣ 세션에 토큰 발급 */
-    @PostMapping("/sessions/{sessionId}/token")
-    public ResponseEntity<Map<String, String>> createToken(@PathVariable String sessionId) {
-        HttpHeaders headers = createHeaders();
-        Map<String, Object> tokenBody = new HashMap<>();
-        tokenBody.put("role", "PUBLISHER");
 
-        HttpEntity<Map<String, Object>> tokenRequest = new HttpEntity<>(tokenBody, headers);
 
-        try {
-            ResponseEntity<Map> tokenResponse = restTemplate.exchange(
-                    OPENVIDU_URL + "/sessions/" + sessionId + "/connection",
-                    HttpMethod.POST,
-                    tokenRequest,
-                    Map.class
-            );
-            Map<String, String> result = Map.of("token", tokenResponse.getBody().get("token").toString());
-            return ResponseEntity.ok(result);
-        } catch (HttpClientErrorException.NotFound e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(Map.of("error", "Session not found"));
-        }
-    }
 }

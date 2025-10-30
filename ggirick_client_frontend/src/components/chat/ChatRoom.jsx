@@ -118,6 +118,7 @@ export default function ChatRoom() {
                                     key={msg.id}
                                     msg={msg}
                                     sendMessage={sendMessage}
+                                    chatroom={true}
                                 />
                             </div>
                         );

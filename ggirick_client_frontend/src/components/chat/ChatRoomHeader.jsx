@@ -63,63 +63,35 @@ export default function ChatRoomHeader({sendMessage}) {
             </div>
         ));
     }, [selectedChannelMember]);
-    const handleVideoMeetingPage  = () => {
-
-        if(!selectedWorkspace || !selectedChannel) return;
-
-
-    }
 
 
     return (
         <>
-            <header className="flex items-center justify-between border-b bg-base-100 p-4">
+            <header className="flex flex-wrap items-center justify-between border-b bg-base-100 p-4 gap-2">
                 <div className="flex items-center space-x-4">
-                    <div>
-                        <h2 className="text-lg font-semibold text-base-content">#{selectedChannel.name}</h2>
-                        <p className="text-sm text-base-content/60">{selectedChannel.description}</p>
+                    <div className="flex-1 min-w-[120px]">
+                        <h2 className="text-lg font-semibold text-base-content truncate">#{selectedChannel.name}</h2>
+                        <p className="text-sm text-base-content/60 truncate">{selectedChannel.description}</p>
                     </div>
                     <div className="flex -space-x-2">
                         {memberAvatars || <span className="text-xs opacity-70">멤버 없음</span>}
                     </div>
                 </div>
 
-                <div className=" flex items-center space-x-4">
+                <div className="flex flex-wrap items-center gap-2">
                     <Link to="/videomeeting">
-                        <button
-                            onClick={handleVideoMeetingPage}
-                            className={`btn btn-lg bg-accent text-accent-content rounded-full hidden md:inline-flex`}
-                        >
+                        <button className="btn bg-accent text-accent-content rounded-full px-4 py-2 text-base transition-all duration-200 ease-in-out sm:px-6 sm:py-3 sm:text-md lg:px-8 lg:py-4 lg:text-lg">
                             📸화상회의
                         </button>
                     </Link>
-                    <button
-                        className="text-sm text-red-500 hover:underline transition-colors"
-                        onClick={() => setShowDeleteModal(true)}
-                    >
-                        채널 삭제
-                    </button>
-
-                    <button
-                        onClick={() => setChannelSettingModalOpen(true)}
-                        className="text-sm text-primary hover:underline transition-colors"
-                    >
-                        채널 관리
-                    </button>
                     {!(selectedChannel.typeId === 3 || selectedChannel.type === "direct") && (
-                        <button
-                            onClick={() => setChannelMemberModalOpen(true)}
-                            className="text-sm text-primary hover:underline transition-colors"
-                        >
-                            멤버 관리
-                        </button>
+                    <button className="text-sm text-red-500 hover:underline transition-colors" onClick={()=> setShowDeleteModal(true) }>채널 삭제</button>
                     )}
-                    <button
-                        onClick={() =>  setIsFileDrawerOpen(true)}
-                        className="text-sm text-primary hover:underline transition-colors"
-                    >
-                       파일함 열기
-                    </button>
+                    <button className="text-sm text-primary hover:underline transition-colors" onClick={() => setChannelSettingModalOpen(true)}>채널 관리</button>
+                    {!(selectedChannel.typeId === 3 || selectedChannel.type === "direct") && (
+                        <button className="text-sm text-primary hover:underline transition-colors" onClick={() => setChannelMemberModalOpen(true)}>멤버 관리</button>
+                    )}
+                    <button className="text-sm text-primary hover:underline transition-colors" onClick={() => setIsFileDrawerOpen(true)}>파일함 열기</button>
                 </div>
             </header>
             {/* 채널 설정 모달 */}

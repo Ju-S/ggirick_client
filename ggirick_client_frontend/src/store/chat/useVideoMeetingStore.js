@@ -3,6 +3,12 @@ import { OpenVidu } from "openvidu-browser";
 import axios from "axios";
 import api from "@/api/common/apiInterceptor.js";
 
+/**
+ *
+ * 구 openvidu 2.29 버전으로 화상회의를 구현하기 위해  만든 store입니다
+ * openvidu 3.0 livekit을 사용하면서 더는 사용되지 않습니다.
+ *
+ */
 export const useVideoMeetingStore = create((set, get) => ({
     OV: null,
     session: null,
