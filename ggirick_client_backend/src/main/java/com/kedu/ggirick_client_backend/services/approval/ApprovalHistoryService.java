@@ -53,4 +53,9 @@ public class ApprovalHistoryService {
 
         approvalHistoryDAO.deleteByApprovalIdAndAssigner(params);
     }
+
+    // 최근 3개 기록 조회
+    public List<ApprovalHistoryDTO> getRecentHistory(String userId) {
+        return approvalHistoryDAO.getRecentHistory(userId);
+    }
 }

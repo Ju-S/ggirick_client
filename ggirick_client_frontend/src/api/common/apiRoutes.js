@@ -772,6 +772,22 @@ const apiRoutes = {
             method: "GET"
         })
     },
+    dashboard: {
+        /**
+         * 대시보드 필요한 정보 조회 API<br>
+         * GET /dashboard<br>
+         * response:
+         *  pendingApprovalCount,
+         *  recentApprovalHistory,
+         *  recentNotification,
+         *  todayScheduleSize,
+         *  upcomingScheduleList
+         */
+        getInfos: () => ({
+            url: `/dashboard`,
+            method: "GET",
+        }),
+    },
 };
 
 export default apiRoutes;

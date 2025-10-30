@@ -48,6 +48,18 @@ public class ApprovalService {
         return approvalDAO.getTotalPage(params) / ITEM_PER_PAGE + 1;
     }
 
+    // 문서 총 갯수 조회
+    public int getTotalDocs(String userId, int box, int searchFilter, String searchQuery) {
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("userId", userId);
+        params.put("box", box);
+        params.put("searchFilter", searchFilter);
+        params.put("searchQuery", searchQuery);
+
+        return approvalDAO.getTotalPage(params);
+    }
+
     // 개별 문서 조회
     public ApprovalDTO getById(int approvalId) {
         ApprovalDTO approval =  approvalDAO.getById(approvalId);

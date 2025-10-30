@@ -1,4 +1,4 @@
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Calendar, momentLocalizer, Views} from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/ko"
@@ -17,13 +17,16 @@ const localizer = momentLocalizer(moment);
 
 export default function CalendarPage() {
     const {scheduleList, setSelectedSchedule, setNewEvent, modalOpen, setModalOpen} = useCalendarStore();
-    const {selectedEmployee} = useEmployeeStore();
     const [currentView, setCurrentView] = useState(Views.MONTH);
     const [currentDate, setCurrentDate] = useState(new Date());
 
     const calendarRef = useRef(null);
 
     const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+
+    useEffect(() => {
+        setModalOpen(false);
+    }, []);
 
     // 화면 범위 이벤트 계산
     const getVisibleEvents = () => {

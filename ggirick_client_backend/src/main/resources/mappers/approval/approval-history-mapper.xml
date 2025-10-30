@@ -12,6 +12,48 @@
         ORDER BY recorded_at DESC
     </select>
 
+    <select id="getRecentHistory" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO">
+        SELECT * FROM (
+            SELECT ah.*, e.name
+            FROM approval_history ah
+            JOIN approval a ON ah.approval_id = a.id
+            JOIN employee e ON ah.assigner = e.id
+            WHERE a.writer = #{userId}
+            OR EXISTS (
+                SELECT 1
+                FROM approval_line al_current
+                WHERE al_current.approval_id = a.id
+                AND (
+                    al_current.assigner = #{userId}
+                    OR al_current.assigner IN (
+                        SELECT d.assigner
+                        FROM approval_delegate d
+                        WHERE d.delegator = #{userId}
+                        AND SYSDATE BETWEEN d.start_at AND d.end_at
+                    )
+                )
+                AND (
+                    al_current.order_line = 0
+                    OR EXISTS (
+                        SELECT 1
+                        FROM approval_history ah2
+                        WHERE ah2.approval_id = a.id
+                        AND ah2.assigner = (
+                            SELECT al_prev.assigner
+                            FROM approval_line al_prev
+                            WHERE al_prev.approval_id = a.id
+                            AND al_prev.order_line = al_current.order_line - 1
+                        )
+                        AND ah2.type_id NOT IN(3, 4)
+                        AND ah2.recorded_at BETWEEN a.updated_at AND sysdate
+                    )
+                )
+            )
+            ORDER BY ah.recorded_at DESC
+        )
+        WHERE ROWNUM &lt;= 3
+    </select>
+
     <!-- assigner와 approvalId를 가지는 결재기록 조회 -->
     <select id="getByAssignerAndApprovalId"
             resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO">
@@ -29,16 +71,16 @@
     <select id="getPrevHistory" resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO">
         SELECT *
         FROM (
-            SELECT *
-            FROM approval_history ah
-            WHERE ah.assigner = (
-                SELECT al.assigner
-                FROM approval_line al
-                WHERE al.order_line = #{userOrderLine} - 1
-                AND al.approval_id = #{approvalId}
-            )
-            AND ah.approval_id = #{approvalId}
-            ORDER BY recorded_at DESC
+        SELECT *
+        FROM approval_history ah
+        WHERE ah.assigner = (
+        SELECT al.assigner
+        FROM approval_line al
+        WHERE al.order_line = #{userOrderLine} - 1
+        AND al.approval_id = #{approvalId}
+        )
+        AND ah.approval_id = #{approvalId}
+        ORDER BY recorded_at DESC
         )
         WHERE ROWNUM = 1
     </select>

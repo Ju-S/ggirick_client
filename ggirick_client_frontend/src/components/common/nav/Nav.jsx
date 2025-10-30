@@ -33,6 +33,10 @@ export default function Nav() {
         setPreviewUrl(selectedEmployee?.profileUrl || "");
     }, [isModalOpen, isEditMode]);
 
+    useEffect(() => {
+        setPreviewUrl(selectedEmployee?.profileUrl || "");
+    }, [selectedEmployee]);
+
     const handleChange = (e) => {
         const {name, value} = e.target;
         setEditData(prev => ({...prev, [name]: value}));
@@ -160,7 +164,7 @@ export default function Nav() {
                             <div className="space-y-2">
                                 {/* 프로필 이미지 */}
                                 <div className="flex items-center gap-4">
-                                    <img src={previewUrl} alt="profile preview" className="w-16 h-16 rounded-full"/>
+                                    <img src={previewUrl} alt="profile preview" className="w-16 h-16 rounded-full object-cover"/>
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -205,7 +209,7 @@ export default function Nav() {
                         ) : (
                             <div className="space-y-2">
                                 <div className="flex items-center gap-4 mb-2">
-                                    <img src={selectedEmployee?.profileUrl} className="w-16 h-16 rounded-full"
+                                    <img src={selectedEmployee?.profileUrl} className="w-16 h-16 rounded-full object-cover"
                                          alt="profile"/>
                                     <div>
                                         <p><strong>이름:</strong> {selectedEmployee?.name}</p>
