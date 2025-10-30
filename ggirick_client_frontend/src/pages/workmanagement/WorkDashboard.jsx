@@ -1,4 +1,5 @@
 import {useEffect, useRef, useState} from "react";
+import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
 import {
@@ -18,6 +19,8 @@ import WorkCheckPanel from "@/components/workmanagement/WorkCheckPanel.jsx";
 import WorkStatusPanel from "@/components/workmanagement/WorkStatusPanel.jsx";
 
 export default function WorkDashboard() {
+    const navigate = useNavigate();
+
     const {employee} = useEmployeeStore();
     const [time, setTime] = useState("");
 
@@ -479,9 +482,13 @@ export default function WorkDashboard() {
                                         <p className="text-sm opacity-70">잔여 휴가</p>
                                         <p className="text-3xl font-bold text-primary">{remainingVacation}일</p>
                                     </div>
-                                    <div className="flex gap-2">
-                                        <button className="btn btn-outline btn-sm">휴가 현황</button>
-                                        <button className="btn btn-primary btn-sm">휴가 신청</button>
+                                    <div className="flex">
+                                        <button
+                                            className="btn btn-primary btn-sm"
+                                            onClick={() => navigate("/approval")}
+                                        >
+                                            휴가 신청
+                                        </button>
                                     </div>
                                 </div>
                             </div>
