@@ -1,15 +1,21 @@
 import {useEffect, useRef, useState} from "react";
+import dayjs from "dayjs";
+
 import {
     getAllWorkTimeTypesAPI,
+    getlistByTypeAndPeriodAPI,
     getWorkSummaryAPI,
     getWorkTimeLogsByEmployeeIdAPI,
     insertAPI
 } from "@/api/workmanagement/workManagementAPI.js";
 import {getWorkPlanByPeriod} from "@/api/workmanagement/workPlanAPI.js";
 import {getRemainingVacationAPI} from "@/api/workmanagement/vacationAPI.js";
-import useEmployeeStore from "@/store/hr/employeeStore.js";
-import dayjs from "dayjs";
 import {getDayRange, getMonthRange, getWeekRange, getYearRange} from "@/utils/common/dayjsFormat.js";
+import {getHolidaysByPeriod} from "@/api/common/holidayAPI.js";
+
+import useEmployeeStore from "@/store/hr/employeeStore.js";
+import WorkCheckPanel from "@/components/workmanagement/WorkCheckPanel.jsx";
+import WorkStatusPanel from "@/components/workmanagement/WorkStatusPanel.jsx";
 
 export default function WorkDashboard() {
     const {employee} = useEmployeeStore();
@@ -20,7 +26,11 @@ export default function WorkDashboard() {
 
     const [groupedStatus, setGroupedStatus] = useState([]);
     const [workTimeTypes, setWorkTimeTypes] = useState([]);
-    const [workTimeLogs, setWorkTimeLogs] = useState([]);
+    // 근무기록 상태변수 (일간 + 주간)
+    const [workTimeLogs, setWorkTimeLogs] = useState({
+        daily: [],
+        weekly: [],
+    });
     const [currentStatus, setCurrentStatus] = useState(null);
     const [remainingVacation, setRemainingVacation] = useState(0);
 
@@ -28,8 +38,14 @@ export default function WorkDashboard() {
     const [hasCheckedOut, setHasCheckedOut] = useState(false);
     const [toastMessage, setToastMessage] = useState("");
 
-    // 근무 계획 상태변수 - 일간
-    const [workPlan, setWorkPlan] = useState();
+    const [holidays, setHolidays] = useState([]); // 공휴일 상태변수
+
+    // 근무 계획 상태변수
+    const [workPlan, setWorkPlan] = useState({
+        daily: {},
+        weekly: [],
+        monthly: {totalPlannedHours: 0, workDays: 0}
+    });
 
     // 근무 기록 통계용 상태변수 - 연간/월간/주간
     const [workSummary, setWorkSummary] = useState({
@@ -87,17 +103,20 @@ export default function WorkDashboard() {
 
                 // 2. 내 근무기록
                 const logsResp = await getWorkTimeLogsByEmployeeIdAPI();
-                const logs = logsResp.data;
-                setWorkTimeLogs(logs);
+                const dailyLogs = logsResp.data;
+                setWorkTimeLogs(prev => ({
+                    ...prev,
+                    daily: dailyLogs
+                }));
 
                 // 3. 출퇴근 상태 갱신
-                const hasIn = logs.some(log => log.type === "IN");
-                const hasOut = logs.some(log => log.type === "OUT");
+                const hasIn = dailyLogs.some(log => log.type === "IN");
+                const hasOut = dailyLogs.some(log => log.type === "OUT");
                 setHasCheckedIn(hasIn);
                 setHasCheckedOut(hasOut);
 
                 // 4. 연간 근무 요약 (초기 1회)
-                const { start: startOfYear, end: endOfYear } = getYearRange();
+                const {start: startOfYear, end: endOfYear} = getYearRange();
                 const annualResp = await getWorkSummaryAPI(startOfYear, endOfYear);
 
                 if (annualResp?.data) {
@@ -122,7 +141,11 @@ export default function WorkDashboard() {
                         diffHours: dayjs(plan.endDateTime).diff(dayjs(plan.startDateTime), "hour", true).toFixed(1),
                     };
 
-                    setWorkPlan(formattedPlan);
+                    // 상태변수에 저장
+                    setWorkPlan(prev => ({
+                        ...prev,
+                        daily: formattedPlan
+                    }));
                 }
                 console.log(workPlan);
             } catch (err) {
@@ -133,40 +156,124 @@ export default function WorkDashboard() {
         fetchInitialData();
     }, []);
 
-    // 주간/월간 계획 + 기록 요약 (currentWeekStart 변경 시마다 호출)
+    // 주간/월간 근무계획 + 근무기록 요약
     useEffect(() => {
         const fetchWeeklyAndMonthlySummary = async () => {
             try {
-                // 주간 / 월간 범위 계산
-                const { start: startOfWeek, end: endOfWeek } = getWeekRange(currentWeekStart);
-                const { start: startOfMonth, end: endOfMonth } = getMonthRange(currentWeekStart);
-                console.log(startOfWeek, endOfWeek, startOfMonth, endOfMonth);
+                // 1. 주간 / 월간 범위 계산
+                const {start: startOfWeek, end: endOfWeek} = getWeekRange(currentWeekStart);
+                const {start: startOfMonth, end: endOfMonth} = getMonthRange(currentWeekStart);
 
-                // 주간 / 월간 근무기록 가져오기
-                const weeklyResp = await getWorkSummaryAPI(startOfWeek, endOfWeek);
-                const monthlyResp = await getWorkSummaryAPI(startOfMonth, endOfMonth);
+                // 2. 근무 요약 (주간 / 월간)
+                const [weeklyResp, monthlyResp] = await Promise.all([
+                    getWorkSummaryAPI(startOfWeek, endOfWeek),
+                    getWorkSummaryAPI(startOfMonth, endOfMonth),
+                ]);
 
-                // 상태변수에 저장
-                setWorkSummary(prev => ({
+                // ✅ 월 날짜 앞뒤로 7일 확장 (문자열 -> dayjs -> 문자열)
+                const extendedStart = dayjs(startOfMonth).subtract(7, "day").format("YYYY-MM-DD");
+                const extendedEnd = dayjs(endOfMonth).add(7, "day").format("YYYY-MM-DD");
+
+                // 3. 월간 공휴일 불러오기
+                const holidayResp = await getHolidaysByPeriod(extendedStart, extendedEnd);
+                const monthHolidays = holidayResp?.data || [];
+
+                // 상태에 반영
+                setHolidays(monthHolidays);
+
+                // 4. 근무일 계산 (주말 + 공휴일 제외)
+                let workDays = 0;
+                for (
+                    let d = dayjs(startOfMonth);
+                    d.isBefore(endOfMonth) || d.isSame(endOfMonth, "day");
+                    d = d.add(1, "day")
+                ) {
+                    const isWeekend = [0, 6].includes(d.day());
+                    const isHoliday = monthHolidays.some(
+                        (h) => h.calDate === d.format("YYYY-MM-DD")
+                    );
+                    if (!isWeekend && !isHoliday) {
+                        workDays++;
+                    }
+                }
+
+                // 5. 기준근무시간 계산
+                const standardHours = workDays * 8;
+
+                // 6. 근무 요약 상태 업데이트
+                setWorkSummary((prev) => ({
                     ...prev,
-                    weekly: (weeklyResp?.data || prev.weekly),
-                    monthly: (monthlyResp?.data || prev.monthly)
+                    weekly: weeklyResp?.data || prev.weekly,
+                    monthly: {
+                        ...monthlyResp?.data,
+                        workDays,
+                        standardHours, // ✅ 추가
+                    },
                 }));
 
-                // 주간 / 월간 근무계획 가져오기
-                const weeklyPlanResp = await getWorkPlanByPeriod(startOfWeek, endOfWeek);
-                const monthPlanResp = await getWorkPlanByPeriod(startOfMonth, endOfMonth);
+                // 7. 근무계획 (주간 / 월간)
+                const [weeklyPlanResp, monthPlanResp] = await Promise.all([
+                    getWorkPlanByPeriod(startOfWeek, endOfWeek),
+                    getWorkPlanByPeriod(startOfMonth, endOfMonth),
+                ]);
 
-                // 상태변수에 저장
-                setWorkPlan(prev => ({
+                // 8. 주간 근무기록 (출근/퇴근만)
+                const [inLogsResp, outLogsResp] = await Promise.all([
+                    getlistByTypeAndPeriodAPI(startOfWeek, endOfWeek, "IN"),
+                    getlistByTypeAndPeriodAPI(startOfWeek, endOfWeek, "OUT"),
+                ]);
+
+                const weeklyLogs = [
+                    ...(inLogsResp.data || []),
+                    ...(outLogsResp.data || []),
+                ].map((log) => ({
+                    ...log,
+                    date: dayjs(log.recordedAt).format("YYYY-MM-DD"),
+                    time: dayjs(log.recordedAt).format("HH:mm"),
+                }));
+
+                setWorkTimeLogs((prev) => ({
                     ...prev,
-                    weekly: weeklyPlanResp.data,
-                    monthly: monthPlanResp.data
-                }))
-                console.log(workSummary);
-                console.log(workPlan);
+                    weekly: weeklyLogs,
+                }));
+
+                // 9. 주간 계획 포맷
+                const formattedWeekly = (weeklyPlanResp.data || []).map((p) => ({
+                    ...p,
+                    planDate: dayjs(p.planDate).format("YYYY-MM-DD"),
+                    startTime: dayjs(p.startDateTime).format("HH:mm"),
+                    endTime: dayjs(p.endDateTime).format("HH:mm"),
+                    diffHours: dayjs(p.endDateTime)
+                        .diff(dayjs(p.startDateTime), "hour", true)
+                        .toFixed(1),
+                }));
+
+                // 10. 월간 계획 요약
+                const formattedMonthly = (() => {
+                    const data = monthPlanResp.data || [];
+                    const totalHours = data.reduce((sum, p) => {
+                        const hours =
+                            dayjs(p.endDateTime).diff(dayjs(p.startDateTime), "hour", true) - 1;
+                        return sum + hours;
+                    }, 0);
+                    return {
+                        totalPlannedHours: totalHours.toFixed(1),
+                        workDays: data.length,
+                    };
+                })();
+
+                setWorkPlan((prev) => ({
+                    ...prev,
+                    weekly: formattedWeekly,
+                    monthly: formattedMonthly,
+                }));
+
+                // 디버깅용
+                console.log("공휴일(월간):", monthHolidays);
+                console.log("월간 기준근무:", {workDays, standardHours});
+
             } catch (err) {
-                console.error("주간/월간 근무 요약 불러오기 실패 ❌", err);
+                console.error("❌ 주간/월간 근무 요약 불러오기 실패:", err);
             }
         };
 
@@ -190,7 +297,7 @@ export default function WorkDashboard() {
     const listRef = useRef(null);
     useEffect(() => {
         if (listRef.current) listRef.current.scrollTop = listRef.current.scrollHeight;
-    }, [workTimeLogs]);
+    }, [workTimeLogs.daily]);
 
     // 가장 마지막 근무 상태 뱃지에 반영
     useEffect(() => {
@@ -201,7 +308,7 @@ export default function WorkDashboard() {
         } else {
             setCurrentStatus(null);
         }
-    }, [workTimeLogs, workTimeTypes]);
+    }, [workTimeLogs.daily, workTimeTypes]);
 
     // 실시간 시계(dayjs)
     useEffect(() => {
@@ -217,21 +324,25 @@ export default function WorkDashboard() {
 
     // 출/퇴근 버튼 초기화 ( 오전 5시 초기화 )
     useEffect(() => {
-        if (workTimeLogs.length === 0) return;
+        if (!workTimeLogs.daily || workTimeLogs.daily.length === 0) return;
 
-        const latestLog = workTimeLogs[workTimeLogs.length - 1];
-        const latestDate = dayjs(latestLog.recordedAt);
+        // daily 배열 기준으로 가져와야 함
+        const latestLog = workTimeLogs.daily[workTimeLogs.daily.length - 1];
+        const latestDate = dayjs(latestLog?.recordedAt);
         const now = dayjs();
 
+        // 날짜 바뀌었는지 체크
         const crossedMidnight = now.diff(latestDate, "day") >= 1;
-        const afterResetTime = now.hour() > 2 || (now.hour() === 2 && now.minute() >= 30);
+
+        // 오전 5시 이후면 초기화
+        const afterResetTime = now.hour() >= 5;
 
         // 날짜가 바뀌었고 2시 30분 이후면 근무상태 초기화
         if (crossedMidnight && afterResetTime) {
             setHasCheckedIn(false);
             setHasCheckedOut(false);
         }
-    }, [workTimeLogs]);
+    }, [workTimeLogs.daily]);
 
     // 미니 달력용(dayjs)
     const today = dayjs();
@@ -249,31 +360,34 @@ export default function WorkDashboard() {
                 recordedAt: dayjs().toISOString(),
             };
 
-            // 1️⃣ DB에 insert 요청
+            // 1. DB에 insert 요청
             const insertResp = await insertAPI(workTimeLog);
             const saved = insertResp.data; // {id, employeeId, type, recordedAt}
 
-            // 2️⃣ type 한글 변환
+            // 2. type 한글 변환
             const matchedType = workTimeTypes.find((t) => t.type === saved.type);
             const typeName = matchedType ? matchedType.name : saved.type;
 
-            // 3️⃣ 시간 포맷(dayjs)
+            // 3. 시간 포맷(dayjs)
             const formattedTime = dayjs((saved.recordedAt || "").replace(" ", "T")).format("HH:mm");
 
-            // 4️⃣ 프론트 상태 반영
-            setWorkTimeLogs((prev) => [
+            // ️4. 프론트 상태 반영 (daily에만 추가)
+            setWorkTimeLogs((prev) => ({
                 ...prev,
-                {
-                    ...saved,
-                    time: formattedTime, // 리스트 표시용
-                },
-            ]);
+                daily: [
+                    ...(prev.daily || []),
+                    {
+                        ...saved,
+                        time: formattedTime, // 리스트 표시용
+                    },
+                ],
+            }));
 
-            // 5️⃣ 상태 업데이트
+            // 5. 상태 업데이트
             if (type === "IN") setHasCheckedIn(true);
             if (type === "OUT") setHasCheckedOut(true);
 
-            // 6️⃣ 토스트 메시지
+            // 6. 토스트 메시지
             showToast(`${typeName} 기록 완료`);
         } catch (err) {
             console.error("근무기록 저장 실패:", err);
@@ -306,7 +420,7 @@ export default function WorkDashboard() {
         setCurrentWeekStart(currentWeekStart.add(offset * 7, "day"));
     };
 
-    // ✅ 주간 날짜 배열
+    // 주간 날짜 배열
     const days = Array.from({length: 7}, (_, i) => currentWeekStart.add(i, "day"));
 
     return (
@@ -378,11 +492,14 @@ export default function WorkDashboard() {
                             <div className="card-body">
                                 <h3 className="font-semibold text-base mb-3 border-b-1 pb-3">근무시간</h3>
                                 <div className="grid grid-cols-3 text-center text-sm divide-x divide-base-300">
-                                    <div><p className="text-2xl font-bold text-primary">{workSummary.annual.workDays}일</p>
+                                    <div><p
+                                        className="text-2xl font-bold text-primary">{workSummary.annual.workDays}일</p>
                                         <p>근무일수</p></div>
-                                    <div><p className="text-2xl font-bold text-primary">{workSummary.annual.totalHours}시간</p>
+                                    <div><p
+                                        className="text-2xl font-bold text-primary">{workSummary.annual.totalHours}시간</p>
                                         <p>총근무</p></div>
-                                    <div><p className="text-2xl font-bold text-primary">{workSummary.annual.avgHours}시간</p>
+                                    <div><p
+                                        className="text-2xl font-bold text-primary">{workSummary.annual.avgHours}시간</p>
                                         <p>평균근무</p></div>
                                 </div>
                             </div>
@@ -405,16 +522,16 @@ export default function WorkDashboard() {
                                     <div className="text-sm opacity-70">{day}요일</div>
                                 </div>
                                 <p className="text-lg font-semibold">
-                                    {workPlan?.startDateTime
-                                        ? `${Number(workPlan.startDateTime.split(":")[0])}시 출근`
+                                    {workPlan?.daily.startDateTime
+                                        ? `${Number(workPlan.daily.startDateTime.split(":")[0])}시 출근`
                                         : "출근 계획 없음"}
                                 </p>
                                 <p className="text-sm opacity-70">
-                                    {workPlan?.startDateTime && workPlan?.endDateTime ? (
+                                    {workPlan?.daily.startDateTime && workPlan?.daily.endDateTime ? (
                                         <>
-                                            {workPlan.startDateTime} ~ {workPlan.endDateTime}
+                                            {workPlan.daily.startDateTime} ~ {workPlan.daily.endDateTime}
                                             {" "}
-                                            (소정 {workPlan.diffHours}시간)
+                                            (소정 {workPlan.daily.diffHours - 1}시간)
                                         </>
                                     ) : (
                                         "근무 계획 없음"
@@ -424,122 +541,20 @@ export default function WorkDashboard() {
                         </div>
 
                         {/* 근무체크 */}
-                        <div className="card bg-base-100 shadow-md">
-                            <div className="card-body text-center">
-                                <h3 className="font-semibold text-base mb-4 flex justify-center items-center gap-2">근무체크
-                                    {currentStatus && (
-                                        <span
-                                            className={`badge badge-soft ${
-                                                currentStatus === "출근" ? "badge-primary" :
-                                                    currentStatus === "퇴근" ? "badge-error" :
-                                                        currentStatus === "업무" ? "badge-info" :
-                                                            currentStatus === "회의" ? "badge-accent" :
-                                                                currentStatus === "외근" ? "badge-warning" :
-                                                                    currentStatus === "외출" ? "badge-neutral" :
-                                                                        "badge-ghost"
-                                            } font-semibold`}
-                                        >
-                                          {["출근", "퇴근"].includes(currentStatus)
-                                              ? currentStatus
-                                              : `${currentStatus}중`}
-                                        </span>
-                                    )}
-                                </h3>
-                                <div className="text-5xl font-bold text-primary mb-3">{time}</div>
-                                <div className="flex justify-center gap-4 mb-4">
-                                    <button
-                                        className={`btn btn-soft btn-primary text-primary hover:text-white transition-all ${
-                                            hasCheckedIn || hasCheckedOut ? "opacity-50 cursor-not-allowed" : ""
-                                        }`}
-                                        onClick={() => handleCheck("IN")}
-                                        disabled={hasCheckedIn || hasCheckedOut}
-                                    >
-                                        출근하기
-                                    </button>
+                        <WorkCheckPanel
+                            time={time}
+                            workTimeTypes={workTimeTypes}
+                            hasCheckedIn={hasCheckedIn}
+                            hasCheckedOut={hasCheckedOut}
+                            currentStatus={currentStatus}
+                            handleCheck={handleCheck}
+                        />
 
-                                    <button
-                                        className={`btn btn-soft btn-error text-error hover:text-white transition-all ${
-                                            !hasCheckedIn || hasCheckedOut ? "opacity-50 cursor-not-allowed" : ""
-                                        }`}
-                                        onClick={() => handleCheck("OUT")}
-                                        disabled={!hasCheckedIn || hasCheckedOut}
-                                    >
-                                        퇴근하기
-                                    </button>
-                                </div>
-
-                                {/* 그 외 근무유형 */}
-                                <div className="flex justify-center gap-2 mb-3">
-                                    {workTimeTypes
-                                        .filter((t) => t.type !== "IN" && t.type !== "OUT" && t.type !== "LEAVE")
-                                        .map((type) => (
-                                            <button
-                                                key={type.type}
-                                                className={`btn btn-outline btn-xs transition-all ${
-                                                    !hasCheckedIn || hasCheckedOut
-                                                        ? "opacity-50 cursor-not-allowed"
-                                                        : ""
-                                                }`}
-                                                onClick={() => handleCheck(type.type)}
-                                                disabled={!hasCheckedIn || hasCheckedOut}
-                                            >
-                                                {type.name}
-                                            </button>
-                                        ))}
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* 근무현황 */}
-                        <div className="card bg-base-100 shadow-md">
-                            <div className="card-body">
-                                <h3 className="font-semibold text-base mb-3">근무현황</h3>
-                                <div ref={listRef} className="max-h-48 overflow-y-auto rounded-md p-4">
-                                    {workTimeLogs.length > 0 ? (
-                                        <ul className="relative flex flex-col gap-3 pl-5">
-                                            {workTimeLogs.map((s, i) => {
-                                                // ✅ 시간 포맷(dayjs)
-                                                const formattedTime = dayjs((s.recordedAt || "").replace(" ", "T")).format("HH:mm");
-
-                                                // workTimeTypes에서 한글 이름 찾아오기
-                                                const matchedType = workTimeTypes.find((t) => t.type === s.type);
-                                                const typeName = matchedType ? matchedType.name : s.type;
-
-                                                return (
-                                                    <li key={i}
-                                                        className="relative flex items-center text-xs text-base-content">
-                                                        {i < workTimeLogs.length - 1 && (
-                                                            <div
-                                                                className="absolute left-[0.3rem] top-3 w-[1px] h-full bg-base-300"></div>
-                                                        )}
-                                                        <div
-                                                            className={`w-2 h-2 rounded-full z-10 mr-2 ${
-                                                                i === workTimeLogs.length - 1 ? "bg-primary animate-pulse" : "bg-base-300"
-                                                            }`}
-                                                        ></div>
-                                                        <div className="flex justify-between w-full">
-                                                            <span className="text-sm opacity-70">{formattedTime}</span>
-
-                                                            {/* DaisyUI 배지 색상 구분 */}
-                                                            {s.type === "IN" ? (
-                                                                <span
-                                                                    className="badge badge-soft badge-primary font-semibold">{typeName}</span>
-                                                            ) : s.type === "OUT" ? (
-                                                                <span
-                                                                    className="badge badge-soft badge-error font-semibold">{typeName}</span>
-                                                            ) : (
-                                                                <span
-                                                                    className="badge badge-outline font-semibold">{typeName}</span>
-                                                            )}
-                                                        </div>
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    ) : <p className="text-sm text-gray-500 text-center py-2">아직 근무 기록이 없습니다.</p>}
-                                </div>
-                            </div>
-                        </div>
+                        {/* ✅ 근무현황 */}
+                        <WorkStatusPanel
+                            workTimeLogs={workTimeLogs.daily}
+                            workTimeTypes={workTimeTypes}
+                        />
                     </div>
                 </section>
 
@@ -570,60 +585,107 @@ export default function WorkDashboard() {
                                 <table className="table table-zebra w-full text-center text-sm">
                                     <thead className="bg-base-300">
                                     <tr>
-                                        {days.map((d) => (
-                                            <th key={d.toString()}>
-                                                {`${d.date()} (${dayNames[d.day()]})`}
-                                            </th>
-                                        ))}
+                                        {days.map((d) => {
+                                            const dateStr = d.format("YYYY-MM-DD");
+
+                                            // ✅ 주말 / 공휴일 판단
+                                            const isWeekend = [0, 6].includes(d.day());
+                                            const holiday = holidays.find(h => h.calDate === dateStr);
+
+                                            // ✅ 주말 or 공휴일이면 빨간색 표시
+                                            const isHoliday = isWeekend || holiday;
+
+                                            return (
+                                                <th key={dateStr}
+                                                    className={isHoliday ? "text-error font-semibold" : ""}>
+                                                    {`${d.date()} (${dayNames[d.day()]})`}
+                                                </th>
+                                            );
+                                        })}
                                     </tr>
                                     </thead>
-
                                     <tbody>
                                     <tr>
                                         {days.map((d) => {
-                                            const dayData = groupedStatus.find(g => g.date === d.format("YYYY-MM-DD"));
+                                            const dateStr = d.format("YYYY-MM-DD");
+
+                                            // ✅ 주말 / 공휴일 체크
+                                            const isWeekend = [0, 6].includes(d.day());
+                                            const holiday = holidays?.find(h =>
+                                                dayjs(h.calDate).isSame(d, "day")
+                                            );
+
+                                            const isHoliday = isWeekend || holiday;
+
+                                            // ✅ 근무 계획
+                                            const plan = workPlan.weekly?.find(p => p.planDate === dateStr);
+
+                                            // ✅ 근무 기록 (IN/OUT만 표시)
+                                            const dayLogs = workTimeLogs.weekly.filter(l => l.date === dateStr);
+                                            const inLog = dayLogs.find(l => l.type === "IN");
+                                            const outLog = dayLogs.find(l => l.type === "OUT");
+
+                                            // ✅ 표시할 시간
+                                            let startTime = plan ? plan.startTime : null;
+                                            let endTime = plan ? plan.endTime : null;
+                                            let label = plan ? "계획" : "";
+
+                                            // ✅ 기록이 있으면 계획 덮어쓰기
+                                            if (inLog || outLog) {
+                                                startTime = inLog ? dayjs(inLog.recordedAt).format("HH:mm") : startTime;
+                                                endTime = outLog ? dayjs(outLog.recordedAt).format("HH:mm") : endTime;
+                                                label = "";
+                                            }
+
+                                            // ✅ 휴일명
+                                            let holidayLabel = null;
+                                            if (holiday) holidayLabel = holiday.description;
+                                            else if (isWeekend) holidayLabel = "공휴일";
+
                                             return (
-                                                <td key={d.toString()} className="align-top p-2">
-                                                    {dayData && dayData.records.length > 0 ? (
-                                                        <ul className="text-xs space-y-1">
-                                                            {dayData.records.map((r, i) => (
-                                                                <li key={i} className="flex justify-between">
-                                                                    <span>{r.time}</span>
-                                                                    <span className="font-medium">{r.type}</span>
-                                                                </li>
-                                                            ))}
-                                                        </ul>
-                                                    ) : (
-                                                        <p className="text-gray-400">-</p>
-                                                    )}
+                                                <td key={dateStr} className="align-top p-2">
+                                                    <div className="flex flex-col items-center gap-1">
+                                                        {/* 🔹 휴일 */}
+                                                        {isHoliday ? (
+                                                            <span className="text-xs font-semibold text-error mt-1">
+                                                                {holidayLabel}
+                                                            </span>
+                                                        ) : (
+                                                            <>
+                                                                {/* 🔹 출근 / 퇴근 */}
+                                                                {inLog?.recordedAt && (
+                                                                    <span className="text-primary font-medium text-sm">
+                                                                        출근 : {dayjs(inLog.recordedAt).format("HH:mm")}
+                                                                      </span>
+                                                                )}
+
+                                                                {outLog?.recordedAt && (
+                                                                    <span className="text-error font-medium text-sm">
+                                                                        퇴근 : {dayjs(outLog.recordedAt).format("HH:mm")}
+                                                                      </span>
+                                                                )}
+
+                                                                {/* 🔹 계획 시간 (기록 없을 때만) */}
+                                                                {!inLog && !outLog && plan && (
+                                                                    <span className="text-gray-500 font-medium">
+                                        {startTime} ~ {endTime}
+                                    </span>
+                                                                )}
+
+                                                                {/* 🔹 상태 라벨 */}
+                                                                {label && !isHoliday && (
+                                                                    <span
+                                                                        className="text-xs text-gray-400">{label}</span>
+                                                                )}
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </td>
                                             );
                                         })}
                                     </tr>
-
-                                    {/* ✅ 주간 합계 행 */}
-                                    <tr className="bg-base-200 text-left text-sm">
-                                        <td colSpan={7} className="p-4">
-                                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                                <div>
-                                                    <h4 className="font-semibold mb-1">계획</h4>
-                                                    <p>{workSummary.weekly.totalPlannedHours ?? 0}시간</p>
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-semibold mb-1">휴가</h4>
-                                                    <p>{workSummary.weekly.leaveHours ?? 0}시간</p>
-                                                </div>
-                                                <div>
-                                                    <h4 className="font-semibold mb-1">실근무</h4>
-                                                    <p>총: {workSummary.weekly.totalHours ?? 0}시간</p>
-                                                    <p>소정: {Math.min(workSummary.weekly.totalHours ?? 0,8)}시간</p>
-                                                    <p>연장: {workSummary.weekly.overtimeHours ?? 0}시간</p>
-                                                    <p>야간: {workSummary.weekly.nightHours ?? 0}시간</p>
-                                                </div>
-                                            </div>
-                                        </td>
-                                    </tr>
                                     </tbody>
+
                                 </table>
                             </div>
                         </div>
@@ -654,17 +716,24 @@ export default function WorkDashboard() {
                                     <tr>
                                         <td className="font-semibold">소정</td>
                                         {/* 기준근무 — 8시간 × 근무일수 */}
-                                        <td>{(workSummary.monthly.workDays ?? 0) * 8}시간</td>
-                                        {/* 계획 */}
-                                        <td>{workSummary.monthly.plannedHours ?? 0}시간</td>
+                                        <td>{workSummary.monthly.standardHours ?? 0}시간</td>
+                                        {/* 계획 — WorkPlan의 월간 합계 사용 */}
+                                        <td>{Math.round(workPlan.monthly?.totalPlannedHours ?? 0)}시간</td>
                                         {/* 실근무 — 8시간 초과 시 8로 제한 */}
                                         <td>
-                                            {Math.min(workSummary.monthly.totalHours ?? 0, (workSummary.monthly.workDays ?? 0) * 8)}시간
+                                            {Math.min(
+                                                workSummary.monthly.totalHours ?? 0,
+                                                (workSummary.monthly.workDays ?? 0) * 8
+                                            )}
+                                            시간
                                         </td>
                                         {/* 연월차 */}
                                         <td>{workSummary.monthly.leaveHours ?? 0}시간</td>
-                                        {/* 모든 휴가 */}
-                                        <td>{(workSummary.monthly.leaveHours ?? 0).toFixed(1)}시간</td>
+                                        {/* 모든 휴가 (소수점 제거) */}
+                                        <td>
+                                            {(workSummary.monthly.leaveHours ?? 0) +
+                                                (workSummary.monthly.overtimeHours ?? 0)}시간
+                                        </td>
                                     </tr>
 
                                     {/* ✅ 연장, 휴일 */}
@@ -680,13 +749,12 @@ export default function WorkDashboard() {
                                     {/* ✅ 총 근무 */}
                                     <tr>
                                         <td className="font-semibold">총 근무</td>
-                                        {/* 기준근무 총합 */}
                                         <td>{(workSummary.monthly.workDays ?? 0) * 8}시간</td>
-                                        <td>{workSummary.monthly.plannedHours ?? 0}시간</td>
+                                        <td>{Math.round(workPlan.monthly?.totalPlannedHours ?? 0)}시간</td>
                                         <td>{workSummary.monthly.totalHours ?? 0}시간</td>
                                         <td>{workSummary.monthly.leaveHours ?? 0}시간</td>
                                         <td>
-                                            {((workSummary.monthly.leaveHours ?? 0) + (workSummary.monthly.overtimeHours ?? 0)).toFixed(1)}시간
+                                            {(workSummary.monthly.leaveHours ?? 0) + (workSummary.monthly.overtimeHours ?? 0)}시간
                                         </td>
                                     </tr>
                                     </tbody>

@@ -19,24 +19,27 @@ public class WorkSummaryScheduler {
 
     // 매일 오전 2시 30분 실행 (운영용)
     // cron = "초 분 시 일 월 요일"
-    // @Scheduled(cron = "0 30 2 * * *", zone = "Asia/Seoul")
-
-    // 테스트용: 60분마다 실행
-    @Scheduled(fixedRate = 60 * 60 * 1000)
+    @Scheduled(cron = "0 30 2 * * *", zone = "Asia/Seoul")
     public void generateDailySummary() {
-        // 전일 기준 Date 계산
+        // 날짜 계산 (00시 고정)
         Calendar cal = Calendar.getInstance();
+        cal.set(Calendar.HOUR_OF_DAY, 0);
+        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.SECOND, 0);
+        cal.set(Calendar.MILLISECOND, 0);
+
         cal.add(Calendar.DAY_OF_MONTH, -1);
         Date targetDate = new Date(cal.getTimeInMillis());
 
-        // 로그용 포맷
         String yyyyMMdd = new SimpleDateFormat("yyyy-MM-dd").format(targetDate);
 
-        log.info("[WorkSummaryScheduler] {} 기준 근무요약 데이터 생성 시작", yyyyMMdd);
-
-        // 서비스 호출 (서비스도 Date 시그니처)
-        workSummaryDailyService.aggregateDailyWorkSummary(targetDate);
-
-        log.info("[WorkSummaryScheduler] {} 근무요약 데이터 생성 완료", yyyyMMdd);
+        // 어제 근무기록 요약
+        try {
+            log.info("[WorkSummaryScheduler] {} 기준 근무요약 데이터 생성 시작", yyyyMMdd);
+            workSummaryDailyService.aggregateDailyWorkSummary(targetDate);
+            log.info("[WorkSummaryScheduler] {} 근무요약 데이터 생성 완료 ✅", yyyyMMdd);
+        } catch (Exception e) {
+            log.error("[WorkSummaryScheduler] {} 처리 중 예외 발생 ❌: {}", yyyyMMdd, e.getMessage(), e);
+        }
     }
 }

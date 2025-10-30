@@ -51,11 +51,8 @@ public class ApprovalDAO {
         mybatis.delete("Approval.delete", approvalId);
     }
 
-    // 특정 직원 승인된 문서 가져오기 (문서 종류별)
-    public List<ApprovalDTO> getApprovedDocs(String employeeId, String docTypeCode) {
-        Map<String, Object> params = new HashMap<>();
-        params.put("employeeId", employeeId);
-        params.put("docTypeCode", docTypeCode);
-        return mybatis.selectList("Approval.getApprovedDocs", params);
+    // 특정 직원의 승인 완료된 문서를 유형별로 조회 (VAC, OWR, HWR 등)
+    public List<ApprovalDTO> getApprovedDocsByEmployeeAndType(Map<String, Object> params) {
+        return mybatis.selectList("Approval.getApprovedDocsByEmployeeAndType", params);
     }
 }

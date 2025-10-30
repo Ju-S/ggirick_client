@@ -797,7 +797,7 @@ const apiRoutes = {
          * GET /worktimelog
          * response: List<WorkTimeLogDTO>
          */
-        getWorkTimeLogsByEmployeeIdAPI: {url:`/worktimelog`, method: "GET"},
+        getWorkTimeLogsByEmployeeIdAPI: {url: `/worktimelog`, method: "GET"},
 
         /**
          * 기간별 근무기록 리스트 조회 API
@@ -814,18 +814,18 @@ const apiRoutes = {
          * GET /worktimelog?type=${type}
          * response: WorkTimeLogDTO
          */
-        listByType: (type) => ({
+        getlistByType: (type) => ({
             url: `/worktimelog?type=${type}`,
             method: "GET",
         }),
 
         /**
          * 기간 + 근무유형 조건으로 근무기록 리스트 조회 API
-         * GET /worktimelog?startDate=${startDate}&endDate=${endDate}&type=${type}
+         * GET /worktimelog/typeAndPeriod?startDate=${startDate}&endDate=${endDate}&type=${type}
          * response: WorkTimeLogDTO
          */
-        listByTypeAndPeriod: (startDate, endDate, type) => ({
-            url: `/worktimelog?startDate=${startDate}&endDate=${endDate}&type=${type}`,
+        getlistByTypeAndPeriod: (startDate, endDate, type) => ({
+            url: `/worktimelog/typeAndPeriod?startDate=${startDate}&endDate=${endDate}&type=${type}`,
             method: "GET",
         }),
 
@@ -848,14 +848,14 @@ const apiRoutes = {
          *
          * Response: WorkSummaryDTO
          */
-        getWorkSummary: { url: `/worksummarydaily/summary`, method: "GET" },
+        getWorkSummary: {url: `/worksummarydaily/summary`, method: "GET"},
 
         /**
          * 근무현황 기록 유형 목록 조회 API<br>
          * GET /workmanagement/worktimetype<br>
          * response: WorkTimeTypeDTO
          */
-        getAllWorkTimeTypes: {url:`/workmanagement/worktimetype`, method: "GET"},
+        getAllWorkTimeTypes: {url: `/workmanagement/worktimetype`, method: "GET"},
 
 
         /**
@@ -863,16 +863,28 @@ const apiRoutes = {
          * GET /workmanagement/vacation/remaining<br>
          * response: Integer
          */
-        getRemainingVacation: {url:`/workmanagement/vacation/remaining`, method: "GET"},
+        getRemainingVacation: {url: `/workmanagement/vacation/remaining`, method: "GET"},
 
         /**
          * 기간별 근무 계획 조회 API<br>
          * GET /workmanagement/plan/list<br>
          * response: WorkPlanDTO
          */
-        getWorkPlanByPeriod: {url:`/workmanagement/plan/list`, method: "GET"},
+        getWorkPlanByPeriod: {url: `/workmanagement/plan/list`, method: "GET"},
     },
 
+    // 법정 공휴일, 회사기념일 등 쉬는 날
+    holiday: {
+        /**
+         * 기간별 공휴일 + 회사 기념일 리스트 조회 API
+         * GET /holiday/list?startDate=${startDate}&endDate=${endDate}
+         * response: HolidayCalendarDTO
+         */
+        getHolidaysByPeriod: (startDate, endDate) => ({
+            url: `/holiday/list?startDate=${startDate}&endDate=${endDate}`,
+            method: "GET",
+        })
+    },
 
 };
 

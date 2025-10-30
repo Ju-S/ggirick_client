@@ -5,23 +5,25 @@
 
 <mapper namespace="WorkSummaryDaily">
 
-    <!-- 전일 근무기록 집계 후 MERGE -->
+    <!-- 근무기록 요약 테이블 MERGE -->
     <update id="merge" parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDailyDTO">
         MERGE INTO WORK_SUMMARY_DAILY s
         USING (
-        SELECT #{employeeId} AS EMPLOYEE_ID,
-        TRUNC(#{workDate}) AS WORK_DATE   <!-- 파라미터도 날짜만 -->
+        SELECT
+        #{employeeId} AS EMPLOYEE_ID,
+        #{workDate, jdbcType=DATE} AS WORK_DATE
         FROM dual
         ) t
         ON (
         s.EMPLOYEE_ID = t.EMPLOYEE_ID
-        AND TRUNC(s.WORK_DATE) = t.WORK_DATE     <!-- 좌측도 TRUNC 비교 -->
+        AND TRUNC(s.WORK_DATE) = TRUNC(t.WORK_DATE)   <!-- ✅ 둘 다 TRUNC -->
         )
         WHEN MATCHED THEN
         UPDATE SET
         s.START_TIME      = #{startTime, jdbcType=TIMESTAMP},
         s.END_TIME        = #{endTime, jdbcType=TIMESTAMP},
         s.TOTAL_HOURS     = #{totalHours, jdbcType=NUMERIC},
+        s.WORK_HOURS      = #{totalHours, jdbcType=NUMERIC},
         s.OVERTIME_HOURS  = #{overtimeHours, jdbcType=NUMERIC},
         s.NIGHT_HOURS     = #{nightHours, jdbcType=NUMERIC},
         s.LEAVE_HOURS     = #{leaveHours, jdbcType=NUMERIC},
@@ -29,13 +31,15 @@
         WHEN NOT MATCHED THEN
         INSERT (
         EMPLOYEE_ID, WORK_DATE, START_TIME, END_TIME,
-        TOTAL_HOURS, OVERTIME_HOURS, NIGHT_HOURS, LEAVE_HOURS, STATUS
+        TOTAL_HOURS, WORK_HOURS, OVERTIME_HOURS,
+        NIGHT_HOURS, LEAVE_HOURS, STATUS
         )
         VALUES (
         #{employeeId},
-        TRUNC(#{workDate}),                     <!-- 저장도 날짜만 -->
+        TRUNC(#{workDate, jdbcType=DATE}),   <!-- ✅ 저장 시에도 TRUNC -->
         #{startTime, jdbcType=TIMESTAMP},
         #{endTime, jdbcType=TIMESTAMP},
+        #{totalHours, jdbcType=NUMERIC},
         #{totalHours, jdbcType=NUMERIC},
         #{overtimeHours, jdbcType=NUMERIC},
         #{nightHours, jdbcType=NUMERIC},

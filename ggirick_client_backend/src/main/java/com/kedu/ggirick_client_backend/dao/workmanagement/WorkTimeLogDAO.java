@@ -59,4 +59,8 @@ public class WorkTimeLogDAO {
         return mybatis.selectList("WorkTimeLog.getAllLogsByDate", targetDate);
     }
 
+    // 로그인한 id의 기간 + 근무유형 조건으로 근무기록 조회
+    public List<WorkTimeLogDTO> getLogsByTypeAndPeriod(Map<String, Object> params) {
+        return mybatis.selectList("WorkTimeLog.getLogsByTypeAndPeriod", params);
+    }
 }

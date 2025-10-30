@@ -297,7 +297,7 @@
     </delete>
 
     <!-- 승인 완료된 문서만 필터 -->
-    <select id="getApprovedDocs" parameterType="map"
+    <select id="getApprovedDocsByEmployeeAndType" parameterType="map"
             resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO">
         SELECT *
         FROM approval

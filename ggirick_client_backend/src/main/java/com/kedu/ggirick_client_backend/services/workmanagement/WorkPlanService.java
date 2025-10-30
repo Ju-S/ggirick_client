@@ -3,6 +3,7 @@ package com.kedu.ggirick_client_backend.services.workmanagement;
 import com.kedu.ggirick_client_backend.dao.workmanagement.WorkPlanDAO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.EmployeeWorkPolicyDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkPlanDTO;
+import com.kedu.ggirick_client_backend.services.common.HolidayCalendarService;
 import com.kedu.ggirick_client_backend.services.hr.EmploymentStatusService;
 import com.kedu.ggirick_client_backend.utils.workmanagement.HalfYearUtil;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Date;
 import java.sql.Timestamp;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +26,7 @@ public class WorkPlanService {
     private final WorkPlanDAO workPlanDAO;
     private final EmploymentStatusService employeeService;
     private final EmployeeWorkPolicyService employeeWorkPolicyService;
+    private final HolidayCalendarService holidayCalendarService;
 
     // 입사 시 자동 근무계획 생성
     @Transactional
@@ -30,32 +34,38 @@ public class WorkPlanService {
         // 입사일 조회
         Timestamp hireDate = employeeService.getHireDateByEmployeeId(employeeId).getRegDate();
 
-        // Timestamp -> Date 타입 변환 ( 시간 버리기 )
+        // Timestamp -> Date 타입 변환 (시간 제거)
         Date start = new Date(hireDate.getTime());
         Date end = HalfYearUtil.getHalfEnd(start);
 
-        // Date -> LocalDate 변환 ( 날짜 계산 편의 )
         LocalDate s = start.toLocalDate();
         LocalDate e = end.toLocalDate();
 
-        // 시작일 ~ 종료일까지 하루씩 증가하면서
         for (LocalDate day = s; !day.isAfter(e); day = day.plusDays(1)) {
-            if (day.getDayOfWeek().getValue() >= 6) continue; // 주말 제외
+            // 주말 또는 공휴일은 제외
+            if (day.getDayOfWeek().getValue() >= 6) continue;
+            if (holidayCalendarService.isHoliday(Date.valueOf(day))) continue;
 
+            // 기준 날짜
             Date planDate = Date.valueOf(day);
 
-            if (!workPlanDAO.exists(employeeId, planDate)) { // 해당 직원의 계획이 없다면
-                // 해당 직원의 근무 정책 상세 조회
-                EmployeeWorkPolicyDTO ewpDTO = employeeWorkPolicyService.getEmployeeWorkPolicyDetails(employeeId);
+            // 근무정책 시간 (LocalTime)
+            EmployeeWorkPolicyDTO ewpDTO = employeeWorkPolicyService.getEmployeeWorkPolicyDetails(employeeId);
+            LocalTime startTime = ewpDTO.getWorkStartTime();
+            LocalTime endTime = ewpDTO.getWorkEndTime();
 
-                // 계획 입력
+            // 날짜 + 시간 결합 → LocalDateTime
+            LocalDateTime startDateTime = day.atTime(startTime);
+            LocalDateTime endDateTime = day.atTime(endTime);
+
+            if (!workPlanDAO.exists(employeeId, planDate)) {
                 WorkPlanDTO dto = new WorkPlanDTO();
                 dto.setEmployeeId(employeeId);
                 dto.setPlanDate(planDate);
-                dto.setStartDateTime(ewpDTO.getWorkStartTime());
-                dto.setEndDateTime(ewpDTO.getWorkEndTime());
+                dto.setStartDateTime(startDateTime);
+                dto.setEndDateTime(endDateTime);
                 dto.setType(ewpDTO.getPolicyName());
-                dto.setStatus("POLICY"); // 기본 세팅 POLICY - 정책 기반 계획 등록이므로
+                dto.setStatus("POLICY");
                 workPlanDAO.insertPlan(dto);
             }
         }
@@ -64,28 +74,37 @@ public class WorkPlanService {
     // 상/하반기 자동 생성
     @Transactional
     public void generateHalfYearPlans(EmployeeWorkPolicyDTO dto, Date startDate, Date endDate) {
-
         LocalDate s = startDate.toLocalDate();
         LocalDate e = endDate.toLocalDate();
 
         for (LocalDate day = s; !day.isAfter(e); day = day.plusDays(1)) {
-            if (day.getDayOfWeek().getValue() >= 6) continue; // 주말 제외
+            // 주말 또는 공휴일은 제외
+            if (day.getDayOfWeek().getValue() >= 6) continue;
+            if (holidayCalendarService.isHoliday(Date.valueOf(day))) continue;
 
+            // 기준 날짜
             Date planDate = Date.valueOf(day);
 
-            if (!workPlanDAO.exists(dto.getEmployeeId(), planDate)) {
-                // 해당 직원의 근무 정책 상세 조회
-                EmployeeWorkPolicyDTO ewpDTO = employeeWorkPolicyService.getEmployeeWorkPolicyDetails(dto.getEmployeeId());
+            // employeeId
+            String employeeId = dto.getEmployeeId();
 
-                // 계획 입력
-                WorkPlanDTO workplanDTO = new WorkPlanDTO();
-                workplanDTO.setEmployeeId(dto.getEmployeeId());
-                workplanDTO.setPlanDate(planDate);
-                workplanDTO.setStartDateTime(ewpDTO.getWorkStartTime());
-                workplanDTO.setEndDateTime(ewpDTO.getWorkEndTime());
-                workplanDTO.setType(ewpDTO.getPolicyName());
-                workplanDTO.setStatus("POLICY");
-                workPlanDAO.insertPlan(workplanDTO);
+            // 근무정책 시간 (LocalTime)
+            LocalTime startTime = dto.getWorkStartTime();
+            LocalTime endTime = dto.getWorkEndTime();
+
+            // 날짜 + 시간 결합 → LocalDateTime
+            LocalDateTime startDateTime = day.atTime(startTime);
+            LocalDateTime endDateTime = day.atTime(endTime);
+
+            if (!workPlanDAO.exists(employeeId, planDate)) {
+                WorkPlanDTO workPlanDTO = new WorkPlanDTO();
+                workPlanDTO.setEmployeeId(employeeId);
+                workPlanDTO.setPlanDate(planDate);
+                workPlanDTO.setStartDateTime(startDateTime);
+                workPlanDTO.setEndDateTime(endDateTime);
+                workPlanDTO.setType(dto.getPolicyName());
+                workPlanDTO.setStatus("POLICY");
+                workPlanDAO.insertPlan(workPlanDTO);
             }
         }
     }

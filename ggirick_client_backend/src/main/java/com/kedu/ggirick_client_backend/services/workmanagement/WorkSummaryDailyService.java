@@ -2,12 +2,10 @@ package com.kedu.ggirick_client_backend.services.workmanagement;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.kedu.ggirick_client_backend.dao.approval.ApprovalDAO;
-import com.kedu.ggirick_client_backend.dao.workmanagement.EmployeeWorkPolicyDAO;
 import com.kedu.ggirick_client_backend.dao.workmanagement.WorkSummaryDailyDAO;
-import com.kedu.ggirick_client_backend.dao.workmanagement.WorkTimeLogDAO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.*;
+import com.kedu.ggirick_client_backend.services.approval.ApprovalService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -29,9 +27,10 @@ import java.util.stream.Collectors;
 public class WorkSummaryDailyService {
 
     private final WorkSummaryDailyDAO workSummaryDailyDAO;
-    private final WorkTimeLogDAO workTimeLogDAO;
-    private final EmployeeWorkPolicyDAO employeeWorkPolicyDAO;
-    private final ApprovalDAO approvalDAO;
+
+    private final WorkTimeLogService workTimeLogService;
+    private final EmployeeWorkPolicyService employeeWorkPolicyService;
+    private final ApprovalService approvalService;
     private final WorkPlanService workPlanService;
 
     private final Gson gson = new Gson();
@@ -40,15 +39,15 @@ public class WorkSummaryDailyService {
     public void aggregateDailyWorkSummary(Date targetDate) {
         log.info("[WorkSummaryDailyService] {} 근무기록 요약 시작 🚀", targetDate);
 
-        // 1️⃣ 근무정책 전체 조회 (Map 형태로 캐싱)
+        // 1️⃣ 근무정책 전체 조회
         Map<String, EmployeeWorkPolicyDTO> policyMap =
-                employeeWorkPolicyDAO.getAllWithPolicyDetails().stream()
+                employeeWorkPolicyService.getAllWithPolicyDetails().stream()
                         .collect(Collectors.toMap(EmployeeWorkPolicyDTO::getEmployeeId, p -> p));
 
-        // 2️⃣ 전 직원 근무기록 한 번에 조회
-        List<WorkTimeLogDTO> allLogs = workTimeLogDAO.getAllLogsByDate(targetDate);
+        // 2️⃣ 전 직원 근무기록 조회
+        List<WorkTimeLogDTO> allLogs = workTimeLogService.getAllLogsByDate(targetDate);
 
-        // 3️⃣ 직원별로 로그 그룹핑
+        // 3️⃣ 직원별 로그 그룹핑
         Map<String, List<WorkTimeLogDTO>> logsByEmployee =
                 allLogs.stream().collect(Collectors.groupingBy(WorkTimeLogDTO::getEmployeeId));
 
@@ -57,8 +56,8 @@ public class WorkSummaryDailyService {
             EmployeeWorkPolicyDTO policy = policyMap.get(empId);
             List<WorkTimeLogDTO> logs = logsByEmployee.getOrDefault(empId, new ArrayList<>());
 
-            LocalDateTime startTime = policy.getWorkStartTime();
-            LocalDateTime endTime = policy.getWorkEndTime();
+            LocalTime startTime = policy.getWorkStartTime();
+            LocalTime endTime = policy.getWorkEndTime();
 
             Timestamp start = null;
             Timestamp end = null;
@@ -76,15 +75,17 @@ public class WorkSummaryDailyService {
             if (logs.isEmpty()) {
                 if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) continue;
 
-                List<ApprovalDTO> vacationDocs = approvalDAO.getApprovedDocs(empId, "VAC");
+                // ✅ ApprovalService 호출
+                List<ApprovalDTO> vacationDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "VAC");
                 boolean approvedVacation = false;
 
                 for (ApprovalDTO doc : vacationDocs) {
                     try {
-                        // ✅ Gson으로 docDataJson → Map 변환
                         Type type = new TypeToken<Map<String, Object>>() {
                         }.getType();
                         Map<String, Object> data = gson.fromJson(doc.getDocDataJson(), type);
+
+                        if (data == null) continue; // ✅ NPE 방지
 
                         LocalDate startDate = LocalDate.parse((String) data.get("startDate"));
                         LocalDate endDateJson = LocalDate.parse((String) data.get("endDate"));
@@ -119,32 +120,37 @@ public class WorkSummaryDailyService {
                         .max(Timestamp::compareTo)
                         .orElse(null);
 
-                if (start == null) {
+                if (start == null && end == null) {
                     status = "ABSENT";
                 } else if (end == null) {
                     status = "MISSING_OUT";
                     totalHours = 8.0;
                 } else {
+                    LocalTime startLocal = start.toLocalDateTime().toLocalTime();
+                    LocalTime endLocal = end.toLocalDateTime().toLocalTime();
+
                     long diffMillis = end.getTime() - start.getTime();
                     totalHours = diffMillis / (1000.0 * 60 * 60);
 
-                    if (start.toLocalDateTime().isAfter(startTime.plusMinutes(10))) {
+                    // 🔹 지각
+                    if (startLocal.isAfter(startTime.plusMinutes(10))) {
                         status = "LATE";
                     }
 
-                    if (end.toLocalDateTime().isBefore(endTime.minusHours(1))) {
+                    // 🔹 조퇴
+                    if (endLocal.isBefore(endTime.minusHours(1))) {
                         status = ("LATE".equals(status)) ? "LATE_EARLY_LEAVE" : "EARLY_LEAVE";
                     }
 
-                    // ✅ 연장/야간 결재문서 확인
-                    if (end.toLocalDateTime().isAfter(endTime.plusHours(1))) {
-                        // 🔹 연장근무
-                        List<ApprovalDTO> overtimeDocs = approvalDAO.getApprovedDocs(empId, "OWR");
+                    // 🔹 연장근무
+                    if (endLocal.isAfter(endTime.plusHours(1))) {
+                        List<ApprovalDTO> overtimeDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "OWR");
                         for (ApprovalDTO doc : overtimeDocs) {
                             try {
                                 Type type = new TypeToken<Map<String, Object>>() {
                                 }.getType();
                                 Map<String, Object> data = gson.fromJson(doc.getDocDataJson(), type);
+                                if (data == null) continue;
 
                                 LocalDate startDate = LocalDate.parse((String) data.get("startDate"));
                                 LocalDate endDateJson = LocalDate.parse((String) data.get("endDate"));
@@ -168,39 +174,40 @@ public class WorkSummaryDailyService {
                             }
                         }
 
-                        // 🔹 야간근무 (22시 이후)
-                        if (end.toLocalDateTime().toLocalTime().isAfter(LocalTime.of(22, 0))) {
-                            List<ApprovalDTO> nightDocs = approvalDAO.getApprovedDocs(empId, "HWR");
-                            for (ApprovalDTO doc : nightDocs) {
-                                try {
-                                    Type type = new TypeToken<Map<String, Object>>() {
-                                    }.getType();
-                                    Map<String, Object> data = gson.fromJson(doc.getDocDataJson(), type);
+                        // 🔹 야간근무 (전자결재 승인된 문서 기준)
+                        List<ApprovalDTO> nightDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "HWR");
+                        for (ApprovalDTO doc : nightDocs) {
+                            try {
+                                Type type = new TypeToken<Map<String, Object>>() {
+                                }.getType();
+                                Map<String, Object> data = gson.fromJson(doc.getDocDataJson(), type);
+                                if (data == null) continue;
 
-                                    LocalDate startDate = LocalDate.parse((String) data.get("startDate"));
-                                    LocalDate endDateJson = LocalDate.parse((String) data.get("endDate"));
+                                LocalDate startDate = LocalDate.parse((String) data.get("startDate"));
+                                LocalDate endDateJson = LocalDate.parse((String) data.get("endDate"));
 
-                                    if (!targetDate.toLocalDate().isBefore(startDate)
-                                            && !targetDate.toLocalDate().isAfter(endDateJson)) {
+                                if (!targetDate.toLocalDate().isBefore(startDate)
+                                        && !targetDate.toLocalDate().isAfter(endDateJson)) {
 
-                                        String startTimeStr = (String) data.get("startTime");
-                                        String endTimeStr = (String) data.get("endTime");
+                                    String startTimeStr = (String) data.get("startTime");
+                                    String endTimeStr = (String) data.get("endTime");
 
-                                        double startHour = Double.parseDouble(startTimeStr.split(":")[0])
-                                                + Double.parseDouble(startTimeStr.split(":")[1]) / 60.0;
-                                        double endHour = Double.parseDouble(endTimeStr.split(":")[0])
-                                                + Double.parseDouble(endTimeStr.split(":")[1]) / 60.0;
+                                    double startHour = Double.parseDouble(startTimeStr.split(":")[0])
+                                            + Double.parseDouble(startTimeStr.split(":")[1]) / 60.0;
+                                    double endHour = Double.parseDouble(endTimeStr.split(":")[0])
+                                            + Double.parseDouble(endTimeStr.split(":")[1]) / 60.0;
 
-                                        nightHours = endHour - startHour;
-                                        break;
-                                    }
-                                } catch (Exception e) {
-                                    log.warn("[WorkSummaryDailyService] HWR JSON 파싱 실패: {}", e.getMessage());
+                                    nightHours = endHour - startHour;
+                                    status = "NIGHT_WORK";
+                                    break;
                                 }
+                            } catch (Exception e) {
+                                log.warn("[WorkSummaryDailyService] HWR JSON 파싱 실패: {}", e.getMessage());
                             }
                         }
                     }
 
+                    // 🔹 주말 근무
                     if (dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY) {
                         status = "HOLIDAY_WORK";
                     }
@@ -225,38 +232,31 @@ public class WorkSummaryDailyService {
         log.info("[WorkSummaryDailyService] {} 근무요약 완료 ✅", targetDate);
     }
 
-
     // 통계용
     public WorkSummaryDTO getWorkSummary(String employeeId, LocalDate startDate, LocalDate endDate) {
         Map<String, Object> params = new HashMap<>();
         params.put("employeeId", employeeId);
-        params.put("startDate", Date.valueOf(startDate)); // java.sql.Date
-        params.put("endDate", Date.valueOf(endDate.plusDays(1))); // 주의: +1로 endDate 포함
+        params.put("startDate", Date.valueOf(startDate));
+        params.put("endDate", Date.valueOf(endDate)); // endDate 포함
 
-        // 근무기록 조회
         WorkSummaryDTO summary = workSummaryDailyDAO.getWorkSummary(params);
 
-        // ✅ 근무계획 조회
+        // 근무계획 조회
         List<WorkPlanDTO> plans = workPlanService.getPlansByPeriod(employeeId, startDate, endDate);
 
         int totalPlannedHours = 0;
-
         for (WorkPlanDTO plan : plans) {
             LocalDateTime start = plan.getStartDateTime();
             LocalDateTime end = plan.getEndDateTime();
 
             if (start != null && end != null) {
-                // 🔹 Duration으로 근무시간 계산 (점심 1시간 차감)
                 int diffHours = (int) Duration.between(start, end).toHours() - 1;
-                if (diffHours < 0) diffHours = 0; // 음수 방지
-
-                // 🔹 누적
+                if (diffHours < 0) diffHours = 0;
                 totalPlannedHours += diffHours;
             }
         }
-        // ✅ 누적합계 세팅
-        summary.setTotalPlannedHours(totalPlannedHours);
 
+        summary.setTotalPlannedHours(totalPlannedHours);
         return summary;
     }
 }

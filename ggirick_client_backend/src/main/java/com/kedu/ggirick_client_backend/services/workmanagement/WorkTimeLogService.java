@@ -62,4 +62,25 @@ public class WorkTimeLogService {
     public List<WorkTimeLogDTO> getWorkTimeLogsByCondition(WorkSearchConditionDTO condition) {
         return workTimeLogDAO.getWorkTimeLogsByCondition(condition);
     }
+
+    // 특정 날짜의 모든 직원 근무기록 조회 - 매일 실행될 근무요약 스케쥴러용
+    public List<WorkTimeLogDTO> getAllLogsByDate(Date targetDate) {
+        return  workTimeLogDAO.getAllLogsByDate(targetDate);
+    }
+
+    // 로그인한 id의 기간 + 근무유형 조건으로 근무기록 조회
+    public List<WorkTimeLogDTO> getLogsByTypeAndPeriod(
+            String employeeId,
+            LocalDate startDate,
+            LocalDate endDate,
+            String type
+    ) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("employeeId", employeeId);
+        params.put("startDate", Date.valueOf(startDate));
+        params.put("endDate", Date.valueOf(endDate));
+        params.put("type", type);
+
+        return workTimeLogDAO.getLogsByTypeAndPeriod(params);
+    }
 }

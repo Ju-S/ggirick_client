@@ -1,4 +1,5 @@
 import axios from "axios";
+import {BASE_URL} from "@/api/common/ipaddress.js";
 
 const api = axios.create();
 

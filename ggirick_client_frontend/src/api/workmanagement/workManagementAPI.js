@@ -11,6 +11,9 @@ export const getWorkTimeLogsByEmployeeIdAPI = () => api(apiRoutes.workmanagement
 // 근무현황 기록 유형 목록 조회
 export const getAllWorkTimeTypesAPI = () => api(apiRoutes.workmanagement.getAllWorkTimeTypes);
 
+// 근무기록 기간 + 유형으로 조회
+export const getlistByTypeAndPeriodAPI = (startDate, endDate, type) => api(apiRoutes.workmanagement.getlistByTypeAndPeriod(startDate, endDate, type));
+
 // 근무현황 통계용 조회
 export const getWorkSummaryAPI = (startDate, endDate) =>
     api({

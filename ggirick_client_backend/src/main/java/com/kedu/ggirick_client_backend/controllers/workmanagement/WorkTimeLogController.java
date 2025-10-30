@@ -70,6 +70,19 @@ public class WorkTimeLogController {
         return ResponseEntity.ok(workTimeLogService.getWorkTimeLogsByCondition(condition));
     }
 
+    // 로그인한 id의 기간 + 근무유형 조건으로 근무기록 조회
+    @GetMapping("/typeAndPeriod")
+    public ResponseEntity<List<WorkTimeLogDTO>> getLogsByTypeAndPeriod(
+            @AuthenticationPrincipal UserTokenDTO userInfo,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(required = false) String type
+    ) {
+        List<WorkTimeLogDTO> logs =
+                workTimeLogService.getLogsByTypeAndPeriod(userInfo.getId(), startDate, endDate, type);
+        return ResponseEntity.ok(logs);
+    }
+
     @ExceptionHandler
     public ResponseEntity<Void> error(Exception e) {
         e.printStackTrace();

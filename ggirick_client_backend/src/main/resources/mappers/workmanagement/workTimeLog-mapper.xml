@@ -90,7 +90,27 @@
         type,
         recorded_at
         FROM work_time_log
-        WHERE TRUNC(recorded_at) = #{targetDate}
+        WHERE recorded_at BETWEEN TRUNC(#{targetDate})
+        AND TRUNC(#{targetDate}) + INTERVAL '1' DAY
         ORDER BY employee_id, recorded_at
     </select>
+
+    <!-- id + 기간 + 근무유형 조건으로 근무기록 조회 -->
+    <select id="getLogsByTypeAndPeriod"
+            parameterType="map"
+            resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkTimeLogDTO">
+        SELECT
+        id,
+        employee_id,
+        type,
+        recorded_at
+        FROM work_time_log
+        WHERE employee_id = #{employeeId}
+        AND recorded_at BETWEEN #{startDate} AND #{endDate}
+        <if test="type != null and type != ''">
+            AND type = #{type}
+        </if>
+        ORDER BY recorded_at ASC
+    </select>
+
 </mapper>
