@@ -2,12 +2,13 @@ package com.kedu.ggirick_client_backend.controllers.employee;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.employee.EmployeeDTO;
-import com.kedu.ggirick_client_backend.services.employee.EmployeeService;
+import com.kedu.ggirick_client_backend.services.hr.EmployeeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -20,11 +21,41 @@ public class EmployeeController {
 
     // 직원 수정
     @PutMapping
-    public ResponseEntity<EmployeeDTO> updateEmployee(@RequestBody EmployeeDTO dto) {
-        EmployeeDTO updated = employeeService.updateEmployee(dto);
+    public ResponseEntity<EmployeeDTO> updateEmployee(@AuthenticationPrincipal UserTokenDTO userInfo,
+                                                      @RequestPart("employeeInfo") EmployeeDTO dto,
+                                                      @RequestPart(value = "profileImg", required = false) MultipartFile profileImg) throws Exception {
+        // 직원 정보 수정 하면서 프로필 이미지 업로드 및 URL 넣어주기.
+        EmployeeDTO updated = null;
+        if (dto.getId().equals(userInfo.getId())) {
+            updated = employeeService.updateEmployee(dto, profileImg);
+        }
         return (updated != null)
                 ? ResponseEntity.ok(updated)
                 : ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+    }
+
+    @GetMapping("/duplcheck")
+    public ResponseEntity<String> checkEmailDuplication(@RequestParam String email,
+                                                        @RequestParam String phone,
+                                                        @AuthenticationPrincipal UserTokenDTO userInfo) {
+        List<EmployeeDTO> employeeList = employeeService.getAllEmployeeList().stream()
+                .filter(emp -> !emp.getId().equals(userInfo.getId())) // userInfo.getId와 다른 것만
+                .toList();
+
+        String errorMsg = null;
+        if (employeeList.stream().anyMatch(emp -> emp.getEmail() != null && emp.getEmail().equalsIgnoreCase(email))) {
+            errorMsg = "존재하는 이메일입니다.";
+        }
+        if (employeeList.stream().anyMatch(emp -> emp.getPhone() != null && emp.getPhone().equals(phone))) {
+            String msg = "존재하는 전화번호입니다.";
+            errorMsg = errorMsg == null ? msg : errorMsg + msg;
+        }
+
+        if (errorMsg != null) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(errorMsg);
+        } else {
+            return ResponseEntity.ok().build();
+        }
     }
 
     // 로그인한 사용자 정보 조회
@@ -58,9 +89,13 @@ public class EmployeeController {
 
     // 비밀번호 변경
     @PutMapping("/password/{id}")
-    public ResponseEntity<Void> updatePassword(@PathVariable String id, @RequestBody EmployeeDTO dto) {
-        dto.setId(id);
-        boolean success = employeeService.updatePassword(dto);
+    public ResponseEntity<Void> updatePassword(@PathVariable String id, @RequestBody EmployeeDTO dto,
+                                               @AuthenticationPrincipal UserTokenDTO userInfo) {
+        boolean success = false;
+        if (userInfo.getId().equals(id) || userInfo.getAuthority() > 10) {
+            dto.setId(id);
+            success = employeeService.updatePassword(dto);
+        }
         return success ? ResponseEntity.ok().build()
                 : ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }

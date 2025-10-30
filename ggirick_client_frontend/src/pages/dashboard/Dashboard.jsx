@@ -5,6 +5,7 @@ import './Dashboard.css';
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  //
 
   return (
     <main className="h-auto min-h-screen p-4 pt-20 md:ml-64 bg-base-200">
@@ -30,9 +31,9 @@ export default function Dashboard() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className="lucide lucide-mail-icon lucide-mail h-6 w-6 text-info-content"
                   >
                     <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7" />
@@ -64,9 +65,9 @@ export default function Dashboard() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className="lucide lucide-calendar-icon lucide-calendar h-6 w-6 text-success-content"
                   >
                     <path d="M8 2v4" />
@@ -100,9 +101,9 @@ export default function Dashboard() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className="lucide lucide-signature-icon lucide-signature h-6 w-6 text-warning-content"
                   >
                     <path d="m21 17-2.156-1.868A.5.5 0 0 0 18 15.5v.5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1c0-2.545-3.991-3.97-8.5-4a1 1 0 0 0 0 5c4.153 0 4.745-11.295 5.708-13.5a2.5 2.5 0 1 1 3.31 3.284" />
@@ -134,9 +135,9 @@ export default function Dashboard() {
                     viewBox="0 0 24 24"
                     fill="none"
                     stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
                     className="lucide lucide-message-square-more-icon lucide-message-square-more h-6 w-6 text-error-content"
                   >
                     <path d="M22 17a2 2 0 0 1-2 2H6.828a2 2 0 0 0-1.414.586l-2.202 2.202A.71.71 0 0 1 2 21.286V5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2z" />
@@ -254,8 +255,8 @@ export default function Dashboard() {
           </Card>
         </div>
       </div>
-      <div className="mb-2 grid grid-cols-3 gap-4">
-        <div className="col-span-2 h-32 rounded-lg md:h-72">
+      <div className="mb-2 grid grid-cols-2 gap-4">
+        <div className="h-32 rounded-lg md:h-72">
           <Card className="h-full w-full rounded-lg shadow-sm border-none !bg-base-100">
             <div className="flex items-start justify-start">
               <div className="flex w-full flex-col gap-4">

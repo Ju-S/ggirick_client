@@ -24,6 +24,7 @@ export default function App() {
     // 전역 상태변수
     const {isLogin, login, logout} = useAuthStore(state => state); // 로그인용
     const setAllCommonData = useCommonStore(state => state.setAllCommonData); //  메타 데이터용
+    const {setEmployee} = useEmployeeStore();
 
     // 오류 모달 상태 설정
     const [errorModalOpen, setErrorModalOpen] = useState(false);
@@ -31,17 +32,29 @@ export default function App() {
 
     // 로그인 상태 먼저 초기화 (맨 처음 앱 실행 시)
     useEffect(() => {
-        const token = sessionStorage.getItem("token");
-        const authority = sessionStorage.getItem("authority");
+        const init = async () => {
+            const token = sessionStorage.getItem("token");
+            const authority = sessionStorage.getItem("authority");
 
-        if (token && authority) {
-            // 세션에 로그인 정보가 있으면 상태 복원
-            login({token, authority});
-        } else {
-            // 세션에 정보 없으면 로그아웃 상태로
-            logout();
-        }
-    }, [login, logout]);
+            if (!token || !authority) {
+                logout();
+                return;
+            }
+
+            try {
+                const resp = await getMyInfoAPI();
+                if (resp.status === 200) {
+                    setEmployee(resp.data);
+                    login({token, authority}); // 상태 복원
+                } else {
+                    logout();
+                }
+            } catch (err) {
+                logout();
+            }
+        };
+        init();
+    }, []);
 
     // 로그인 이후 공통 데이터 불러오고 스토어에 저장 (부서 / 직급 / 조직)
     useEffect(() => {
@@ -54,7 +67,7 @@ export default function App() {
                 // Zustand 스토어에 한꺼번에 저장
                 setAllCommonData(metaData);
             } catch (err) {
-                console.error("❌ HR 메타데이터 불러오기 실패:", err);
+                console.error("HR 메타데이터 불러오기 실패:", err);
                 // 🔹 모달로 에러 안내
                 setErrorMessage("서버에서 데이터를 불러오는 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.");
                 setErrorModalOpen(true);
@@ -63,7 +76,7 @@ export default function App() {
 
         // 로그인 상태가 true일 때만 실행
         if (isLogin === true) {
-           fetchHrMetaData();
+            fetchHrMetaData();
         }
     }, [isLogin, setAllCommonData]);
 
@@ -83,7 +96,7 @@ export default function App() {
                 <div className="flex flex-col h-screen">
 
                     {isLogin === "none" && (
-                        <div className="flex justify-center items-center min-h-screen text-gray-500">
+                        <div className="flex justify-center items-center min-h-screen text-base-content">
                             로그인 상태 확인 중...
                         </div>
                     )}

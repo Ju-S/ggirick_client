@@ -543,6 +543,15 @@ const apiRoutes = {
             url: `/employee/${empId}`,
             method: "GET",
         }),
+
+        /**
+         * 이메일용 아이디 중복확인 API<br>
+         * GET /employee/duplcheck?email={email}<br>
+         */
+        duplcheck: (email, phone) => ({
+            url: `/employee/duplcheck?email=${email}&phone=${phone}`,
+            method: "GET",
+        }),
     },
     hrMeta: {
         /**
@@ -599,7 +608,7 @@ const apiRoutes = {
         }),
 
         // 주소록 수정
-        updateAddress: (addressId, updatedData) => ({
+        updateAddress: (addressId) => ({
             method: "put",
             url: `/address/update-address/${addressId}`,
         }),
@@ -674,7 +683,7 @@ const apiRoutes = {
         /**
          * 채널 제목 정보 수정
          */
-        updateWorkspace: (workspaceId) =>( {
+        updateWorkspace: (workspaceId) => ({
             url: `/workspace/${workspaceId}`,
             method: "PATCH",
         }),
@@ -732,9 +741,9 @@ const apiRoutes = {
             method: "POST"
         }),
 
-        deleteFile: () =>( {
-            url:'chat/delete',
-            method:"DELETE"
+        deleteFile: () => ({
+            url: 'chat/delete',
+            method: "DELETE"
         })
 
     },
@@ -755,12 +764,12 @@ const apiRoutes = {
          * DELETE /file/delete?file= {sysName}<br>
          */
         delete: (sysName) => ({
-            url:  `/file/delete`,
+            url: `/file/delete`,
             method: "DELETE",
         }),
         download: (sysName) => ({
-            url:`/file/download?file=${sysName}`,
-            method:"GET"
+            url: `/file/download?file=${sysName}`,
+            method: "GET"
         })
     },
 };
