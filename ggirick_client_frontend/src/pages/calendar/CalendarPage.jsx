@@ -1,4 +1,4 @@
-import React, {useRef, useState} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import {Calendar, momentLocalizer, Views} from "react-big-calendar";
 import moment from "moment";
 import "moment/locale/ko"
@@ -10,20 +10,22 @@ import getContrastColor from "@/utils/calendar/getContrastColor.js";
 
 import './CalendarPage.css';
 import WeekendCalenderHeader from "@/components/calendar/WeekendCalenderHeader.jsx";
-import useEmployeeStore from "@/store/employeeStore.js";
 
 moment.locale("ko");
 const localizer = momentLocalizer(moment);
 
 export default function CalendarPage() {
     const {scheduleList, setSelectedSchedule, setNewEvent, modalOpen, setModalOpen} = useCalendarStore();
-    const {selectedEmployee} = useEmployeeStore();
     const [currentView, setCurrentView] = useState(Views.MONTH);
     const [currentDate, setCurrentDate] = useState(new Date());
 
     const calendarRef = useRef(null);
 
     const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
+
+    useEffect(() => {
+        setModalOpen(false);
+    }, [location.pathname, location.search]);
 
     // 화면 범위 이벤트 계산
     const getVisibleEvents = () => {
@@ -81,10 +83,10 @@ export default function CalendarPage() {
         return visibleEvents;
     };
 
-    const EventComponent = ({ event }) => (
+    const EventComponent = ({event}) => (
         <div>
             <div>{event.title}</div>
-            <div style={{ fontSize: "0.7em" }}>{event.name}</div>
+            <div style={{fontSize: "0.7em"}}>{event.name}</div>
         </div>
     );
 

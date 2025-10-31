@@ -1,7 +1,6 @@
 package com.kedu.ggirick_client_backend.dao.board;
 
 import com.kedu.ggirick_client_backend.dto.board.BoardGroupDTO;
-import com.kedu.ggirick_client_backend.dto.employee.EmployeeDTO;
 import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;

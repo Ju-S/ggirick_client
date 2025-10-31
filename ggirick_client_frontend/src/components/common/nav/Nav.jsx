@@ -3,8 +3,8 @@ import {useNavigate} from "react-router-dom";
 
 import React, {useEffect, useState} from "react";
 import ThemeDropdown from "@/components/common/ThemeDropdown.jsx";
-import useAuthStore from "@/store/authStore.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useAuthStore from "@/store/auth/authStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {emailDuplCheck, updateEmployeeAPI} from "@/api/mypage/employeeAPI.js";
 
 export default function Nav() {
@@ -32,6 +32,10 @@ export default function Nav() {
         });
         setPreviewUrl(selectedEmployee?.profileUrl || "");
     }, [isModalOpen, isEditMode]);
+
+    useEffect(() => {
+        setPreviewUrl(selectedEmployee?.profileUrl || "");
+    }, [selectedEmployee]);
 
     const handleChange = (e) => {
         const {name, value} = e.target;
@@ -160,7 +164,7 @@ export default function Nav() {
                             <div className="space-y-2">
                                 {/* 프로필 이미지 */}
                                 <div className="flex items-center gap-4">
-                                    <img src={previewUrl} alt="profile preview" className="w-16 h-16 rounded-full"/>
+                                    <img src={previewUrl} alt="profile preview" className="w-16 h-16 rounded-full object-cover"/>
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -205,7 +209,7 @@ export default function Nav() {
                         ) : (
                             <div className="space-y-2">
                                 <div className="flex items-center gap-4 mb-2">
-                                    <img src={selectedEmployee?.profileUrl} className="w-16 h-16 rounded-full"
+                                    <img src={selectedEmployee?.profileUrl} className="w-16 h-16 rounded-full object-cover"
                                          alt="profile"/>
                                     <div>
                                         <p><strong>이름:</strong> {selectedEmployee?.name}</p>

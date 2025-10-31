@@ -4,7 +4,7 @@ import useCalendarStore from "@/store/calendar/useCalendarStore.js";
 import getContrastColor from "@/utils/calendar/getContrastColor.js";
 import {deleteAPI, insertAPI, updateAPI} from "@/api/calendar/calendarAPI.js";
 import {useSearchParams} from "react-router-dom";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 
 export default function AddScheduleModal() {
     const {

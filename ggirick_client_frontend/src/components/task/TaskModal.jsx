@@ -32,7 +32,7 @@ export default function TaskModal({ open, onClose, task }) {
                }
             </div>
             <div>
-              <span className="font-semibold">상태:</span> {taskDetail.status}
+              <span className="font-semibold">상태:</span> {taskDetail.logs}
             </div>
             <div>
               <span className="font-semibold">중요도:</span> {taskDetail.priority}

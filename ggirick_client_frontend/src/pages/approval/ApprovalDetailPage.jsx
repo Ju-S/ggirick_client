@@ -3,7 +3,7 @@ import {useNavigate, useParams} from "react-router-dom";
 import {Paperclip} from "lucide-react";
 import {boardFileDownloadAPI} from "@/api/board/boardFileAPI.js";
 import {useEffect, useState} from "react";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 import {deleteAPI} from "@/api/board/boardAPI.js";
 import useApprovalStore from "@/store/approval/approvalStore.js";

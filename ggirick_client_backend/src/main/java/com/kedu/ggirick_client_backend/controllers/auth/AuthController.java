@@ -1,7 +1,7 @@
 package com.kedu.ggirick_client_backend.controllers.auth;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
-import com.kedu.ggirick_client_backend.dto.employee.EmployeeDTO;
+import com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO;
 
 import com.kedu.ggirick_client_backend.services.AuthService;
 import com.kedu.ggirick_client_backend.services.hr.EmployeeService;

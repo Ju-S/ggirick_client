@@ -37,4 +37,9 @@ public class ApprovalHistoryDAO {
     public void deleteByApprovalIdAndAssigner(Map<String, Object> params) {
         mybatis.delete("ApprovalHistory.deleteByApprovalIdAndAssigner", params);
     }
+
+    // 최근 3개 기록 가져오기 사용자와 연관된
+    public List<ApprovalHistoryDTO> getRecentHistory(String userId) {
+        return mybatis.selectList("ApprovalHistory.getRecentHistory", userId);
+    }
 }

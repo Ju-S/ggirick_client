@@ -1,6 +1,6 @@
 import React, {useState} from "react";
 import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 
 export default function ApprovalAdditionalForm({ docTypeCode, docData, setDocData, viewMode=false, approvalLine }) {
     const [isModalOpen, setIsModalOpen] = useState(false);

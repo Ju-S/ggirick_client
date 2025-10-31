@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="EmploymentStatus">
+    <!-- 직원 한명 입사일 조회 -->
+    <select id="getHireDateByEmployeeId" resultType="com.kedu.ggirick_client_backend.dto.hr.EmploymentStatusDTO">
+        SELECT reg_date as hireDate FROM employment_status WHERE emp_id = #{employeeId}
+    </select>
+
+    <!-- 선택한 직원 재직 상태 수정 - 한명 정보 한꺼번에 수정시 사용 -->
+    <update id="updateEmploymentStatusById" parameterType="com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO">
+        UPDATE employment_status
+        SET
+        employment_status = #{status},
+        change_date = #{hireDate},
+        reg_date = sysdate
+        WHERE emp_id = #{id}
+    </update>
+</mapper>

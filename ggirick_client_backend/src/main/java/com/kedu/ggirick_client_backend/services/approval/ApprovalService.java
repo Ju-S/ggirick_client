@@ -48,6 +48,18 @@ public class ApprovalService {
         return approvalDAO.getTotalPage(params) / ITEM_PER_PAGE + 1;
     }
 
+    // 문서 총 갯수 조회
+    public int getTotalDocs(String userId, int box, int searchFilter, String searchQuery) {
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("userId", userId);
+        params.put("box", box);
+        params.put("searchFilter", searchFilter);
+        params.put("searchQuery", searchQuery);
+
+        return approvalDAO.getTotalPage(params);
+    }
+
     // 개별 문서 조회
     public ApprovalDTO getById(int approvalId) {
         ApprovalDTO approval =  approvalDAO.getById(approvalId);
@@ -81,4 +93,12 @@ public class ApprovalService {
     public void delete(int approvalId) {
         approvalDAO.delete(approvalId);
     }
+
+     // 특정 직원의 승인 완료된 문서를 유형별로 조회 (VAC, OWR, HWR 등)
+     public List<ApprovalDTO> getApprovedDocsByEmployeeAndType(String employeeId, String docTypeCode) {
+         Map<String, Object> params = new HashMap<>();
+         params.put("employeeId", employeeId);
+         params.put("docTypeCode", docTypeCode);
+         return approvalDAO.getApprovedDocsByEmployeeAndType(params);
+     }
 }

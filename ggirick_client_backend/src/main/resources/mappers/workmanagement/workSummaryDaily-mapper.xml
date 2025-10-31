@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="WorkSummaryDaily">
+
+    <!-- 근무기록 요약 테이블 MERGE -->
+    <update id="merge" parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDailyDTO">
+        MERGE INTO WORK_SUMMARY_DAILY s
+        USING (
+        SELECT
+        #{employeeId} AS EMPLOYEE_ID,
+        #{workDate, jdbcType=DATE} AS WORK_DATE
+        FROM dual
+        ) t
+        ON (
+        s.EMPLOYEE_ID = t.EMPLOYEE_ID
+        AND TRUNC(s.WORK_DATE) = TRUNC(t.WORK_DATE)   <!-- ✅ 둘 다 TRUNC -->
+        )
+        WHEN MATCHED THEN
+        UPDATE SET
+        s.START_TIME      = #{startTime, jdbcType=TIMESTAMP},
+        s.END_TIME        = #{endTime, jdbcType=TIMESTAMP},
+        s.TOTAL_HOURS     = #{totalHours, jdbcType=NUMERIC},
+        s.WORK_HOURS      = #{totalHours, jdbcType=NUMERIC},
+        s.OVERTIME_HOURS  = #{overtimeHours, jdbcType=NUMERIC},
+        s.NIGHT_HOURS     = #{nightHours, jdbcType=NUMERIC},
+        s.LEAVE_HOURS     = #{leaveHours, jdbcType=NUMERIC},
+        s.STATUS          = #{status, jdbcType=VARCHAR}
+        WHEN NOT MATCHED THEN
+        INSERT (
+        EMPLOYEE_ID, WORK_DATE, START_TIME, END_TIME,
+        TOTAL_HOURS, WORK_HOURS, OVERTIME_HOURS,
+        NIGHT_HOURS, LEAVE_HOURS, STATUS
+        )
+        VALUES (
+        #{employeeId},
+        TRUNC(#{workDate, jdbcType=DATE}),   <!-- ✅ 저장 시에도 TRUNC -->
+        #{startTime, jdbcType=TIMESTAMP},
+        #{endTime, jdbcType=TIMESTAMP},
+        #{totalHours, jdbcType=NUMERIC},
+        #{totalHours, jdbcType=NUMERIC},
+        #{overtimeHours, jdbcType=NUMERIC},
+        #{nightHours, jdbcType=NUMERIC},
+        #{leaveHours, jdbcType=NUMERIC},
+        #{status, jdbcType=VARCHAR}
+        )
+    </update>
+
+    <!-- 통합 근무요약 (일간 / 주간 / 연간 / 직접 기간) -->
+    <select id="getWorkSummary"
+            parameterType="map"
+            resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDTO">
+
+        SELECT
+        NVL(SUM(CASE WHEN s.STATUS = 'LATE' THEN 1 ELSE 0 END), 0) late_count,
+        NVL(SUM(CASE WHEN s.STATUS = 'EARLY_LEAVE' THEN 1 ELSE 0 END), 0) early_leave_count,
+        NVL(SUM(CASE WHEN s.STATUS = 'MISSING_OUT' THEN 1 ELSE 0 END), 0) missing_out_count,
+        NVL(SUM(CASE WHEN s.STATUS = 'ABSENT' THEN 1 ELSE 0 END), 0) absent_count,
+
+        NVL(SUM(CASE WHEN s.STATUS != 'ABSENT' THEN 1 ELSE 0 END), 0) work_days,
+        ROUND(NVL(SUM(s.TOTAL_HOURS), 0), 1) total_hours,           -- 🔹 총 근무시간 소수점 1자리
+        ROUND(NVL(AVG(NVL(s.TOTAL_HOURS, 0)), 0), 1) avg_hours,     -- 🔹 평균 근무시간 소수점 1자리
+        NVL(MAX(g.remaining_vacation), 0) remaining_vacation
+
+        FROM WORK_SUMMARY_DAILY s
+        LEFT JOIN (
+        SELECT employee_id, SUM(days_granted - days_used) remaining_vacation
+        FROM ANNUAL_LEAVE_GRANT
+        WHERE expire_date >= SYSDATE
+        GROUP BY employee_id
+        ) g ON g.employee_id = s.employee_id
+
+        WHERE s.employee_id = #{employeeId}
+        AND s.work_date BETWEEN #{startDate} AND #{endDate}
+
+    </select>
+</mapper>
