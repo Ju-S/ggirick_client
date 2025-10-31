@@ -16,9 +16,9 @@ export default function KanbanView() {
   if (!selectedProject) return <div className="p-6">프로젝트 선택</div>;
 
   const getColumns = (tasks) => ({
-    "할 일": tasks.filter((t) => t.status === "할 일"),
-    "진행 중": tasks.filter((t) => t.status === "진행 중"),
-    "완료": tasks.filter((t) => t.status === "완료"),
+    "할 일": tasks.filter((t) => t.logs === "할 일"),
+    "진행 중": tasks.filter((t) => t.logs === "진행 중"),
+    "완료": tasks.filter((t) => t.logs === "완료"),
   });
 
   const onDragEnd = async (result) => {
@@ -27,7 +27,7 @@ export default function KanbanView() {
 
     const updatedTasks = selectedProject.tasks.map((task) =>
       String(task.id) === result.draggableId
-        ? { ...task, status: destination.droppableId }
+        ? { ...task, logs: destination.droppableId }
         : task
     );
 
@@ -36,7 +36,7 @@ export default function KanbanView() {
 
     try {
       const movedTask = updatedTasks.find((t) => String(t.id) === result.draggableId);
-      await updateTaskStatus(movedTask.id, movedTask.status);
+      await updateTaskStatus(movedTask.id, movedTask.logs);
     } catch (err) {
       console.error("업데이트 실패, 롤백", err);
 

@@ -1,5 +1,5 @@
 import ApprovalSidebar from "@/components/approval/ApprovalSidebar.jsx";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {useEffect} from "react";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 

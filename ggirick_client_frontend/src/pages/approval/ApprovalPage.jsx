@@ -1,11 +1,9 @@
 import {useSearchParams} from "react-router-dom";
-import {useBoardList} from "@/hooks/board/useBoardList.js";
 import Pagination from "@/components/approval/Pagination.jsx";
 import React, {useState} from "react";
 import Dropdown from "@/components/approval/Dropdown.jsx";
 import ApprovalList from "@/components/approval/ApprovalList.jsx";
 import {useApprovalList} from "@/hooks/approval/useApprovalList.js";
-import useEmployeeStore from "@/store/employeeStore.js";
 
 export default function ApprovalPage() {
     const [searchParams, setSearchParams] = useSearchParams();

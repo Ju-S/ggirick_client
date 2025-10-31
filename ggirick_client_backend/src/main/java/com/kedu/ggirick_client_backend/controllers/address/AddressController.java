@@ -2,13 +2,12 @@ package com.kedu.ggirick_client_backend.controllers.address;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.address.*;
-import com.kedu.ggirick_client_backend.dto.common.DepartmentDTO;
+import com.kedu.ggirick_client_backend.dto.hr.DepartmentDTO;
 import com.kedu.ggirick_client_backend.services.address.AddressGroupService;
 import com.kedu.ggirick_client_backend.services.address.AddressGroupTypeService;
 import com.kedu.ggirick_client_backend.services.address.AddressService;
 import com.kedu.ggirick_client_backend.services.address.EmployeeAddressShareGroupService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.boot.autoconfigure.amqp.RabbitConnectionDetails;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;

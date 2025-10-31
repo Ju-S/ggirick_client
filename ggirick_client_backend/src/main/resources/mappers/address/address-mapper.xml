@@ -19,7 +19,7 @@
     </select>
 
     <!-- 공유주소록 부서그룹 getList -->
-    <select id="selectAllDepartments" resultType="com.kedu.ggirick_client_backend.dto.common.DepartmentDTO">
+    <select id="selectAllDepartments" resultType="com.kedu.ggirick_client_backend.dto.hr.DepartmentDTO">
         select * from department
     </select>
 

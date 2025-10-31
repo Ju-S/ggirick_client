@@ -3,7 +3,7 @@ import {useEffect, useState} from "react";
 import AddGroupModal from "@/components/board/AddGroupModal.jsx";
 import useBoardGroupStore from "@/store/board/boardGroupStore.js";
 import {boardGroupMemberListAPI, deleteGroupAPI, putGroupMemberAPI} from "@/api/board/boardGroupAPI.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 import ModifyGroupModal from "@/components/board/ModifyGroupModal.jsx";
 import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";

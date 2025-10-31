@@ -13,7 +13,7 @@ import chatAPI from "@/api/chat/chatAPI.js";
 import useChatStore from "@/store/chat/useChatStore.js";
 import FileAPI from "@/api/common/FileAPI.js";
 import {getUploadFolder} from "@/utils/common/fileFolderUtil.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 
 export default function ChatInput({onSend}) {
 

@@ -1,7 +1,7 @@
 package com.kedu.ggirick_client_backend.services.hr;
 
-import com.kedu.ggirick_client_backend.dao.employee.EmployeeDAO;
-import com.kedu.ggirick_client_backend.dto.employee.EmployeeDTO;
+import com.kedu.ggirick_client_backend.dao.hr.EmployeeDAO;
+import com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO;
 import com.kedu.ggirick_client_backend.utils.FileUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;

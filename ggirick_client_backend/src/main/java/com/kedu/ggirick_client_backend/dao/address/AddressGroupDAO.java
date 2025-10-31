@@ -2,7 +2,7 @@ package com.kedu.ggirick_client_backend.dao.address;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.address.AddressGroupDTO;
-import com.kedu.ggirick_client_backend.dto.common.DepartmentDTO;
+import com.kedu.ggirick_client_backend.dto.hr.DepartmentDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;

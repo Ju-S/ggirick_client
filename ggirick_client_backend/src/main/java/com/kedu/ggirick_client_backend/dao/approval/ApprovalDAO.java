@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -48,5 +49,10 @@ public class ApprovalDAO {
     // 결재 문서 삭제
     public void delete(int approvalId) {
         mybatis.delete("Approval.delete", approvalId);
+    }
+
+    // 특정 직원의 승인 완료된 문서를 유형별로 조회 (VAC, OWR, HWR 등)
+    public List<ApprovalDTO> getApprovedDocsByEmployeeAndType(Map<String, Object> params) {
+        return mybatis.selectList("Approval.getApprovedDocsByEmployeeAndType", params);
     }
 }

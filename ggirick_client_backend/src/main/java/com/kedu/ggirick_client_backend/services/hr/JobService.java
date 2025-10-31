@@ -1,7 +1,7 @@
 package com.kedu.ggirick_client_backend.services.hr;
 
-import com.kedu.ggirick_client_backend.dao.common.JobDAO;
-import com.kedu.ggirick_client_backend.dto.common.JobDTO;
+import com.kedu.ggirick_client_backend.dao.hr.JobDAO;
+import com.kedu.ggirick_client_backend.dto.hr.JobDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
