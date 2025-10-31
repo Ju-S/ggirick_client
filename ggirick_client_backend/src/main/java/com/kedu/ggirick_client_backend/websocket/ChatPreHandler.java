@@ -5,16 +5,13 @@ import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.utils.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import com.kedu.ggirick_client_backend.services.AuthService;
+import com.kedu.ggirick_client_backend.services.auth.AuthService;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 
 @RequiredArgsConstructor

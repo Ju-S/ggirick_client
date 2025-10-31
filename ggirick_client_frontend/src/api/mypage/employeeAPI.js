@@ -14,5 +14,5 @@ export const employeeAllListAPI = () => api(apiRoutes.employee.list);
 // 직원 상세 조회
 export const employeeDetailAPI = (id) => api(apiRoutes.employee.detail(id));
 
-// 이메일 중복 확인
+// 이메일, 폰번호 중복 확인
 export const emailDuplCheck = (email, phone) => api(apiRoutes.employee.duplcheck(email, phone));

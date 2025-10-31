@@ -10,8 +10,8 @@ export function insertAPI(task){
 
 export function updateStatusAPI(taskId, status) {
   return api({
-    ...apiRoutes.task.updateLogs(taskId),
-    data: { logs: status }
+    ...apiRoutes.task.updateStatus(taskId),
+    data: {status:status}
   })
 }
 

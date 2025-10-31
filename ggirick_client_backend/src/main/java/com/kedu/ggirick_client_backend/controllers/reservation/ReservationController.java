@@ -5,13 +5,16 @@ import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.reservation.CalendarEventDTO;
 import com.kedu.ggirick_client_backend.dto.reservation.ReservationDTO;
 import com.kedu.ggirick_client_backend.dto.reservation.ResourceDTO;
+import com.kedu.ggirick_client_backend.dto.reservation.ResourceTypeDTO;
 import com.kedu.ggirick_client_backend.services.reservation.ReservationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -58,9 +61,12 @@ public class ReservationController {
 
     // 예약 수정 (FullCalendar Drag & Drop 또는 상세 모달 수정)
     @PutMapping("/{reservationId}")
-    public ResponseEntity<ReservationDTO> updateReservation(@PathVariable Long reservationId, @RequestBody ReservationDTO reservationDto) {
+    public ResponseEntity<ReservationDTO> updateReservation(@PathVariable Long reservationId, @RequestBody ReservationDTO reservationDto, @AuthenticationPrincipal UserTokenDTO userInfo) {
         try {
-            ReservationDTO updatedReservation = reservationService.updateReservation(reservationId, reservationDto);
+            ReservationDTO updatedReservation = reservationService.updateReservation(reservationId, reservationDto, userInfo.getId());
+            if(updatedReservation == null){
+                return ResponseEntity.badRequest().build();
+            }
             return ResponseEntity.ok(updatedReservation);
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().build();
@@ -69,9 +75,13 @@ public class ReservationController {
 
     // 예약 취소/삭제
     @DeleteMapping("/{reservationId}")
-    public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId) {
-        reservationService.cancelReservation(reservationId);
-        return ResponseEntity.noContent().build();
+    public ResponseEntity<Void> cancelReservation(@PathVariable Long reservationId,@AuthenticationPrincipal UserTokenDTO userInfo) {
+        boolean success = reservationService.cancelReservation(reservationId,userInfo.getId());
+        if(success){
+            return ResponseEntity.noContent().build();
+        }else{
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     //리소스 목록
@@ -81,12 +91,23 @@ public class ReservationController {
         return ResponseEntity.ok(resources);
     }
 
+    //리소스 타입 목록
+    @GetMapping("/resource/type")
+    public ResponseEntity<List<ResourceTypeDTO>> getResourceTypes() {
+        List<ResourceTypeDTO> resources = reservationService.getAllResourceTypes();
+        return ResponseEntity.ok(resources);
+    }
+
     //리소스 생성
 
-    @PostMapping("/resource")
-    public ResponseEntity<ResourceDTO> createResource(@RequestBody ResourceDTO resourceDto) {
+    @PostMapping(value = "/resource", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> createResource(
+            @RequestPart("data") ResourceDTO resourceDto,
+            @RequestPart(value = "file", required = true) MultipartFile file
+    ) throws Exception {
+        resourceDto.setFile(file);
         reservationService.createResource(resourceDto);
-        return ResponseEntity.ok(resourceDto);
+        return ResponseEntity.ok().build();
     }
 
 }

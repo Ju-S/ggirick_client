@@ -1,9 +1,7 @@
 package com.kedu.ggirick_client_backend.dao.reservation;
 
 
-import com.kedu.ggirick_client_backend.dto.reservation.CalendarEventDTO;
-import com.kedu.ggirick_client_backend.dto.reservation.ReservationDTO;
-import com.kedu.ggirick_client_backend.dto.reservation.ResourceDTO;
+import com.kedu.ggirick_client_backend.dto.reservation.*;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
@@ -36,6 +34,10 @@ public class ReservationDAO {
         return mybatis.selectList(NAMESPACE + ".findMyReservations", employeeId);
     }
 
+    public List<ResourceTypeDTO> findAllResourceType() {
+        return mybatis.selectList(NAMESPACE + ".findAllResourceType");
+    }
+
     public List<ReservationDTO> findOverlappingReservations(Long resourceId, LocalDateTime startedAt, LocalDateTime endedAt, Long excludeId) {
         Map<String, Object> params = new HashMap<>();
         params.put("resourceId", resourceId);
@@ -61,12 +63,20 @@ public class ReservationDAO {
         mybatis.update(NAMESPACE + ".updateReservation", reservationDto);
     }
 
-    public void deleteReservation(Long reservationId) {
-        mybatis.delete(NAMESPACE + ".deleteReservation", reservationId);
+    public boolean deleteReservation(Long reservationId) {
+        return mybatis.delete(NAMESPACE + ".deleteReservation", reservationId) >0;
     }
 
     public void createResource(ResourceDTO resourceDto) {
         mybatis.insert(NAMESPACE + ".insertResource", resourceDto);
 
+    }
+
+    public void updateResourceImgUrl(ResourceDTO dto) {
+        mybatis.update(NAMESPACE + ".updateResourceImgUrl", dto);
+    }
+
+    public void insertResourceImage(ResourceFileDTO imgDTO) {
+        mybatis.update(NAMESPACE + ".insertResourceImage", imgDTO);
     }
 }

@@ -3,16 +3,15 @@ package com.kedu.ggirick_client_backend.controllers.auth;
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
 import com.kedu.ggirick_client_backend.dto.auth.ResetPasswordDTO;
 import com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO;
+
 import com.kedu.ggirick_client_backend.services.auth.AuthService;
 import com.kedu.ggirick_client_backend.services.hr.EmployeeService;
 import com.kedu.ggirick_client_backend.utils.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -21,7 +20,6 @@ import java.util.Map;
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
-    private final EmployeeService employeeService;
     private final JWTUtil jwt;
     private final AuthService authService;
 
@@ -63,7 +61,7 @@ public class AuthController {
     // JWT 인증 토큰 유효한지 검사
     @GetMapping("/verify")
     public ResponseEntity<String> verifyToken(@AuthenticationPrincipal UserTokenDTO userInfo) {
-        if (userInfo.getId() == null) {
+        if(userInfo.getId()==null){
             // JWTInterceptor가 이미 인증 실패 시 401을 반환하지만
             // 혹시 모를 누락 대비용
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

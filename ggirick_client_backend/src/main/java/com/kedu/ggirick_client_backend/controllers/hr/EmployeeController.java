@@ -34,19 +34,16 @@ public class EmployeeController {
                 : ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
+    // 이메일 & 핸드폰 번호 중복 체크
     @GetMapping("/duplcheck")
     public ResponseEntity<String> checkEmailDuplication(@RequestParam String email,
                                                         @RequestParam String phone,
                                                         @AuthenticationPrincipal UserTokenDTO userInfo) {
-        List<EmployeeDTO> employeeList = employeeService.getAllEmployeeList().stream()
-                .filter(emp -> !emp.getId().equals(userInfo.getId())) // userInfo.getId와 다른 것만
-                .toList();
-
         String errorMsg = null;
-        if (employeeList.stream().anyMatch(emp -> emp.getEmail() != null && emp.getEmail().equalsIgnoreCase(email))) {
+        if (employeeService.isEmailDuplicate(email)) {
             errorMsg = "존재하는 이메일입니다.";
         }
-        if (employeeList.stream().anyMatch(emp -> emp.getPhone() != null && emp.getPhone().equals(phone))) {
+        if (employeeService.isPhoneDuplicate(phone)) {
             String msg = "존재하는 전화번호입니다.";
             errorMsg = errorMsg == null ? msg : errorMsg + msg;
         }

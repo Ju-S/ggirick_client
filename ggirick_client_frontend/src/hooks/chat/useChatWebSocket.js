@@ -22,9 +22,10 @@ export function useChatWebSocket(workspaceId, channelId, onMessage) {
         if (!workspaceId || clientRef.current) return;
 
         const token = sessionStorage.getItem("token");
+        //http환경이라면 ws 아니라면 wss를 앞에 붙일것
         const client = new Client({
-            brokerURL: `ws://${IP_ADDRESS}/ws`,
-            reconnectDelay: 5000,
+            brokerURL: `wss://${IP_ADDRESS}/ws`,
+            reconnectDelay: 3000,
             debug: (str) => console.log("[STOMP]", str),
             connectHeaders: { Authorization: "Bearer " + token },
         });

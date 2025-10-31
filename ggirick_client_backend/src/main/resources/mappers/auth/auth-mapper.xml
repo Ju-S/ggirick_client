@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Auth">
+
+    <!-- 초기 비밀번호로 로그인했는지 체크 -->
+    <select id="existsInPasswordReset" parameterType="string" resultType="int">
+        SELECT COUNT(*) FROM PASSWORD_RESET WHERE EMP_ID = #{empId}
+    </select>
+
+    <!-- password_reset 테이블에서 해당 직원 ID 삭제 -->
+    <delete id="deletePasswordResetById" parameterType="string">
+        DELETE FROM PASSWORD_RESET
+        WHERE EMP_ID = #{id}
+    </delete>
+
+</mapper>
