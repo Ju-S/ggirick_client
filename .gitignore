@@ -181,3 +181,9 @@ sketch
 
 # storage 계정 키
 focus-shape-472605-e7-01d62f8a3302.json
+
+# https 인증서
+cert.crt
+cert.pem
+key.pem
+keystore.p12
