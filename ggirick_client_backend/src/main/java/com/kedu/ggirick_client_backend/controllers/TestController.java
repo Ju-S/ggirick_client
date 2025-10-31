@@ -1,13 +1,10 @@
 package com.kedu.ggirick_client_backend.controllers;
 
-import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
-import com.kedu.ggirick_client_backend.services.AuthService;
+import com.kedu.ggirick_client_backend.services.auth.AuthService;
 import com.kedu.ggirick_client_backend.utils.JWTUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController

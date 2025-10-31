@@ -8,6 +8,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -20,14 +21,8 @@ public class EmployeeService {
     private final FileUtil fileUtil;
 
     // ID만 가져오기 - 로그인 기능에 사용
-    public EmployeeDTO login(EmployeeDTO dto) {
-        EmployeeDTO employeeDTO = employeeDAO.getById(dto);
-
-        // ID, PW 비교
-        if (employeeDTO != null && passwordEncoder.matches(dto.getPw(), employeeDTO.getPw())) {
-            return employeeDTO;
-        }
-        return null;
+    public EmployeeDTO getById(EmployeeDTO dto) {
+        return employeeDAO.getById(dto);
     }
 
     // 사원 삭제
@@ -63,5 +58,24 @@ public class EmployeeService {
         return employeeDAO.updatePassword(dto);
     }
 
+    // 이메일 중복 여부 확인
+    public boolean isEmailDuplicate(String email) {
+        return employeeDAO.isEmailDuplicate(email) > 0;
+    }
 
+    // 핸드폰 번호 중복 여부 확인
+    public boolean isPhoneDuplicate(String phone) {
+        return employeeDAO.isPhoneDuplicate(phone) > 0;
+    }
+
+    // 초기 비밀번호, 이메일, 핸드폰 번호 입력
+    public boolean updatePasswordAndEmailAndPhone(String employeeId, String encodePw, String email, String phone) {
+        Map<String, String> params = new HashMap<>();
+        params.put("employeeId", employeeId);
+        params.put("encodePw", encodePw);
+        params.put("email", email);
+        params.put("phone", phone);
+
+        return employeeDAO.updatePasswordAndEmailAndPhone(params) > 0;
+    }
 }
