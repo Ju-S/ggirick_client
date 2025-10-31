@@ -528,6 +528,9 @@ const apiRoutes = {
         insert: {
             url: "/reservations/resource",
             method: "POST",
+            headers: {
+                "Content-Type": "multipart/form-data",
+            },
         },
         delete: {},
         update: {},

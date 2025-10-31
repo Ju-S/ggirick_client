@@ -5,10 +5,12 @@ import com.kedu.ggirick_client_backend.dto.task.ProjectDTO;
 import com.kedu.ggirick_client_backend.dto.task.ProjectMemberDTO;
 import com.kedu.ggirick_client_backend.dto.task.TaskDTO;
 import com.kedu.ggirick_client_backend.services.task.TaskProjectService;
+import com.kedu.ggirick_client_backend.utils.FileUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.HashMap;
 import java.util.List;
@@ -20,6 +22,9 @@ public class TaskProjectController {
 
     @Autowired
     private TaskProjectService projectService;
+
+    @Autowired
+    private FileUtil fileUtil;
 
     /*
      * Project 관련 CRUD
@@ -133,6 +138,14 @@ public class TaskProjectController {
         return ResponseEntity.ok(map);
     }
 
-
+    @PostMapping("/task/file")
+    public ResponseEntity<Map<String, String>> uploadTaskFile(@RequestParam("file") MultipartFile file) {
+        try {
+            Map<String, String> fileInfo = fileUtil.uploadFileAndGetInfo(file.getOriginalFilename(), "task/", file);
+            return ResponseEntity.ok(fileInfo);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
 
 }

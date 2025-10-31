@@ -3,15 +3,16 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import { tasksToEvents } from "@/utils/task/calendarMapper.js"
+import { tasksToEvents ,eventToTask} from "@/utils/task/calendarMapper.js"
 import { syncEventUpdate, syncEventCreate, syncEventDelete } from "@/utils/task/calendarSync.js";
 import useTaskProjectStore from "@/store/task/useTaskProjectStore.js";
+import TaskModal from "@/components/task/TaskModal.jsx";
 
 export default function FullCalenderView() {
   const { selectedProject } = useTaskProjectStore();
-
+    const [selectedTask, setSelectedTask] = useState(null);
   const [events, setEvents] = useState([]);
-
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
   const [primaryColor, setPrimaryColor] = useState(""); // daisyUI primary 색 가져오기
    useEffect(() => { const rootStyles = getComputedStyle(document.documentElement);
@@ -31,31 +32,39 @@ export default function FullCalenderView() {
 
   }, [selectedProject]);
 
-  const handleDateSelect = async (selectInfo) => {
-    const title = prompt("새로운 이벤트 제목:");
-    if (!title) return;
+    const handleDetail = (clickInfo) => {
+        const event = clickInfo.event;
 
-    const newEvent = {
-      id: String(Date.now()),
-      title,
-      start: selectInfo.start,
-      end: selectInfo.end,
-      allDay: true,
-      extendedProps: {
-        projectId: selectedProject.id,
-        assignee: "EMP001",
-        assigner: "EMP001",
-        logs: "할 일",
-        priority: "medium",
-        description: "설명 없음",
-        file: "",
-        tags: [],
-      },
+        setSelectedTask(eventToTask(event));
+        setIsModalOpen(true);
     };
 
-    setEvents((prev) => [...prev, newEvent]);
-    await syncEventCreate(newEvent);
-  };
+
+  //   const handleDateSelect = async (selectInfo) => {
+  //   const title = prompt("새로운 이벤트 제목:");
+  //   if (!title) return;
+  //
+  //   const newEvent = {
+  //     id: String(Date.now()),
+  //     title,
+  //     start: selectInfo.start,
+  //     end: selectInfo.end,
+  //     allDay: true,
+  //     extendedProps: {
+  //       projectId: selectedProject.id,
+  //       assignee: "EMP001",
+  //       assigner: "EMP001",
+  //       logs: "할 일",
+  //       priority: "medium",
+  //       description: "설명 없음",
+  //       file: "",
+  //       tags: [],
+  //     },
+  //   };
+  //
+  //   setEvents((prev) => [...prev, newEvent]);
+  //   await syncEventCreate(newEvent);
+  // };
 
   const handleEventChange = async (changeInfo) => {
     setEvents((prev) =>
@@ -87,8 +96,8 @@ export default function FullCalenderView() {
         selectable
         editable
         events={events}
-        select={handleDateSelect}
-        eventClick={handleEventClick}
+
+        eventClick={handleDetail}
         eventChange={handleEventChange}
 
         eventContent={(arg) => (
@@ -106,7 +115,13 @@ export default function FullCalenderView() {
         )}
         height="800px"
       />
-
+        {isModalOpen && (
+            <TaskModal
+                open={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                task={selectedTask}
+            />
+        )}
     </div>
   );
 }

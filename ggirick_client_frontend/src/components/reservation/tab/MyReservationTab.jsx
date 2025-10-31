@@ -75,7 +75,7 @@ export default function MyReservationTab() {
                 {format(new Date(reservation.endedAt), 'MM/dd HH:mm')}
               </td>
               <td>{reservation.purpose || '-'}</td>
-              <td>{getStatusBadge(reservation.logs)}</td>
+              <td>{reservation.status}</td>
               <td>
                 <button className="btn btn-ghost btn-xs" onClick={() => handleDetailEditClick(reservation)}>상세/수정</button>
                 <button className="btn btn-error btn-xs ml-2" onClick={() =>handleDeleteClick(reservation.id)} >취소</button>
