@@ -7,6 +7,7 @@ import WorkCheckCardGrid from "@/components/dashboard/WorkCheckCardGrid.jsx";
 import WorkStatusPanel from "@/components/workmanagement/WorkStatusPanel.jsx";
 import {useEffect, useState} from "react";
 import {getInfos} from "@/api/dashboard/dashboardAPI.js";
+import {timestampToMonthDay} from "@/utils/common/dateFormat.js";
 
 export default function Dashboard() {
     const navigate = useNavigate();
@@ -196,116 +197,135 @@ export default function Dashboard() {
                 </div>
             </div>
             <div className="mb-4 grid grid-cols-2 gap-4">
+                {/* 다가오는 일정 */}
                 <div className="h-48 rounded-lg md:h-80">
                     <Card className="h-full w-full rounded-lg shadow-sm border-none !bg-base-100">
-                        <div className="flex items-start justify-start">
-                            <div className="flex w-full flex-col gap-4">
-                                <div className="flex items-center gap-2">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="lucide lucide-calendar-icon text-base-content-800 h-6 w-6"
-                                    >
-                                        <path d="M8 2v4"/>
-                                        <path d="M16 2v4"/>
-                                        <rect width="18" height="18" x="3" y="4" rx="2"/>
-                                        <path d="M3 10h18"/>
-                                    </svg>
-                                    <span className="text-m text-base-content-900">
-                                        다가오는 일정
-                                    </span>
-                                </div>
-                                <div className="flex flex-col gap-2 min-h-[200px]">
-                                    {calendarList && calendarList.length > 0 ? (
-                                        calendarList.map((e) => (
-                                            <Card
-                                                key={e.id}
-                                                onClick={() =>
-                                                    navigate(e.groupId == null ? "/calendar" : `/calendar?groupId=${e.groupId}`)
-                                                }
-                                                className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
-                                            >
-                                                {e.title}
-                                            </Card>
-                                        ))
-                                    ) : (
-                                        // 비어 있을 때도 높이 확보용 placeholder
-                                        <div
-                                            className="flex flex-col justify-center items-center h-full text-base-content">
-                                            <p className="italic text-sm">등록된 일정이 없습니다.</p>
-                                        </div>
-                                    )}
-                                </div>
-                                <button
-                                    onClick={() => navigate("calendar")}
-                                    className="h-8 w-full rounded-lg border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                        <div className="flex flex-col h-full">
+                            <div className="flex items-center gap-2 mb-2">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="lucide lucide-calendar-icon text-base-content-800 h-6 w-6"
                                 >
-                                    전체 일정 보기
-                                </button>
+                                    <path d="M8 2v4" />
+                                    <path d="M16 2v4" />
+                                    <rect width="18" height="18" x="3" y="4" rx="2" />
+                                    <path d="M3 10h18" />
+                                </svg>
+                                <span className="text-m text-base-content-900 font-semibold">다가오는 일정</span>
                             </div>
+
+                            <div className="flex flex-col gap-1 overflow-y-auto">
+                                {calendarList && calendarList.length > 0 ? (
+                                    calendarList.map((e) => (
+                                        <Card
+                                            key={e.id}
+                                            onClick={() => navigate(e.groupId == null ? "/calendar" : `/calendar?groupId=${e.groupId}`)}
+                                            className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-200 transition cursor-pointer px-3 flex flex-col justify-center"
+                                        >
+                                            <div className="flex justify-between items-center">
+                                                <span className="font-medium text-base-content-900 truncate">
+                                                    {e.title}
+                                                </span>
+                                                <span className="text-xs text-base-content-600 ml-2 shrink-0">
+                                                    {timestampToMonthDay(e.startAt)}
+                                                </span>
+                                            </div>
+                                            {e.name && (
+                                                <span className="text-xs text-base-content-700 truncate">
+                                                    {e.name}
+                                                </span>
+                                            )}
+                                        </Card>
+                                    ))
+                                ) : (
+                                    <div className="flex justify-center items-center h-full text-sm italic text-base-content-600">
+                                        등록된 일정이 없습니다.
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => navigate("calendar")}
+                                className="mt-auto h-8 w-full rounded-lg border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                            >
+                                전체 일정 보기
+                            </button>
                         </div>
                     </Card>
                 </div>
+
+                {/* 최근 결재 현황 */}
                 <div className="h-48 rounded-lg md:h-80">
                     <Card className="h-full w-full rounded-lg shadow-sm border-none !bg-base-100">
-                        <div className="flex items-start justify-start">
-                            <div className="flex w-full flex-col gap-4">
-                                <div className="flex items-center gap-2">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="lucide lucide-calendar-icon text-base-content-800 h-6 w-6"
-                                    >
-                                        <path
-                                            d="m21 17-2.156-1.868A.5.5 0 0 0 18 15.5v.5a1 1 0 0 1-1 1h-2a1 1 0 0 1-1-1c0-2.545-3.991-3.97-8.5-4a1 1 0 0 0 0 5c4.153 0 4.745-11.295 5.708-13.5a2.5 2.5 0 1 1 3.31 3.284"/>
-                                        <path d="M3 21h18"/>
-                                    </svg>
-                                    <span className="text-m text-base-content-900">
-                                        최근 결재 현황
-                                    </span>
-                                </div>
-                                <div className="flex flex-col gap-2 min-h-[200px]">
-                                    {approvalList && approvalList.length > 0 ? (
-                                        approvalList.map((e) => (
-                                            <Card
-                                                key={e.id}
-                                                onClick={() =>
-                                                    navigate(`/approval/${e.approvalId}`)
-                                                }
-                                                className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
-                                            >
-                                                {e.title}
-                                            </Card>
-                                        ))
-                                    ) : (
-                                        // 비어 있을 때도 높이 확보용 placeholder
-                                        <div
-                                            className="flex flex-col justify-center items-center h-full text-base-content">
-                                            <p className="italic text-sm">결재 현황이 없습니다.</p>
-                                        </div>
-                                    )}
-                                </div>
-                                <button
-                                    onClick={() => navigate("approval")}
-                                    className="h-8 w-full rounded-lg border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                        <div className="flex flex-col h-full">
+                            <div className="flex items-center gap-2 mb-2">
+                                <svg
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth={2}
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    className="lucide lucide-clipboard-list text-base-content-800 h-6 w-6"
                                 >
-                                    전체 결재 보기
-                                </button>
+                                    <path d="M8 6h8v2H8z" />
+                                    <path d="M9 11h6" />
+                                    <path d="M9 16h6" />
+                                    <rect width="18" height="18" x="3" y="2" rx="2" ry="2" />
+                                </svg>
+                                <span className="text-m text-base-content-900 font-semibold">최근 결재 현황</span>
                             </div>
+
+                            <div className="flex flex-col gap-2 overflow-y-auto">
+                                {approvalList && approvalList.length > 0 ? (
+                                    approvalList.map((e) => (
+                                        <Card
+                                            key={e.history.id}
+                                            onClick={() => navigate(`/approval/${e.approval.id}`)}
+                                            className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-200 transition cursor-pointer px-3 flex flex-col justify-center"
+                                        >
+                                            <div className="flex justify-between items-center">
+                                    <span className="font-medium text-base-content-900 truncate">
+                                        {e.approval.title}
+                                    </span>
+                                                <span className="text-xs text-base-content-600 ml-2 shrink-0">
+                                        {e.approval.docTypeCode}
+                                    </span>
+                                            </div>
+                                            <span className="text-xs text-base-content-700 truncate">
+                                    {e.history.name} •{" "}
+                                                {new Date(e.history.recordedAt).toLocaleDateString("ko-KR", {
+                                                    month: "short",
+                                                    day: "numeric",
+                                                })}
+                                </span>
+                                        </Card>
+                                    ))
+                                ) : (
+                                    <div className="flex justify-center items-center h-full text-sm italic text-base-content-600">
+                                        결재 현황이 없습니다.
+                                    </div>
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() => navigate("approval")}
+                                className="mt-auto h-8 w-full rounded-lg border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
+                            >
+                                전체 결재 보기
+                            </button>
                         </div>
                     </Card>
                 </div>
             </div>
+
             <div className="mb-2 grid grid-cols-3 gap-4">
                 <div className="h-32 rounded-lg md:h-72">
                     <Card className="h-full w-full rounded-lg shadow-sm border-none !bg-base-100">

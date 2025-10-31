@@ -1,9 +1,13 @@
 package com.kedu.ggirick_client_backend.services.dashboard;
 
+import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
+import com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardGroupDTO;
 import com.kedu.ggirick_client_backend.dto.calendar.CalendarDTO;
 import com.kedu.ggirick_client_backend.dto.calendar.CalendarGroupDTO;
+import com.kedu.ggirick_client_backend.services.approval.ApprovalHistoryService;
+import com.kedu.ggirick_client_backend.services.approval.ApprovalService;
 import com.kedu.ggirick_client_backend.services.board.BoardGroupService;
 import com.kedu.ggirick_client_backend.services.board.BoardService;
 import com.kedu.ggirick_client_backend.services.calendar.CalendarGroupService;
@@ -24,6 +28,8 @@ public class DashboardService {
     private final CalendarGroupService calendarGroupService;
     private final BoardService boardService;
     private final BoardGroupService boardGroupService;
+    private final ApprovalHistoryService approvalHistoryService;
+    private final ApprovalService approvalService;
 
     // region 일정 관련
     // 오늘의 일정 갯수
@@ -128,6 +134,31 @@ public class DashboardService {
 
         notificationList.sort(Comparator.comparing(BoardDTO::getCreatedAt).reversed());
         return notificationList.get(0);
+    }
+
+    // endregion
+
+    // region 결재 관련
+    public List<Map<String, Object>> getRecentApprovalHistory(String userId) {
+        List<ApprovalHistoryDTO> historyList = approvalHistoryService.getRecentHistory(userId);
+        List<ApprovalDTO> approvalList = historyList.stream()
+                .map(history -> approvalService.getById(history.getApprovalId()))
+                .toList();
+
+        List<Map<String, Object>> approvalInfos = new ArrayList<>();
+
+        for (int i = 0; i < historyList.size(); i++) {
+            ApprovalHistoryDTO history = historyList.get(i);
+            ApprovalDTO approval = approvalList.get(i);
+
+            Map<String, Object> map = new HashMap<>();
+            map.put("history", history);
+            map.put("approval", approval);
+
+            approvalInfos.add(map);
+        }
+
+        return approvalInfos;
     }
 
     // endregion

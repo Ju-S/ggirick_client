@@ -36,7 +36,8 @@ public class DashboardController {
         // 대기중인 결재
         news.put("pendingApprovalCount", approvalService.getTotalDocs(userInfo.getId(), 1, 0, null));
         // 최근 결재 현황(3개)
-        news.put("recentApprovalHistory", approvalHistoryService.getRecentHistory(userInfo.getId()));
+        news.put("recentApprovalHistory", dashboardService.getRecentApprovalHistory(userInfo.getId()));
+
 
         // 최신 공지
         news.put("recentNotification", dashboardService.getRecentNotification(userInfo.getId()));

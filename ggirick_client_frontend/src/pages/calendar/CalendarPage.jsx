@@ -10,7 +10,6 @@ import getContrastColor from "@/utils/calendar/getContrastColor.js";
 
 import './CalendarPage.css';
 import WeekendCalenderHeader from "@/components/calendar/WeekendCalenderHeader.jsx";
-import useEmployeeStore from "@/store/employeeStore.js";
 
 moment.locale("ko");
 const localizer = momentLocalizer(moment);
@@ -26,7 +25,7 @@ export default function CalendarPage() {
 
     useEffect(() => {
         setModalOpen(false);
-    }, []);
+    }, [location.pathname, location.search]);
 
     // 화면 범위 이벤트 계산
     const getVisibleEvents = () => {
@@ -84,10 +83,10 @@ export default function CalendarPage() {
         return visibleEvents;
     };
 
-    const EventComponent = ({ event }) => (
+    const EventComponent = ({event}) => (
         <div>
             <div>{event.title}</div>
-            <div style={{ fontSize: "0.7em" }}>{event.name}</div>
+            <div style={{fontSize: "0.7em"}}>{event.name}</div>
         </div>
     );
 

@@ -2,7 +2,7 @@ import {useNavigate} from "react-router-dom";
 import {useEffect, useState} from "react";
 import AddGroupModal from "@/components/calendar/AddGroupModal.jsx";
 import useCalendarGroupStore from "@/store/calendar/useCalendarGroupStore.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 import ModifyGroupModal from "@/components/calendar/ModifyGroupModal.jsx";
 import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";
