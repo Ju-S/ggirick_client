@@ -1,26 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="BoardComment">
     <!-- boardId에 따른 댓글정보 리스트 -->
     <select id="getList" resultType="com.kedu.ggirick_client_backend.dto.board.BoardCommentDTO">
-        SELECT bc.*, e.name FROM board_comment bc
-        JOIN employee e ON bc.writer = e.id
+        SELECT bc.*, e.name
+        FROM board_comment bc
+                 JOIN employee e ON bc.writer = e.id
         WHERE board_id = #{boardId}
         ORDER BY created_at DESC
     </select>
 
     <!-- 원댓글에 대한 대댓글 조회 -->
     <select id="getListByRefId" resultType="com.kedu.ggirick_client_backend.dto.board.BoardCommentDTO">
-        SELECT * FROM board_comment
+        SELECT *
+        FROM board_comment
         WHERE ref_comment_id = #{refCommentId}
         ORDER BY created_at DESC
     </select>
 
     <!-- 개별 댓글 조회 -->
     <select id="getById" resultType="com.kedu.ggirick_client_backend.dto.board.BoardCommentDTO">
-        SELECT * from board_comment WHERE id = #{id, jdbcType=INTEGER}
+        SELECT *
+        from board_comment
+        WHERE id = #{id, jdbcType=INTEGER}
     </select>
 
     <!-- 댓글 등록 -->
@@ -39,11 +43,15 @@
 
     <!-- 댓글 삭제 -->
     <delete id="deleteById">
-        DELETE FROM board_comment WHERE id = #{id}
+        DELETE
+        FROM board_comment
+        WHERE id = #{id}
     </delete>
 
     <!-- 댓글 수정(내용만 수정 가능) -->
     <update id="updateById">
-        UPDATE board_comment SET contents = #{contents} WHERE id = #{id}
+        UPDATE board_comment
+        SET contents = #{contents}
+        WHERE id = #{id}
     </update>
 </mapper>

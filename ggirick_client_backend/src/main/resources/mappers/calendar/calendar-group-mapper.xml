@@ -1,24 +1,26 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="CalendarGroup">
     <select id="getListByUserId" resultType="com.kedu.ggirick_client_backend.dto.calendar.CalendarGroupDTO">
         SELECT cg.*
         FROM calendar_group cg
-        JOIN employee_calendar_group ecg ON ecg.group_id=cg.id
-        WHERE ecg.employee_id=#{id}
+                 JOIN employee_calendar_group ecg ON ecg.group_id = cg.id
+        WHERE ecg.employee_id = #{id}
     </select>
 
     <select id="getEmployeeListByGroupId" resultType="String">
         SELECT ecg.employee_id
         FROM calendar_group cg
-        JOIN employee_calendar_group ecg ON ecg.group_id=cg.id
-        WHERE ecg.group_id=#{groupId}
+                 JOIN employee_calendar_group ecg ON ecg.group_id = cg.id
+        WHERE ecg.group_id = #{groupId}
     </select>
 
     <select id="getOwnerById" resultType="String">
-        SELECT owner FROM calendar_group WHERE id=#{id}
+        SELECT owner
+        FROM calendar_group
+        WHERE id = #{id}
     </select>
 
     <insert id="insert">
@@ -30,21 +32,27 @@
     </insert>
 
     <update id="updateById">
-        UPDATE calendar_group SET
-        name=#{name},
-        description=#{description, jdbcType=VARCHAR}
-        WHERE id=#{id}
+        UPDATE calendar_group
+        SET name=#{name},
+            description=#{description, jdbcType=VARCHAR}
+        WHERE id = #{id}
     </update>
 
     <delete id="deleteById">
-        DELETE FROM calendar_group WHERE id=#{id}
+        DELETE
+        FROM calendar_group
+        WHERE id = #{id}
     </delete>
 
     <delete id="deleteGroupEmployee">
-        DELETE FROM employee_calendar_group WHERE employee_id=#{userId} AND group_id=#{groupId}
+        DELETE
+        FROM employee_calendar_group
+        WHERE employee_id = #{userId}
+          AND group_id = #{groupId}
     </delete>
 
     <insert id="insertGroupEmployee">
-        INSERT INTO employee_calendar_group(id, employee_id, group_id) VALUES(employee_calendar_group_seq.nextval, #{userId}, #{groupId})
+        INSERT INTO employee_calendar_group(id, employee_id, group_id)
+        VALUES (employee_calendar_group_seq.nextval, #{userId}, #{groupId})
     </insert>
 </mapper>

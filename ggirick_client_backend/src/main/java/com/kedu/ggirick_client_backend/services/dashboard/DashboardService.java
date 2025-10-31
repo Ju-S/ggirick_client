@@ -6,12 +6,17 @@ import com.kedu.ggirick_client_backend.dto.board.BoardDTO;
 import com.kedu.ggirick_client_backend.dto.board.BoardGroupDTO;
 import com.kedu.ggirick_client_backend.dto.calendar.CalendarDTO;
 import com.kedu.ggirick_client_backend.dto.calendar.CalendarGroupDTO;
+import com.kedu.ggirick_client_backend.dto.dashboard.ActivityDTO;
+import com.kedu.ggirick_client_backend.dto.task.ProjectDTO;
+import com.kedu.ggirick_client_backend.dto.task.TaskDTO;
 import com.kedu.ggirick_client_backend.services.approval.ApprovalHistoryService;
 import com.kedu.ggirick_client_backend.services.approval.ApprovalService;
 import com.kedu.ggirick_client_backend.services.board.BoardGroupService;
 import com.kedu.ggirick_client_backend.services.board.BoardService;
 import com.kedu.ggirick_client_backend.services.calendar.CalendarGroupService;
 import com.kedu.ggirick_client_backend.services.calendar.CalendarService;
+import com.kedu.ggirick_client_backend.services.reservation.ReservationService;
+import com.kedu.ggirick_client_backend.services.task.TaskProjectService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -30,6 +35,8 @@ public class DashboardService {
     private final BoardGroupService boardGroupService;
     private final ApprovalHistoryService approvalHistoryService;
     private final ApprovalService approvalService;
+    private final ReservationService reservationService;
+    private final TaskProjectService taskProjectService;
 
     // region 일정 관련
     // 오늘의 일정 갯수
@@ -85,6 +92,7 @@ public class DashboardService {
 
         for (CalendarDTO item : originalList) {
             LocalDateTime start = item.getStartAt().toLocalDateTime();
+            LocalDateTime end = item.getEndAt().toLocalDateTime();
             LocalDateTime recurrenceEnd = item.getRecurrenceEnd() != null
                     ? item.getRecurrenceEnd().toLocalDateTime()
                     : start.plusMonths(6); // 기본 6개월까지만 확장
@@ -92,32 +100,48 @@ public class DashboardService {
             while (!start.isAfter(recurrenceEnd)) {
                 // 오늘 포함 여부 비교 (날짜만 비교)
                 if (!start.toLocalDate().isBefore(today)) {
-                    expandedList.add(copySchedule(item, start));
+                    expandedList.add(copySchedule(item, start, end));
                 }
 
                 if (item.getRecurrence().equalsIgnoreCase("none")) {
                     break;
                 }
 
-                start = switch (item.getRecurrence()) {
-                    case "daily" -> start.plusDays(1);
-                    case "weekly" -> start.plusWeeks(1);
-                    case "monthly" -> start.plusMonths(1);
-                    case "yearly" -> start.plusYears(1);
-                    default -> start;
-                };
+                switch (item.getRecurrence()) {
+                    case "daily" -> {
+                        start = start.plusDays(1);
+                        end = end.plusDays(1);
+                    }
+                    case "weekly" -> {
+                        start = start.plusWeeks(1);
+                        end = end.plusWeeks(1);
+                    }
+                    case "monthly" -> {
+                        start = start.plusMonths(1);
+                        end = end.plusMonths(1);
+                    }
+                    case "yearly" -> {
+                        start = start.plusYears(1);
+                        end = end.plusYears(1);
+                    }
+                    default -> {
+                        // 변경 없음
+                    }
+                }
             }
         }
         return expandedList;
     }
 
     // 일정 복사
-    public CalendarDTO copySchedule(CalendarDTO original, LocalDateTime start) {
+    public CalendarDTO copySchedule(CalendarDTO original, LocalDateTime start, LocalDateTime end) {
         return CalendarDTO.builder()
                 .startAt(Timestamp.valueOf(start))
+                .endAt(Timestamp.valueOf(end))
                 .title(original.getTitle())
                 .name(original.getName())
                 .groupId(original.getGroupId())
+                .color(original.getColor())
                 .build();
     }
     // endregion
@@ -159,6 +183,154 @@ public class DashboardService {
         }
 
         return approvalInfos;
+    }
+
+    // endregion
+
+    // region 최근 활동(3개)
+    public List<ActivityDTO> getRecentActivity(String userId) {
+        List<ActivityDTO> recentActivity = new ArrayList<>();
+
+        // 예약
+        recentActivity.addAll(getReservationList(userId));
+
+        // 게시글
+        recentActivity.addAll(getBoardList(userId));
+
+        // 공지
+        recentActivity.addAll(getNotificationList(userId));
+
+        // 업무
+        recentActivity.addAll(getTaskList(userId));
+
+        // 결재 문서
+        recentActivity.addAll(getPendingApprovalList(userId));
+        recentActivity.addAll(getAssignedApprovalList(userId));
+
+        // 일정
+        recentActivity.addAll(getCalendarList(userId));
+
+        // 모든 활동을 날짜 기준으로 정렬 후 최근 3개만 반환
+        return recentActivity.stream()
+                .sorted(Comparator.comparing(ActivityDTO::getCreatedAt).reversed())
+                .limit(3)
+                .toList();
+    }
+
+    // --- 예약 ---
+    public List<ActivityDTO> getReservationList(String userId) {
+        return reservationService.getMyReservations(userId)
+                .stream()
+                .limit(3)
+                .map(item -> ActivityDTO.builder()
+                        .type("reservation")
+                        .createdAt(Timestamp.valueOf(item.getReservatedAt()))
+                        .rawData(item)
+                        .build())
+                .toList();
+    }
+
+    // --- 게시글 ---
+    public List<ActivityDTO> getBoardList(String userId) {
+        List<BoardGroupDTO> groupList = boardGroupService.getGroupList(userId);
+
+        List<BoardDTO> boardList = new ArrayList<>(boardService.getList(1, 1, 0, null)
+                .stream().limit(3).toList()); // 공개 게시글
+
+        for (BoardGroupDTO group : groupList) {
+            boardList.addAll(boardService.getList(1, group.getId(), 0, null)
+                    .stream().limit(3).toList());
+        }
+
+        return boardList.stream()
+                .map(item -> ActivityDTO.builder()
+                        .type("board")
+                        .createdAt(item.getCreatedAt())
+                        .rawData(item)
+                        .build())
+                .toList();
+    }
+
+    // --- 공지 ---
+    public List<ActivityDTO> getNotificationList(String userId) {
+        List<BoardGroupDTO> groupList = boardGroupService.getGroupList(userId);
+        List<BoardDTO> notificationList = new ArrayList<>();
+
+        for (BoardGroupDTO group : groupList) {
+            notificationList.addAll(boardService.getNotificationList(group.getId())
+                    .stream().limit(3).toList());
+        }
+
+        return notificationList.stream()
+                .map(item -> ActivityDTO.builder()
+                        .type("notification")
+                        .createdAt(item.getCreatedAt())
+                        .rawData(item)
+                        .build())
+                .toList();
+    }
+
+    // --- 업무 ---
+    public List<ActivityDTO> getTaskList(String userId) {
+        List<ProjectDTO> projectList = taskProjectService.getMyProjects(userId);
+        List<TaskDTO> taskList = new ArrayList<>();
+
+        for (ProjectDTO project : projectList) {
+            taskList.addAll(taskProjectService.getTaskByProjectId(project.getId())
+                    .stream().limit(3).toList());
+        }
+
+        return taskList.stream()
+                .map(item -> ActivityDTO.builder()
+                        .type("task")
+                        .createdAt(Timestamp.valueOf(item.getCreatedAt()))
+                        .rawData(item)
+                        .build())
+                .toList();
+    }
+
+    // --- 결재 문서 ---
+    public List<ActivityDTO> getPendingApprovalList(String userId) {
+        return approvalService.getList(userId, 1, 0, 0, null)
+                .stream().limit(3)
+                .map(item -> ActivityDTO.builder()
+                        .type("pendingApproval")
+                        .createdAt(item.getCreatedAt())
+                        .rawData(item)
+                        .build())
+                .toList();
+    }
+
+    public List<ActivityDTO> getAssignedApprovalList(String userId) {
+        return approvalService.getList(userId, 1, 3, 0, null)
+                .stream().limit(3)
+                .map(item -> ActivityDTO.builder()
+                        .type("assignedApproval")
+                        .createdAt(item.getCreatedAt())
+                        .rawData(item)
+                        .build())
+                .toList();
+    }
+
+    // --- 일정 ---
+    public List<ActivityDTO> getCalendarList(String userId) {
+        List<CalendarGroupDTO> calendarGroupList = calendarGroupService.getListByUserId(userId);
+
+        List<CalendarDTO> calendarList = new ArrayList<>(calendarService.getListByUserId(userId)
+                .stream().limit(3).toList());
+
+        for (CalendarGroupDTO group : calendarGroupList) {
+            calendarList.addAll(calendarService.getListByGroupId(group.getId())
+                    .stream().limit(3).toList());
+        }
+
+        return calendarList.stream()
+                .map(item -> ActivityDTO.builder()
+                        .type("calendar")
+                        .createdAt(item.getCreatedAt())
+                        .rawData(item)
+                        .build())
+                .toList();
     }
 
     // endregion

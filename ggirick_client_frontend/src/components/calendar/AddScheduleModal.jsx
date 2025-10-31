@@ -245,11 +245,33 @@ export default function AddScheduleModal() {
                         }
 
                         {!selectedSchedule &&
-                            <div className="flex gap-2">
-                                <button className="btn btn-primary flex-1" onClick={handleSaveEvent}>
-                                    추가
-                                </button>
-                            </div>
+                            <>
+                                <div className="mb-4">
+                                    <label className="block font-semibold mb-1">색상</label>
+                                    <div className="flex items-center gap-2">
+                                        <input
+                                            type="color"
+                                            value={newEvent.color}
+                                            onChange={(e) => setNewEvent({...newEvent, color: e.target.value})}
+                                            className="w-16 h-10 p-0 border-0 cursor-pointer"
+                                        />
+                                        <span
+                                            className="px-2 py-1 rounded font-semibold"
+                                            style={{
+                                                backgroundColor: newEvent.color,
+                                                color: getContrastColor(newEvent.color)
+                                            }}
+                                        >
+                                    {newEvent.title ? newEvent.title : "텍스트 미리보기"}
+                                </span>
+                                    </div>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button className="btn btn-primary flex-1" onClick={handleSaveEvent}>
+                                        추가
+                                    </button>
+                                </div>
+                            </>
                         }
                     </div>
                 </div>

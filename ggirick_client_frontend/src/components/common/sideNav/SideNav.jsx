@@ -104,9 +104,6 @@ export default function SideNav() {
                                 viewBox="0 0 20 20"
                                 xmlns="http://www.w3.org/2000/svg"
                             ></svg>
-                            <span className="text-primary-800 bg-primary-100 inline-flex h-5 w-5 items-center justify-center rounded-full text-xs font-semibold">
-                4
-              </span>
                         </button>
                     </li>
                     <li>
@@ -304,27 +301,27 @@ export default function SideNav() {
                     {/*    </button>*/}
                     {/*</li>*/}
                 </ul>
-                <ul className="mt-5 space-y-2 border-t border-gray-200 pt-5">
-                    <li>
-                        <button
-                            type="button"
-                            onClick={() => navigate("/organization")}
-                            className="group flex w-full items-center rounded-lg p-2 text-base-content font-medium  transition duration-75"
-                        >
-                            <svg
-                                aria-hidden="true"
-                                className="h-6 w-6 flex-shrink-0 text-primary transition duration-75 group-hover:text-secondary"
-                                fill="currentColor"
-                                viewBox="0 -2 15 20"
-                                xmlns="http://www.w3.org/2000/svg"
-                            >
-                                <path d="M4 2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM7.5 5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2.5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM4.5 8a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2.5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" />
-                                <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1zm11 0H3v14h3v-2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V15h3z" />
-                            </svg>
-                            <span className="ml-3">조직도</span>
-                        </button>
-                    </li>
-                </ul>
+                {/*<ul className="mt-5 space-y-2 border-t border-gray-200 pt-5">*/}
+                {/*    <li>*/}
+                {/*        <button*/}
+                {/*            type="button"*/}
+                {/*            onClick={() => navigate("/organization")}*/}
+                {/*            className="group flex w-full items-center rounded-lg p-2 text-base-content font-medium  transition duration-75"*/}
+                {/*        >*/}
+                {/*            <svg*/}
+                {/*                aria-hidden="true"*/}
+                {/*                className="h-6 w-6 flex-shrink-0 text-primary transition duration-75 group-hover:text-secondary"*/}
+                {/*                fill="currentColor"*/}
+                {/*                viewBox="0 -2 15 20"*/}
+                {/*                xmlns="http://www.w3.org/2000/svg"*/}
+                {/*            >*/}
+                {/*                <path d="M4 2.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zM4 5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM7.5 5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2.5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zM4.5 8a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5zm2.5.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5zm3.5-.5a.5.5 0 0 0-.5.5v1a.5.5 0 0 0 .5.5h1a.5.5 0 0 0 .5-.5v-1a.5.5 0 0 0-.5-.5z" />*/}
+                {/*                <path d="M2 1a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1zm11 0H3v14h3v-2.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V15h3z" />*/}
+                {/*            </svg>*/}
+                {/*            <span className="ml-3">조직도</span>*/}
+                {/*        </button>*/}
+                {/*    </li>*/}
+                {/*</ul>*/}
             </div>
         </aside>
     );

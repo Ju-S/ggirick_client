@@ -216,4 +216,8 @@ public class TaskProjectService {
         return true;
     }
 
+    // 멤버 아이디로 프로젝트 업무 리스트 조회
+    public List<TaskDTO> getTaskByProjectId(long projectId) {
+        return taskProjectDAO.getTasks(projectId);
+    }
 }

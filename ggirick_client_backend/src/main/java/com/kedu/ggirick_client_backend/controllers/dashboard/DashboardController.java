@@ -20,7 +20,6 @@ import java.util.Map;
 public class DashboardController {
     private final DashboardService dashboardService;
     private final ApprovalService approvalService;
-    private final ApprovalHistoryService approvalHistoryService;
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getDashboardNews(@AuthenticationPrincipal UserTokenDTO userInfo) {
@@ -43,7 +42,7 @@ public class DashboardController {
         news.put("recentNotification", dashboardService.getRecentNotification(userInfo.getId()));
 
         // 최근 활동(3개)
-
+        news.put("recentActivities", dashboardService.getRecentActivity(userInfo.getId()));
 
         return ResponseEntity.ok(news);
     }

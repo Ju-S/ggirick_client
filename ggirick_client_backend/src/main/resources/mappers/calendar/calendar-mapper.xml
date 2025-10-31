@@ -1,23 +1,21 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="Calendar">
     <insert id="insert">
-        INSERT INTO
-        calendar(id, title, description, color, recurrence, recurrence_end, group_id, writer, start_at, end_at)
-        VALUES (
-        calendar_seq.nextval,
-        #{title},
-        #{description, jdbcType=VARCHAR},
-        #{color, jdbcType=VARCHAR},
-        #{recurrence, jdbcType=VARCHAR},
-        #{recurrenceEnd, jdbcType=TIMESTAMP},
-        #{groupId, jdbcType=NUMERIC},
-        #{writer},
-        #{startAt},
-        #{endAt}
-        )
+        INSERT INTO calendar(id, title, description, color, recurrence, recurrence_end, group_id, writer, start_at,
+                             end_at)
+        VALUES (calendar_seq.nextval,
+                #{title},
+                #{description, jdbcType=VARCHAR},
+                #{color, jdbcType=VARCHAR},
+                #{recurrence, jdbcType=VARCHAR},
+                #{recurrenceEnd, jdbcType=TIMESTAMP},
+                #{groupId, jdbcType=NUMERIC},
+                #{writer},
+                #{startAt},
+                #{endAt})
     </insert>
 
     <update id="updateById">
@@ -42,27 +40,32 @@
     </update>
 
     <delete id="deleteById">
-        DELETE FROM calendar WHERE id=#{id}
+        DELETE
+        FROM calendar
+        WHERE id = #{id}
     </delete>
 
     <!-- 개인 캘린더 일정 조회 -->
     <select id="getListByUserId" resultType="com.kedu.ggirick_client_backend.dto.calendar.CalendarDTO">
         SELECT c.*, e.name
         FROM calendar c
-        JOIN employee e ON c.writer=e.id
-        WHERE group_id IS NULL AND writer=#{userId}
+                 JOIN employee e ON c.writer = e.id
+        WHERE group_id IS NULL
+          AND writer = #{userId}
     </select>
 
     <!-- 그룹 캘린더 일정 조회 -->
     <select id="getListByGroupId" resultType="com.kedu.ggirick_client_backend.dto.calendar.CalendarDTO">
         SELECT c.*, e.name
         FROM calendar c
-        JOIN employee e ON c.writer=e.id
-        WHERE group_id=#{groupId}
+                 JOIN employee e ON c.writer = e.id
+        WHERE group_id = #{groupId}
     </select>
 
     <!-- 개별 일정 조회 -->
     <select id="getById" resultType="com.kedu.ggirick_client_backend.dto.calendar.CalendarDTO">
-        SELECT * FROM calendar WHERE id=#{id}
+        SELECT *
+        FROM calendar
+        WHERE id = #{id}
     </select>
 </mapper>

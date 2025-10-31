@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="Board">
     <!-- (to, from) 페이징 게시글 목록 게시 순서대로 select (검색을 위한 필터 설정 - title, writer) -->
     <!-- board_group_id에 대한 설정까지 필요 -->
@@ -54,33 +54,31 @@
     <!-- 공지 게시글만 조회 -->
     <select id="getNotificationList" resultType="com.kedu.ggirick_client_backend.dto.board.BoardDTO">
         SELECT *
-        FROM (
-        SELECT ROWNUM rm,
-        a.*
-        FROM (
-        SELECT b.id,
-        b.writer,
-        b.title,
-        b.created_at,
-        b.view_count,
-        e.name,
-        COUNT(DISTINCT bc.id) AS comment_count,
-        COUNT(DISTINCT bf.id) AS file_count
-        FROM board b
-        JOIN employee e ON b.writer = e.id
-        LEFT JOIN board_file bf ON b.id = bf.board_id
-        LEFT JOIN board_comment bc ON b.id = bc.board_id
-        WHERE b.board_group_id = #{groupId} AND is_notification='Y'
-        GROUP BY b.id, b.writer, b.title, b.created_at, b.view_count, e.name
-        ORDER BY b.created_at DESC
-        ) a
-        )
+        FROM (SELECT ROWNUM rm,
+                     a.*
+              FROM (SELECT b.id,
+                           b.writer,
+                           b.title,
+                           b.created_at,
+                           b.view_count,
+                           e.name,
+                           COUNT(DISTINCT bc.id) AS comment_count,
+                           COUNT(DISTINCT bf.id) AS file_count
+                    FROM board b
+                             JOIN employee e ON b.writer = e.id
+                             LEFT JOIN board_file bf ON b.id = bf.board_id
+                             LEFT JOIN board_comment bc ON b.id = bc.board_id
+                    WHERE b.board_group_id = #{groupId}
+                      AND is_notification = 'Y'
+                    GROUP BY b.id, b.writer, b.title, b.created_at, b.view_count, e.name
+                    ORDER BY b.created_at DESC) a)
     </select>
 
     <!-- 선택된 게시글의 내용 select -->
     <select id="getById" resultType="com.kedu.ggirick_client_backend.dto.board.BoardDTO">
-        SELECT b.*, e.name FROM board b
-        JOIN employee e ON b.writer = e.id
+        SELECT b.*, e.name
+        FROM board b
+                 JOIN employee e ON b.writer = e.id
         WHERE b.id = #{id}
     </select>
 
@@ -127,7 +125,9 @@
 
     <!-- 게시글 삭제 -->
     <delete id="deleteById">
-        DELETE FROM board WHERE id = #{id}
+        DELETE
+        FROM board
+        WHERE id = #{id}
     </delete>
 
     <!-- 게시글 수정(제목, 내용만 수정 가능) -->
@@ -142,6 +142,8 @@
 
     <!-- 게시글 조회수 증가 -->
     <update id="increaseViewCount">
-        UPDATE board SET view_count = view_count+1 WHERE id = #{id}
+        UPDATE board
+        SET view_count = view_count + 1
+        WHERE id = #{id}
     </update>
 </mapper>
