@@ -13,4 +13,14 @@ public class AuthDAO {
     public UserTokenDTO getTokenInfo(String id) {
         return mybatis.selectOne("Token.getTokenInfo", id);
     }
+
+    // password_reset 테이블에서 삭제
+    public int deletePasswordResetById(String id) {
+        return mybatis.delete("Auth.deletePasswordResetById", id);
+    }
+
+    // 초기 비밀번호로 로그인했는지 체크
+    public int existsInPasswordReset(String empId) {
+        return mybatis.selectOne("Auth.existsInPasswordReset", empId);
+    }
 }

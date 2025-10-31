@@ -1,3 +1,5 @@
+import {checkResetRequiredAPI} from "@/api/auth/authAPI.js";
+
 const apiRoutes = {
     auth: {
         /**
@@ -15,6 +17,13 @@ const apiRoutes = {
         logout: {url: `/auth/logout`, method: "GET"},
 
         /**
+         * 초기 비밀번호로 로그인 했는지 확인 API<br>
+         * GET /auth/checkResetRequired<br>
+         * response: {boolean}
+         */
+        checkResetRequired: {url: `/auth/checkResetRequired`, method: "GET"},
+
+        /**
          * 아이디 중복 확인 API<br>
          * GET /employee<br>
          * param: {empId}<br>
@@ -24,6 +33,35 @@ const apiRoutes = {
             url: `/employee/checkDuplicateId?id=${empId}`,
             method: "GET",
         }),
+
+        /**
+         * 이메일 중복 확인 API
+         * GET /auth/check-email?email={email}
+         * response: true(중복)/false(중복아님)
+         */
+        checkEmailDuplicate: (email) => ({
+            url: `/auth/checkEmail?email=${email}`,
+            method: "GET",
+        }),
+
+        /**
+         * 초기 비밀번호 변경 + 이메일 등록
+         * POST /auth/reset-password
+         * body: { empId, currentPw, newPw, email }
+         */
+        resetPassword: (resetInfo) => ({
+            url: `/auth/resetPassword`,
+            method: "POST",
+            data: resetInfo
+        }),
+
+        /**
+         * JWT 인증 토큰 유효한지 검사
+         * GET /auth/verify
+         * response: 200(정상), SC_UNAUTHORIZED(비정상)
+         */
+        verify: {url:`/auth/verify`, method:"GET"},
+
     },
     board: {
         /**
