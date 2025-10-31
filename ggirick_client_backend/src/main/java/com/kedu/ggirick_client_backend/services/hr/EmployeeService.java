@@ -59,13 +59,23 @@ public class EmployeeService {
     }
 
     // 이메일 중복 여부 확인
-    public boolean isEmailDuplicate(String email) {
-        return employeeDAO.isEmailDuplicate(email) > 0;
+    public boolean isEmailDuplicate(String email, String userId) {
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("email", email);
+        params.put("userId", userId);
+
+        return employeeDAO.isEmailDuplicate(params) > 0;
     }
 
     // 핸드폰 번호 중복 여부 확인
-    public boolean isPhoneDuplicate(String phone) {
-        return employeeDAO.isPhoneDuplicate(phone) > 0;
+    public boolean isPhoneDuplicate(String phone, String userId) {
+        Map<String, Object> params = new HashMap<>();
+
+        params.put("phone", phone);
+        params.put("userId", userId);
+
+        return employeeDAO.isPhoneDuplicate(params) > 0;
     }
 
     // 초기 비밀번호, 이메일, 핸드폰 번호 입력

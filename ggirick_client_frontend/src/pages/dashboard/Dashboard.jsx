@@ -172,7 +172,7 @@ export default function Dashboard() {
                                     최신 공지
                                 </span>
                                 <span className="mt-3 text-xs text-base-content-900">
-                                    {newNotification ? (
+                                    {newNotification.name ? (
                                         "[" + newNotification.name + "]" + newNotification.title
                                     ) : (
                                         "등록된 공지가 없습니다."

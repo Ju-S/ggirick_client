@@ -150,13 +150,17 @@ public class DashboardService {
     // 최신 공지글 하나 조회
     public BoardDTO getRecentNotification(String userId) {
         List<BoardGroupDTO> boardGroupList = boardGroupService.getGroupList(userId);
-        List<BoardDTO> notificationList = new ArrayList<>();
+        List<BoardDTO> notificationList = new ArrayList<>(boardService.getNotificationList(1));
 
         for (BoardGroupDTO boardGroup : boardGroupList) {
             notificationList.addAll(boardService.getNotificationList(boardGroup.getId()));
         }
 
         notificationList.sort(Comparator.comparing(BoardDTO::getCreatedAt).reversed());
+
+        if(notificationList.isEmpty()) {
+            return null;
+        }
         return notificationList.get(0);
     }
 
