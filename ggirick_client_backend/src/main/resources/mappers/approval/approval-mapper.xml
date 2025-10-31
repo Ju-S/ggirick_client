@@ -295,4 +295,14 @@
     <delete id="delete">
         DELETE FROM approval WHERE id=#{id}
     </delete>
+
+    <!-- 승인 완료된 문서만 필터 -->
+    <select id="getApprovedDocsByEmployeeAndType" parameterType="map"
+            resultType="com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO">
+        SELECT *
+        FROM approval
+        WHERE writer = #{employeeId}
+        AND doc_type_code = #{docTypeCode}
+        AND type_id = 1 <!-- 승인완료 -->
+    </select>
 </mapper>

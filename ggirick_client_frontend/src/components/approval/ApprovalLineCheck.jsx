@@ -1,7 +1,7 @@
 import useApprovalStore from "@/store/approval/approvalStore.js";
 import {useEffect, useState} from "react";
 import {getTypeAPI} from "@/api/approval/approvalTypeAPI.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {insertAPI} from "@/api/approval/approvalHistoryAPI.js";
 import {useNavigate} from "react-router-dom";
 

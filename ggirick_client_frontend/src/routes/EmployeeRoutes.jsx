@@ -14,6 +14,7 @@ const ApprovalRoutes = lazy(() => import("@/routes/ApprovalRoutes.jsx"));
 const VideoMeetingPage = lazy(() => import("@/pages/chat/VideoMeetingPage.jsx"));
 const CalendarPage = lazy(() => import("@/pages/calendar/CalendarPage.jsx"));
 const CalendarLayout = lazy(() => import("@/pages/calendar/CalendarLayout.jsx"));
+const WorkDashboard = lazy(() => import("@/pages/workmanagement/WorkDashboard.jsx"));
 
 export default function EmployeeRoutes() {
     // prefetch hook
@@ -31,7 +32,7 @@ export default function EmployeeRoutes() {
                 <Route path="/board/*" element={<BoardRoutes/>}/>
                 <Route path="/approval/*" element={<ApprovalRoutes/>}/>
                 <Route path="/calendar" element={<CalendarLayout><CalendarPage/></CalendarLayout>}/>
-                <Route path="/workmanagement" element={<>workmanagement</>}/>
+                <Route path="/workmanagement" element={<WorkDashboard/>}/>
                 <Route path="/reservation" element={<ReservationPage/>}/>
                 <Route path="/task" element={<TaskPage/>}/>
                 <Route path="/mail" element={<MailPage/>}/>

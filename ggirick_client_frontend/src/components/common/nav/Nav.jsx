@@ -3,8 +3,8 @@ import {useNavigate} from "react-router-dom";
 
 import React, {useEffect, useState} from "react";
 import ThemeDropdown from "@/components/common/ThemeDropdown.jsx";
-import useAuthStore from "@/store/authStore.js";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useAuthStore from "@/store/auth/authStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {emailDuplCheck, updateEmployeeAPI} from "@/api/mypage/employeeAPI.js";
 
 export default function Nav() {

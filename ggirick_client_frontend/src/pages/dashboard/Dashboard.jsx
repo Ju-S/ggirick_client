@@ -2,11 +2,22 @@ import {Card} from "flowbite-react";
 import {useNavigate} from "react-router-dom";
 import Clock from "@/components/dashboard/Clock.jsx";
 import './Dashboard.css';
+import useWorkCheck from "@/hooks/workmanagement/useWorkCheck.js";
+import WorkCheckCardGrid from "@/components/dashboard/WorkCheckCardGrid.jsx";
+import WorkStatusPanel from "@/components/workmanagement/WorkStatusPanel.jsx";
 import {useEffect, useState} from "react";
 import {getInfos} from "@/api/dashboard/dashboardAPI.js";
 
 export default function Dashboard() {
     const navigate = useNavigate();
+    const {
+        workTimeLogs,
+        workTimeTypes,
+        hasCheckedIn,
+        hasCheckedOut,
+        handleCheck,
+    } = useWorkCheck();
+
     // 읽지 않은 메일
     const [mailCount, setMailCount] = useState(0);
     // 오늘 일정
@@ -295,7 +306,7 @@ export default function Dashboard() {
                     </Card>
                 </div>
             </div>
-            <div className="mb-2 grid grid-cols-2 gap-4">
+            <div className="mb-2 grid grid-cols-3 gap-4">
                 <div className="h-32 rounded-lg md:h-72">
                     <Card className="h-full w-full rounded-lg shadow-sm border-none !bg-base-100">
                         <div className="flex items-start justify-start">
@@ -343,80 +354,19 @@ export default function Dashboard() {
                         </div>
                     </Card>
                 </div>
-                <div className="h-32 rounded-lg md:h-72">
-                    <Card className="h-full w-full rounded-lg shadow-sm border-none !bg-base-100">
-                        <div className="flex items-start justify-start">
-                            <div className="flex w-full flex-col gap-4">
-                                <div className="flex items-center gap-2">
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth={2}
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="lucide lucide-clipboard-clock-icon lucide-clipboard-clock text-base-content-800 h-6 w-6"
-                                    >
-                                        <path d="M16 14v2.2l1.6 1"/>
-                                        <path d="M16 4h2a2 2 0 0 1 2 2v.832"/>
-                                        <path d="M8 4H6a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h2"/>
-                                        <circle cx="16" cy="16" r="6"/>
-                                        <rect x="8" y="2" width="8" height="4" rx="1"/>
-                                    </svg>
-                                    <span className="text-m text-base-content-900">
-                    출/퇴근 기록
-                  </span>
-                                </div>
-                                <div className="grid grid-cols-2 gap-4">
-                                    <Clock/>
-                                    <div className="inline-grid grid-cols-2 gap-2">
-                                        <div className="col-span-2">
-                                        </div>
-                                        <Card
-                                            onClick={() => navigate("")}
-                                            className="h-24 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
-                                        >
-                                            출근<br/>
-                                            <span className="text-sm">08:56:24</span>
-                                        </Card>
-                                        <Card
-                                            onClick={() => navigate("")}
-                                            className="h-24 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
-                                        >
-                                            퇴근<br/>
-                                            <span className="text-sm">00:00:00</span>
-                                        </Card>
-                                        <Card
-                                            onClick={() => navigate("")}
-                                            className="h-12 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
-                                        >
-                                            업무
-                                        </Card>
-                                        <Card
-                                            onClick={() => navigate("")}
-                                            className="h-12 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
-                                        >
-                                            외출
-                                        </Card>
-                                        <Card
-                                            onClick={() => navigate("")}
-                                            className="h-12 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
-                                        >
-                                            회의
-                                        </Card>
-                                        <Card
-                                            onClick={() => navigate("")}
-                                            className="h-12 w-full rounded-lg text-center shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800"
-                                        >
-                                            외근
-                                        </Card>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </Card>
-                </div>
+                {/* 출퇴근 카드 */}
+                <WorkCheckCardGrid
+                    workTimeLogs={workTimeLogs}
+                    workTimeTypes={workTimeTypes}
+                    hasCheckedIn={hasCheckedIn}
+                    hasCheckedOut={hasCheckedOut}
+                    handleCheck={handleCheck}
+                />
+                {/* 근무현황 */}
+                <WorkStatusPanel
+                    workTimeLogs={workTimeLogs.daily}
+                    workTimeTypes={workTimeTypes}
+                />
             </div>
         </main>
     );

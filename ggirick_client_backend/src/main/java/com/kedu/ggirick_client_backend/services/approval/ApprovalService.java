@@ -93,4 +93,12 @@ public class ApprovalService {
     public void delete(int approvalId) {
         approvalDAO.delete(approvalId);
     }
+
+     // 특정 직원의 승인 완료된 문서를 유형별로 조회 (VAC, OWR, HWR 등)
+     public List<ApprovalDTO> getApprovedDocsByEmployeeAndType(String employeeId, String docTypeCode) {
+         Map<String, Object> params = new HashMap<>();
+         params.put("employeeId", employeeId);
+         params.put("docTypeCode", docTypeCode);
+         return approvalDAO.getApprovedDocsByEmployeeAndType(params);
+     }
 }

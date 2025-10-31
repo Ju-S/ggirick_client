@@ -1,6 +1,6 @@
 import axios from "axios";
+import {BASE_URL} from "@/api/common/ipaddress.js";
 
-import { BASE_URL } from "./ipaddress.js"
 const api = axios.create();
 
 api.interceptors.request.use(

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="Job">
+    <!-- 직급 코드 -> 직급명 찾기 -->
+    <select id="findJobName" resultType="String" parameterType="String">
+        SELECT name FROM job WHERE UPPER(code) = UPPER(#{code, jdbcType=VARCHAR})
+    </select>
+
+    <!-- ID로 직급 코드 가져오기 -->
+    <select id="getJobCodeById" resultType="String" parameterType="String">
+        SELECT job_code FROM employee_job WHERE id = #{id}
+    </select>
+
+    <!-- 올해 마지막 사번 조회 -->
+    <select id="getLastEmployeeId" parameterType="String" resultType="String">
+        SELECT MAX(id)
+        FROM EMPLOYEE
+        WHERE SUBSTR(id, 3, 2) = #{yearSuffix}
+    </select>
+
+
+
+    <!-- 선택한 직원 직급 수정 - 한명 정보 한꺼번에 수정시 사용 -->
+    <update id="updateEmployeeJobById" parameterType="com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO">
+        UPDATE employee_job
+        SET
+        job_code = #{jobCode}
+        <if test="jobChanged == true">
+            , assigned_at = SYSDATE
+        </if>
+        WHERE employee_id = #{id}
+    </update>
+</mapper>

@@ -3,7 +3,7 @@ package com.kedu.ggirick_client_backend.services.chat;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.kedu.ggirick_client_backend.dao.chat.ChatDAO;
-import com.kedu.ggirick_client_backend.dao.employee.EmployeeDAO;
+import com.kedu.ggirick_client_backend.dao.hr.EmployeeDAO;
 import com.kedu.ggirick_client_backend.dto.chat.ChatMessageDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;

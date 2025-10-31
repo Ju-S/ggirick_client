@@ -86,8 +86,8 @@ export default function ReservationDetailModal() {
         <p><strong>예약자:</strong> {selectedReservation.employeeName || '정보 없음'}</p>
         <p>
           <strong>상태:</strong>
-          <span className={`badge ml-2 ${selectedReservation.status === 'CONFIRMED' ? 'badge-success' : selectedReservation.status === 'CANCELED' ? 'badge-error' : 'badge-neutral'}`}>
-            {selectedReservation.status}
+          <span className={`badge ml-2 ${selectedReservation.logs === 'CONFIRMED' ? 'badge-success' : selectedReservation.logs === 'CANCELED' ? 'badge-error' : 'badge-neutral'}`}>
+            {selectedReservation.logs}
           </span>
         </p>
         <p><strong>예약 목적:</strong> {selectedReservation.purpose || '없음'}</p>

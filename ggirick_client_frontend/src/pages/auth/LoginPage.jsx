@@ -1,6 +1,6 @@
 import { useState } from "react";
-import useEmployeeStore from "../../store/employeeStore.js";
-import useAuthStore from "../../store/authStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
+import useAuthStore from "@/store/auth/authStore.js";
 
 import GgirickLogo from '@/assets/logo/ggirick-header.svg?react';
 
@@ -25,6 +25,7 @@ export function LoginPage() {
 
 
     const handleLogin = () => {
+        console.log(loginInfo);
         loginAPI(loginInfo)
             .then(resp => {
                 const token = resp.data.token;

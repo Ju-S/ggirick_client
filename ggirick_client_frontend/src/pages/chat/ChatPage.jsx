@@ -1,7 +1,7 @@
 import SidebarWorkspaces from "../../components/chat/SidebarWorkspaces.jsx";
 import SidebarChannels from "../../components/chat//SidebarChannels.jsx";
 import ChatRoom from "../../components/chat/ChatRoom.jsx";
-import useEmployeeStore from "@/store/employeeStore.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {useEffect} from "react";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 
