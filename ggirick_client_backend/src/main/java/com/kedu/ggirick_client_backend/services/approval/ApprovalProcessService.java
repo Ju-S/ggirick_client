@@ -5,6 +5,8 @@ import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalDelegateDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO;
+import com.kedu.ggirick_client_backend.dto.hr.VacationUsageLogDTO;
+import com.kedu.ggirick_client_backend.services.hr.VacationService;
 import com.kedu.ggirick_client_backend.utils.approval.DocDataUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,8 @@ public class ApprovalProcessService {
     private final ApprovalService approvalService;
     private final ApprovalFilesService approvalFilesService;
     private final ApprovalDelegateService approvalDelegateService;
+
+    private final VacationService vacationService;
 
     private final DocDataUtil docDataUtil;
 
@@ -92,6 +96,20 @@ public class ApprovalProcessService {
                                                     .build());
                                 }
                             }
+
+//                            ApprovalDTO approvalInfo = approvalService.getById(approvalHistoryInfo.getApprovalId());
+//
+//                            VacationUsageLogDTO dto = new VacationUsageLogDTO();
+//                            dto.setEmployeeId(approvalInfo.getWriter());
+//                            dto.setApprovalId(approvalInfo.getId());
+//                            dto.setGrantId(vacationService.getCurrentGrantId(approvalInfo.getWriter()));
+//                            dto.setStartDate(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), true));
+//                            dto.setEndDate(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), false));
+//                            dto.setVacationType((String) approvalInfo.getDocData().get("vacationType"));
+//
+//                            vacationService.registerVacationUsage(dto);
+//
+
                         }
                         case DOC_TYPE_HOLIDAY -> {
 
