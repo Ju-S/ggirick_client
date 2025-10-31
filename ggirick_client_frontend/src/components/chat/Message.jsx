@@ -4,7 +4,7 @@ import { BlockActions } from "@/components/chat/BlockAction.jsx";
 import React from "react";
 import useChatStore from "@/store/chat/useChatStore.js";
 
-export function Message({ msg,  viewer, reactions, sendMessage }) {
+export function Message({ msg,  viewer, reactions, sendMessage, chatroom }) {
     const { addReaction,selectedWorkspace,selectedChannel} = useChatStore();
 
 
@@ -59,7 +59,7 @@ export function Message({ msg,  viewer, reactions, sendMessage }) {
                 />
             </div>
 
-            <BlockActions
+            {chatroom && ( <BlockActions
                 onLike={handleLike}
                 onCopy={handleCopy}
                 onViewer={handleViewer}
@@ -76,7 +76,7 @@ export function Message({ msg,  viewer, reactions, sendMessage }) {
                     });
                 }}
 
-            />
+            />)}
         </div>
     );
 }

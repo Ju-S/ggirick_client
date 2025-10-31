@@ -1,56 +1,56 @@
 import VideoHeader from "@/components/videoMeeting/VideoHeader.jsx";
-import ChatSidebar from "@/components/videoMeeting/ChatSidebaR.jsx";
+import ChatSidebar from "@/components/videoMeeting/ChatSidebar.jsx";
 import VideoFooter from "@/components/videoMeeting/VideoFooter.jsx";
 import VideoGrid from "@/components/videoMeeting/VideoGrid.jsx";
+import { Room } from 'livekit-client';
 import useChatStore from "@/store/chat/useChatStore.js";
 import {useVideoMeetingStore} from "@/store/chat/useVideoMeetingStore.js";
-import {useEffect} from "react";
+import {useEffect, useState} from "react";
+import {useNavigate} from "react-router";
+import api from "@/api/common/apiInterceptor.js";
+import {useLivekitStore} from "@/store/chat/useLivekitStore.js";
+import {useStore} from "zustand/react";
+
 
 export default function VideoMeetingPage({ users = [], messages = [] }) {
 
-    const {selectedWorkspace, selectedChannel, leaveSession,} = useChatStore();
+    const {selectedWorkspace, selectedChannel} = useChatStore();
+    const navigator = useNavigate();
+    const [isChatSidebarOpen, setChatSidebarOpen] = useState(false);
 
-    const { initSession, joinSession } = useVideoMeetingStore();
+
+    if(selectedChannel == null || selectedWorkspace == null){
+        navigator("/chat")
+    }
+
+
+    const { joinRoom, room, localVideoTrack, remoteTracks ,leaveRoom} = useLivekitStore();
 
     useEffect(() => {
-        const setup = async () => {
-            await initSession();
+        if (!selectedChannel || !selectedWorkspace) {
+            navigator("/chat");
+            return;
+        }
 
+        const init = async () => {
+            await joinRoom(`${selectedChannel.id}_${selectedWorkspace.id}`);
         };
-        setup();
-        return leaveSession;
-    }, []);
+        init();
+
+        return () => {
+            leaveRoom(); // cleanup 시 안전하게 호출
+        };
+    }, [selectedChannel, selectedWorkspace]);
 
 
-    const sampleUsers = users.length
-        ? users
-        : Array.from({ length: 5 }).map((_, idx) => ({
-            name: `User ${idx + 1}`,
-            avatar: `https://flowbite.com/docs/images/people/profile-picture-${(idx % 5) + 1}.jpg`,
-        }));
+    const handleChatSidebar =  () => {
+        if(isChatSidebarOpen){
+            setChatSidebarOpen(false);
+        }else{
+            setChatSidebarOpen(true);
+        }
+    }
 
-    const sampleMessages = messages.length
-        ? messages
-        : [
-            {
-                sender: "Alice",
-                avatar: "https://flowbite.com/docs/images/people/profile-picture-1.jpg",
-                text: "프로젝트는 어떻게 되어가고 있어?",
-                time: "10:12 AM",
-            },
-            {
-                sender: "You",
-                avatar: "",
-                text: "이해했어! 👍",
-                time: "10:14 AM",
-            },
-            {
-                sender: "Alice",
-                avatar: "https://flowbite.com/docs/images/people/profile-picture-1.jpg",
-                text: "아니 어떻게 되고 있냐고",
-                time: "10:15 AM",
-            },
-        ];
 
     return (
         <main className="flex flex-col h-screen pt-20 md:ml-64 bg-base-200">
@@ -62,14 +62,21 @@ export default function VideoMeetingPage({ users = [], messages = [] }) {
             {/* 메인 영역 */}
             <div className="flex flex-1 overflow-hidden">
                 {/* 비디오 그리드 */}
-                <VideoGrid users={sampleUsers} />
+                <VideoGrid
+                    localVideoTrack={localVideoTrack}
+                    remoteTracks={remoteTracks}
+                />
 
                 {/* 채팅 사이드바 */}
-                <ChatSidebar messages={sampleMessages} />
+                {
+                    isChatSidebarOpen && (<ChatSidebar />)
+
+                }
+
             </div>
 
             {/* 하단 제어 */}
-            <VideoFooter />
+            <VideoFooter handleChatSidebar = {handleChatSidebar}/>
         </main>
     );
 }

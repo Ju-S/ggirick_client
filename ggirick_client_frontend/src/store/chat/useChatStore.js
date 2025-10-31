@@ -1,25 +1,8 @@
 import { create } from "zustand";
 import chatAPI from "@/api/chat/chatAPI.js";
+import normalizeMessage from "@/utils/chat/nomalizeMessage.js";
 
-function normalizeMessage(m) {
-    return {
-        id: m.id,
-        senderId: m.senderId,
-        senderName: m.senderName || "Unknown",
-        type: m.type,
-        content: JSON.parse(m.content || []),
-        like: m.like_count || 0,
-        likeUsers:m.likeUsers || [],
-        viewer:m.viewer || [],
-        files: m.files,
-        reactions: m.reactions || [],
-        time: new Date(m.createdAt).toLocaleTimeString([], {  year: "numeric",
-            month: "2-digit",
-            day: "2-digit",
-            hour: "2-digit",
-            minute: "2-digit" }),
-    };
-}
+
 
 
 const useChatStore = create((set, get) => ({
@@ -111,8 +94,8 @@ const useChatStore = create((set, get) => ({
 
     // 워크스페이스 선택
     selectWorkspace: async (workspace) => {
-        const {fetchWorkspaceRole,workspaceRole} = get();
-        set({ selectedWorkspace: workspace, selectedChannel: null, messages: [], channels: [], });
+        const {fetchWorkspaceRole,workspaceRole,loading} = get();
+        set({ selectedWorkspace: workspace, selectedChannel: null, messages: [], channels: [], loading:true});
 
         try {
             const channels = await chatAPI.fetchChannels(workspace.id);
@@ -123,7 +106,7 @@ const useChatStore = create((set, get) => ({
 
             //워크스페이스에서의 내역할 세팅하기
             fetchWorkspaceRole(workspace.id);
-
+            set({loading:false});
 
         } catch (err) {
             console.error("채널 불러오기 실패:", err);
@@ -143,9 +126,17 @@ const useChatStore = create((set, get) => ({
         //캐시된 메시지 있으면 서버 호출 없이 렌더링
         const cached = getChannelMessages(channel.id);
         if (cached.length > 0) {
-            setTimeout(() => {
-                set({ messages: cached });
+            setTimeout(async () => {
+                set({messages: cached});
+
+                try {
+                    const members = await chatAPI.fetchChannelParticipants(selectedWorkspace.id, channel.id);
+                    set({selectedChannelMember: members});
+                }catch(err){
+                    console.log(err);
+                }
                 setLoading(false);
+
             }, 100); // 100ms 딜레이로 로딩 표시 보임
             return;
         }

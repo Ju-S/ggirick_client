@@ -4,17 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ResourceDTO {
+public class ResourceFileDTO {
     private Long id;
-    private String name;
-    private String description;
-    private String imgUrl;
-    private MultipartFile file;
-    private String type;
+    private String fileUrl;
+    private Long reservationResourceId;
+    private String filename;
+    private String sysname;
+    private LocalDateTime createdAt;
 }

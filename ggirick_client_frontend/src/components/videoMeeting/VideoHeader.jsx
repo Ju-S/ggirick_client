@@ -19,10 +19,7 @@ export default function VideoHeader() {
       <h1 className="text-lg font-semibold">
           {selectedWorkspace.name} |  {selectedChannel?.name}
       </h1>
-      <div className="flex items-center space-x-2">
-        <button className="btn btn-ghost btn-sm">Participants</button>
-        <button className="btn btn-ghost btn-sm">Chat</button>
-      </div>
+
     </header>
   )
 }

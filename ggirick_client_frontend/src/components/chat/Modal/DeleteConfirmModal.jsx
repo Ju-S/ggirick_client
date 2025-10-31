@@ -14,7 +14,7 @@ export default function DeleteConfirmModal({
 
             <div className="flex justify-end gap-4">
                 <button
-                    className="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
+                    className="px-4 py-2 bg-base-200 rounded hover:bg-secondary"
                     onClick={onCancel}
                 >
                     취소

@@ -73,7 +73,7 @@ export default function ChatInput({onSend}) {
                 files:uploadedFiles,
             }
 
-            console.log("입력창 페이로드:"+payload);
+            console.log("입력창 페이로드:"+JSON.stringify(payload));
           onSend( payload);
           editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
           setUploadedFiles([])

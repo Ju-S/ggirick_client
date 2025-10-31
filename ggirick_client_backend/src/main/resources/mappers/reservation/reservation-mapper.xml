@@ -5,7 +5,10 @@
 <mapper namespace="reservationMapper">
 
     <select id="findAllResources" resultType="com.kedu.ggirick_client_backend.dto.reservation.ResourceDTO">
-        SELECT * FROM RESERVATION_RESOURCE
+        SELECT * FROM RESERVATION_RESOURCE where deleted_at is null
+    </select>
+    <select id="findAllResourceType" resultType="com.kedu.ggirick_client_backend.dto.reservation.ResourceTypeDTO">
+        select * from RESERVATION_RESOURCE_TYPE
     </select>
 
     <select id="findReservationsForCalendar"
@@ -83,11 +86,32 @@
             SELECT RESOURCE_SEQ.NEXTVAL FROM DUAL
         </selectKey>
         insert into RESERVATION_RESOURCE (
-            id, name, description, IMGURL
+            id, name,type, description, created_at
         )VALUES (
-        #{id}, #{name}, #{description}, #{imgUrl}
+        #{id}, #{name},#{type}, #{description},sysdate
         )
     </insert>
+
+
+    <update id="updateResourceImgUrl">
+        UPDATE reservation_resource
+        SET imgurl = #{imgUrl}
+        WHERE id = #{id}
+    </update>
+    <insert id="insertResourceImage" useGeneratedKeys="true" keyProperty="id" keyColumn="ID" >
+        INSERT INTO reservation_resource_img (
+        id, fileurl, reservation_resource_id, filename, sysname, created_at
+        )
+        VALUES (
+        RESOURCE_FILE_SEQ.NEXTVAL,
+        #{fileUrl},
+        #{reservationResourceId},
+        #{filename},
+        #{sysname},
+        SYSTIMESTAMP
+        )
+    </insert>
+
 
     <select id="findReservationById" resultType="com.kedu.ggirick_client_backend.dto.reservation.ReservationDTO">
         SELECT * FROM RESERVATION WHERE ID = #{id}
@@ -101,8 +125,17 @@
             RESOURCE_ID = #{resourceId}
         WHERE ID = #{id}
     </update>
+    <update id="deleteReservationResource" parameterType="com.kedu.ggirick_client_backend.dto.reservation.ReservationDTO">
+        UPDATE RESERVATION_RESOURCE
+        SET
+            DELETED_AT = SYSDATE
+        WHERE ID = #{id}
+    </update>
+
     <delete id="deleteReservation">
         delete from RESERVATION WHERE ID = #{id}
     </delete>
+
+
 
 </mapper>
