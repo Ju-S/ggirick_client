@@ -619,6 +619,14 @@ const apiRoutes = {
         structure: {url: `/hr-meta/org-structure `, method: "GET"}
     },
 
+    mail:{
+      sendMail: (formData)=>({
+        url:"/mail/send",
+        method:"POST",
+        data:formData, // {} 로 감싸지않고 이렇게 보내야 @RequestParam같은걸로 받을수 있음
+      })
+    },
+
     address: {
         getGroupType: {
             url: "/address/group-type",
