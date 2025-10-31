@@ -485,7 +485,7 @@ export default function WorkDashboard() {
                                     <div className="flex">
                                         <button
                                             className="btn btn-primary btn-sm"
-                                            onClick={() => navigate("/approval")}
+                                            onClick={() => navigate("/approval/posting")}
                                         >
                                             휴가 신청
                                         </button>

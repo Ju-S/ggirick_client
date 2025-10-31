@@ -1,8 +1,5 @@
 package com.kedu.ggirick_client_backend.config;
 
-import com.kedu.ggirick_client_backend.interceptors.JWTInterceptor;
-import com.kedu.ggirick_client_backend.services.AuthService;
-import com.kedu.ggirick_client_backend.utils.JWTUtil;
 import com.kedu.ggirick_client_backend.websocket.ChatPreHandler;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;

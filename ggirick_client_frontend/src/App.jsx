@@ -17,73 +17,53 @@ import useAuthStore from "@/store/auth/authStore.js";
 import EmployeeRoutes from "./routes/EmployeeRoutes.jsx";
 import AlertModal from "@/components/common/modals/AlertModal.jsx";
 import {LoginPage} from "@/pages/auth/LoginPage.jsx";
-import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
-import useEmployeeStore from "@/store/hr/employeeStore.js";
+import {checkResetRequiredAPI, verifyAPI} from "@/api/auth/authAPI.js";
+import ResetPasswordPage from "@/pages/auth/ResetPasswordPage.jsx";
+import VerifyToken from "@/pages/auth/VerifyToken.jsx";
 
 export default function App() {
-    // 전역 상태변수
-    const {isLogin, login, logout} = useAuthStore(state => state); // 로그인용
-    const setAllCommonData = useCommonStore(state => state.setAllCommonData); //  메타 데이터용
-    const {setEmployee} = useEmployeeStore();
-
-    // 오류 모달 상태 설정
+    const {isLogin, login, logout} = useAuthStore(state => state);
+    const setAllCommonData = useCommonStore(state => state.setAllCommonData);
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
+    const [mustResetPw, setMustResetPw] = useState(false); // 초기비밀번호 여부 상태
 
-    // 로그인 상태 먼저 초기화 (맨 처음 앱 실행 시)
+    // 세션 로그인 복원
     useEffect(() => {
-        const init = async () => {
-            const token = sessionStorage.getItem("token");
-            const authority = sessionStorage.getItem("authority");
+        const token = sessionStorage.getItem("token");
+        const authority = sessionStorage.getItem("authority");
 
-            if (!token || !authority) {
-                logout();
-                return;
-            }
+        if (token && authority) login({token, authority});
+        else logout();
+    }, [login, logout]);
 
+    // 로그인 시 HR 메타데이터 + 초기비밀번호 여부 확인
+    useEffect(() => {
+        const initAfterLogin = async () => {
             try {
-                const resp = await getMyInfoAPI();
-                if (resp.status === 200) {
-                    setEmployee(resp.data);
-                    login({token, authority}); // 상태 복원
+                const metaData = await getAllHrMetaAPI();
+                setAllCommonData(metaData);
+
+                // 초기비밀번호 상태 확인
+                const resp = await checkResetRequiredAPI();
+                if (resp.data === true) {
+                    setMustResetPw(true);
                 } else {
-                    logout();
+                    setMustResetPw(false);
                 }
             } catch (err) {
-                logout();
-            }
-        };
-        init();
-    }, []);
-
-    // 로그인 이후 공통 데이터 불러오고 스토어에 저장 (부서 / 직급 / 조직)
-    useEffect(() => {
-        //  데이터 불러오고 스토어에 저장하는 함수 정의
-        const fetchHrMetaData = async () => {
-            try {
-                // 비동기로 메타데이터 받아오기
-                const metaData = await getAllHrMetaAPI();
-
-                // Zustand 스토어에 한꺼번에 저장
-                setAllCommonData(metaData);
-            } catch (err) {
-                console.error("HR 메타데이터 불러오기 실패:", err);
-                // 🔹 모달로 에러 안내
-                setErrorMessage("서버에서 데이터를 불러오는 중 오류가 발생했습니다.\n잠시 후 다시 시도해주세요.");
+                console.error("초기 로드 실패:", err);
+                setErrorMessage("데이터 로드 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
                 setErrorModalOpen(true);
             }
         };
 
-        // 로그인 상태가 true일 때만 실행
-        if (isLogin === true) {
-            fetchHrMetaData();
-        }
+        if (isLogin === true) initAfterLogin();
     }, [isLogin, setAllCommonData]);
 
     return (
-        <ThemeProvider>
 
-            {/* 전역 에러 안내 모달 — 로그인 여부 상관없이 항상 렌더링 */}
+        <ThemeProvider>
             <AlertModal
                 isOpen={errorModalOpen}
                 onClose={() => setErrorModalOpen(false)}
@@ -93,14 +73,14 @@ export default function App() {
             />
 
             <BrowserRouter>
-                <div className="flex flex-col h-screen">
-
+                <div className="bg-gray-50 antialiased dark:bg-gray-900">
                     {isLogin === "none" && (
-                        <div className="flex justify-center items-center min-h-screen text-base-content">
+                        <div className="flex justify-center items-center min-h-screen text-gray-500">
                             로그인 상태 확인 중...
                         </div>
                     )}
 
+                    {/* 로그인 전 */}
                     {isLogin === false && (
                         <Routes>
                             <Route path="/login" element={<LoginPage/>}/>
@@ -108,20 +88,31 @@ export default function App() {
                         </Routes>
                     )}
 
+                    {/* 로그인 후 */}
                     {isLogin === true && (
-                        <>
-                            {/* 상단 네비 */}
-                            <Nav/>
-                            <SideNav/>
-                            <Routes>
-                                {/* 메인 컨텐츠 */}
-                                <Route path="/*" element={
-                                    <div className="flex-1 overflow-hidden">
-                                        <EmployeeRoutes/>
-                                    </div>
-                                }/>
-                            </Routes>
-                        </>
+                        <VerifyToken>
+                            {/* 초기 비밀번호면 강제 이동 */}
+                            {mustResetPw ? (
+                                <Routes>
+                                    <Route path="/resetPassword" element={<ResetPasswordPage/>}/>
+                                    <Route path="*" element={<Navigate to="/resetPassword" replace/>}/>
+                                </Routes>
+                            ) : (
+                                <>
+                                    {/* 상단 네비 */}
+                                    <Nav/>
+                                    <SideNav/>
+                                    <Routes>
+                                        {/* 메인 컨텐츠 */}
+                                        <Route path="/*" element={
+                                            <div className="flex-1 overflow-hidden">
+                                                <EmployeeRoutes/>
+                                            </div>
+                                        }/>
+                                    </Routes>
+                                </>
+                            )}
+                        </VerifyToken>
                     )}
                 </div>
             </BrowserRouter>

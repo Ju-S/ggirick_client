@@ -6,6 +6,7 @@ import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
@@ -47,8 +48,22 @@ public class EmployeeDAO {
         return mybatis.update("Employee.updatePassword", dto) != 0;
     }
 
+    // 이메일 중복 여부 확인
+    public int isEmailDuplicate(String email) {
+        return mybatis.selectOne("Employee.isEmailDuplicate", email);
+    }
+
+    // 핸드폰 번호 중복 여부 확인
+    public int isPhoneDuplicate(String phone) {
+        return mybatis.selectOne("Employee.isPhoneDuplicate", phone);
+    }
+
     // 아이디 리스트로 이름 목록 검색
     public List<String> selectEmployeeNamesByIds(List<String> idLists) {
         return mybatis.selectList("hr.employee.selectEmployeeNamesByIds", idLists);
+    }
+
+    public int updatePasswordAndEmailAndPhone(Map<String, String> params) {
+        return mybatis.update("Employee.updatePasswordAndEmailAndPhone", params);
     }
 }
