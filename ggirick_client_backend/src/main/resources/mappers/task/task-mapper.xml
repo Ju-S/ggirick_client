@@ -123,6 +123,25 @@
         WHERE project_id = #{projectId}
         ORDER BY project_id ASC
     </select>
+    <!-- 프로젝트 업무 조회(만든 시간 순 조회) -->
+    <select id="findTasksByProjectIdOrderByCreatedAt" resultType="com.kedu.ggirick_client_backend.dto.task.TaskDTO">
+        SELECT
+            id AS id,
+            project_id as projectId,
+            title AS title,
+            assignee AS assignee,
+            assigner AS assigner,
+            status AS status,
+            priority AS priority,
+            started_at as startedAt,
+            ended_at as endedAt,
+            task_data as taskData,
+            created_at AS createdAt,
+            updated_at AS updatedAt
+        FROM task
+        WHERE project_id = #{projectId}
+        ORDER BY created_at DESC
+    </select>
     <update id="updateTaskStatusById">
         update task set status = #{status} where id = #{id}
     </update>

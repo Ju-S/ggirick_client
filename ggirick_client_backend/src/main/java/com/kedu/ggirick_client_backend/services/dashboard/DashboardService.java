@@ -15,6 +15,7 @@ import com.kedu.ggirick_client_backend.services.board.BoardGroupService;
 import com.kedu.ggirick_client_backend.services.board.BoardService;
 import com.kedu.ggirick_client_backend.services.calendar.CalendarGroupService;
 import com.kedu.ggirick_client_backend.services.calendar.CalendarService;
+import com.kedu.ggirick_client_backend.services.hr.EmployeeService;
 import com.kedu.ggirick_client_backend.services.reservation.ReservationService;
 import com.kedu.ggirick_client_backend.services.task.TaskProjectService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class DashboardService {
     private final ApprovalService approvalService;
     private final ReservationService reservationService;
     private final TaskProjectService taskProjectService;
+    private final EmployeeService employeeService;
 
     // region 일정 관련
     // 오늘의 일정 갯수
@@ -280,16 +282,31 @@ public class DashboardService {
         List<TaskDTO> taskList = new ArrayList<>();
 
         for (ProjectDTO project : projectList) {
-            taskList.addAll(taskProjectService.getTaskByProjectId(project.getId())
-                    .stream().limit(3).toList());
+            taskList.addAll(
+                    taskProjectService.getTasksOrderByCreatedAt(project.getId())
+                            .stream().limit(3)
+                            .toList()
+            );
         }
 
         return taskList.stream()
-                .map(item -> ActivityDTO.builder()
-                        .type("task")
-                        .createdAt(Timestamp.valueOf(item.getCreatedAt()))
-                        .rawData(item)
-                        .build())
+                .map(item -> {
+                    // assigner 이름 조회
+                    String assignerName = employeeService.getEmployeeInfo(item.getAssigner()).getName();
+                    String assigneeName = employeeService.getEmployeeInfo(item.getAssignee()).getName();
+
+                    // rawData에 assignerName 추가
+                    Map<String, Object> rawDataWithAssigner = new HashMap<>();
+                    rawDataWithAssigner.put("task", item);
+                    rawDataWithAssigner.put("assignerName", assignerName);
+                    rawDataWithAssigner.put("assigneeName", assigneeName);
+
+                    return ActivityDTO.builder()
+                            .type("task")
+                            .createdAt(Timestamp.valueOf(item.getCreatedAt()))
+                            .rawData(rawDataWithAssigner)
+                            .build();
+                })
                 .toList();
     }
 
