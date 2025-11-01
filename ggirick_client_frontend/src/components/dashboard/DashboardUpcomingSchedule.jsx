@@ -42,19 +42,18 @@ export default function DashboardUpcomingSchedule() {
                                 <Card
                                     key={e.id}
                                     onClick={() => navigate(e.groupId == null ? "/calendar" : `/calendar?groupId=${e.groupId}`)}
-                                    className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-200 transition cursor-pointer py-2 flex flex-col justify-between"
+                                    className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-200 cursor-pointer py-2 flex flex-col justify-between"
                                 >
                                     {/* 상단: 색상 원 + 제목 (한 줄, truncate) */}
                                     <div className="flex items-center justify-between relative">
+
                                         <div className="flex items-center gap-1 min-w-0">
                                             <span
                                                 className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0"
                                                 style={{backgroundColor: e.color || "#60a5fa"}}/>
-                                            <span
-                                                className="font-medium text-base-content-900 truncate"
-                                            >
+                                            <div className="font-medium text-base-content-900 truncate">
                                                 {e.title}
-                                            </span>
+                                            </div>
                                         </div>
 
                                         <span className="text-xs text-base-content-600 ml-2 flex-shrink-0">

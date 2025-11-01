@@ -27,7 +27,7 @@ export default function Dashboard() {
 
     if (initLoading) {
         return (
-            <div className="flex flex-col justify-center items-center h-screen w-full">
+            <div className="flex flex-col justify-center items-center h-screen w-full bg-base-200">
                 <div className="mb-5">
                     <span className="text-xl text-base-900">대시보드 로딩 중...</span>
                 </div>

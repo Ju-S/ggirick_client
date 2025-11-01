@@ -24,12 +24,14 @@ const descriptionAndNavigateURLByType = (e) => {
 
             description = (
                 <div className="flex flex-col">
-                    <span className="truncate">
-                        <div className="badge badge-sm badge-accent badge-soft mb-1 mr-1">
-                            예약
+                    <div className="tooltip" data-tip={e.rawData?.resourceName + "을 예약하였습니다."}>
+                        <div className="truncate">
+                            <div className="badge badge-sm badge-accent badge-soft mb-1 mr-1">
+                                예약
+                            </div>
+                            {e.rawData?.resourceName}을 예약하였습니다.
                         </div>
-                        {e.rawData?.resourceName}을 예약하였습니다.
-                    </span>
+                    </div>
                     <div className="flex justify-between text-xs text-base-content-500">
                         <span></span>
                         <span className="truncate">
@@ -46,25 +48,30 @@ const descriptionAndNavigateURLByType = (e) => {
         case "notification": {
             const createdAt = timestampToMonthDay(e.rawData?.createdAt);
             const boardGroup = boardGroupList.find(item => item.id === e.rawData?.boardGroupId);
-            const boardGroupName = boardGroup ? boardGroup.name : "";
+            const boardGroupName = boardGroup ? boardGroup.name : "전사공지";
 
             description = (
                 <div className="flex flex-col">
-                    <span className="truncate">
-                        {e.type === "notification" ? (
-                            <div className="badge badge-sm badge-warning badge-soft mb-1 mr-1">
-                                공지
+                    <div className="tooltip" data-tip={e.rawData?.title + "을 등록하였습니다."}>
+                        <div className="truncate">
+                            {e.type === "notification" ? (
+                                <div className="badge badge-sm badge-warning badge-soft mb-1 mr-1">
+                                    공지
+                                </div>
+                            ) : (
+                                <div className="badge badge-sm badge-secondary badge-soft mb-1 mr-1">
+                                    게시글
+                                </div>
+                            )}
+                            <div className="badge badge-sm badge-base mb-1 mr-1">
+                                {boardGroupName}
                             </div>
-                        ) : (
-                            <div className="badge badge-sm badge-secondary badge-soft mb-1 mr-1">
-                                게시글
-                            </div>
-                        )}
-                        {e.rawData?.title}을 등록하였습니다.
-                    </span>
+                            {e.rawData?.title}을 등록하였습니다.
+                        </div>
+                    </div>
                     <div className="flex justify-between text-xs text-base-content-500">
                         <span className="truncate">
-                            작성자: {e.rawData?.name} / 게시판: {boardGroupName}
+                            작성자: {e.rawData?.name}
                         </span>
                         <span className="truncate">
                             {createdAt}
@@ -82,12 +89,14 @@ const descriptionAndNavigateURLByType = (e) => {
 
             description = (
                 <div className="flex flex-col">
-                    <span className="truncate">
-                        <div className="badge badge-sm badge-primary badge-soft mb-1 mr-1">
-                            업무
+                    <div className="tooltip" data-tip={e.rawData?.task.title + "을 등록하였습니다."}>
+                        <div className="truncate">
+                            <div className="badge badge-sm badge-primary badge-soft mb-1 mr-1">
+                                업무
+                            </div>
+                            {e.rawData?.task?.title}을 등록하였습니다.
                         </div>
-                        {e.rawData?.task?.title}을 등록하였습니다.
-                    </span>
+                    </div>
                     <div className="flex justify-between text-xs text-base-content-500">
                         <span className="truncate">
                             등록자: {e.rawData?.assignerName} / 담당자: {e.rawData?.assigneeName}
@@ -111,15 +120,17 @@ const descriptionAndNavigateURLByType = (e) => {
 
             description = (
                 <div className="flex flex-col">
-                    <span className="truncate">
-                        <div className="badge badge-sm badge-info badge-soft mb-1 mr-1">
-                            전자결재
+                    <div className="tooltip" data-tip={e.rawData?.title + "을 기안하였습니다."}>
+                        <div className="truncate">
+                            <div className="badge badge-sm badge-info badge-soft mb-1 mr-1">
+                                전자결재
+                            </div>
+                            <div className="badge badge-sm badge-base mr-1">
+                                {docTypeName}
+                            </div>
+                            {e.rawData?.title}을 기안하였습니다.
                         </div>
-                        <div className="badge badge-sm badge-base mb-1 mr-1">
-                            {docTypeName}
-                        </div>
-                        {e.rawData?.title}을 기안하였습니다.
-                    </span>
+                    </div>
                     <div className="flex justify-between text-xs text-base-content-500">
                         <span className="truncate">
                             기안자: {e.rawData?.name}
@@ -142,23 +153,30 @@ const descriptionAndNavigateURLByType = (e) => {
 
             description = (
                 <div className="flex flex-col">
-                    <span className="truncate">
-                        <div className="badge badge-sm badge-error badge-soft mb-1 mr-1">
-                            일정
+                    <div className="tooltip" data-tip={e.rawData?.title + "을 등록하였습니다."}>
+                        <div className="truncate">
+                            <div className="badge badge-sm badge-error badge-soft mb-1 mr-1">
+                                일정
+                            </div>
+                            {e.rawData?.groupId !== null ? (
+                                <div className="badge badge-sm badge-base mb-1 mr-1">
+                                    {calendarGroupName}
+                                </div>
+                            ) : (
+                                <div className="badge badge-sm badge-base mb-1 mr-1">
+                                    개인일정
+                                </div>
+                            )}
+                            <span
+                                className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 mr-1"
+                                style={{backgroundColor: e.rawData.color || "#878787"}}/>
+                            {e.rawData?.title}을 등록하였습니다.
                         </div>
-                        <span
-                            className="inline-block w-2.5 h-2.5 rounded-full flex-shrink-0 mr-1"
-                            style={{backgroundColor: e.rawData.color || "#878787"}}/>
-                        {e.rawData?.title}을 등록하였습니다.
-                    </span>
+                    </div>
                     <div className="flex justify-between text-xs text-base-content-500">
-                        {e.rawData?.groupId === null ? (
+                        {e.rawData?.groupId !== null && (
                             <span className="truncate">
-                                {calendarGroupName}
-                            </span>
-                        ) : (
-                            <span className="truncate">
-                                작성자: {e.rawData?.name} / 그룹: {calendarGroupName}
+                                작성자: {e.rawData?.name}
                             </span>
                         )}
                         <span className="truncate">

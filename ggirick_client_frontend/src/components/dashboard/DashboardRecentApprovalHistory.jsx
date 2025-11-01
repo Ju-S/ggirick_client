@@ -41,7 +41,7 @@ export default function DashboardRecentApprovalHistory() {
                                 <Card
                                     key={e.history.id}
                                     onClick={() => navigate(`/approval/${e.approval.id}`)}
-                                    className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-200 transition cursor-pointer py-2 flex flex-col justify-between"
+                                    className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-200 cursor-pointer py-2 flex flex-col justify-between"
                                 >
                                     {/* 상단: 제목 + 우측(상태 뱃지 + 문서유형) */}
                                     <div className="flex items-center justify-between relative">
@@ -49,10 +49,12 @@ export default function DashboardRecentApprovalHistory() {
                                                     className="font-medium text-base-content-900 truncate"
                                                     style={{maxWidth: "calc(100% - 110px)"}} // 뱃지영역 고려
                                                 >
-                                                    <span className="text-sm font-bold text-base mr-2">
+                                                    <span className="text-sm font-bold text-base mr-2 truncate">
                                                         {e.approval.name}
                                                     </span>
-                                                    {e.approval.title}
+                                                    <span className="truncate">
+                                                        {e.approval.title}
+                                                    </span>
                                                 </span>
 
                                         <div className="flex items-center gap-1 flex-shrink-0">
@@ -75,7 +77,7 @@ export default function DashboardRecentApprovalHistory() {
                                     </div>
 
                                     {/* 하단: 결재자 + 날짜 (한 줄) */}
-                                    <span className="text-xs text-base-content-700 relative bottom-3">
+                                    <span className="text-xs text-base-content-700 relative bottom-3 truncate">
                                                 {e.history.name} -> {e.history.typeId === 1 ? "승인" : e.history.typeId === 2 ? "반려" : "의견"} • {timestampToMonthDay(e.history.recordedAt)}
                                             </span>
                                 </Card>
