@@ -12,6 +12,7 @@ export default function ApprovalPostingPage({editMode}) {
     const navigate = useNavigate();
     const {id} = useParams();
     const fetchApproval = useApprovalStore(state => state.fetchApprovalInfo);
+    const [loadingPost, setLoadingPost] = useState(false);
 
     const [approvalInfos, setApprovalInfos] = useState({
         title: "",
@@ -78,82 +79,102 @@ export default function ApprovalPostingPage({editMode}) {
     };
 
     const postingHandler = () => {
-        if (approvalLine.length === 0) {
-            alert("결재자를 최소 1명 이상 선택해주세요.");
-            return;
-        }
-
-        // 휴가 관련 문서일 경우 docData 검사
-        if (["VAC"].includes(approvalInfos.docTypeCode)) {
-            const {startDate, startTime, endDate, endTime} = approvalInfos.docData;
-
-            if (!startDate || !startTime || !endDate || !endTime) {
-                alert("시작일시와 종료일시는 반드시 입력해야 합니다.");
+        try {
+            if (approvalLine.length === 0) {
+                alert("결재자를 최소 1명 이상 선택해주세요.");
                 return;
             }
 
-            if (new Date(startDate) > new Date(endDate)) {
-                alert("종료일시는 시작일시 이후여야 합니다.");
-                return;
+            // 휴가 관련 문서일 경우 docData 검사
+            if (["VAC"].includes(approvalInfos.docTypeCode)) {
+                const {startDate, startTime, endDate, endTime} = approvalInfos.docData;
+
+                if (!startDate || !startTime || !endDate || !endTime) {
+                    alert("시작일시와 종료일시는 반드시 입력해야 합니다.");
+                    return;
+                }
+
+                if (new Date(startDate) > new Date(endDate)) {
+                    alert("종료일시는 시작일시 이후여야 합니다.");
+                    return;
+                }
             }
-        }
 
-        // 근무 관련 문서일 경우 docData 검사
-        if (["HWR", "OWR"].includes(approvalInfos.docTypeCode)) {
-            const {startDateTime, endDateTime} = approvalInfos.docData;
+            // 근무 관련 문서일 경우 docData 검사
+            if (["HWR", "OWR"].includes(approvalInfos.docTypeCode)) {
+                const {startDateTime, endDateTime} = approvalInfos.docData;
 
-            if (!startDateTime || !endDateTime) {
-                alert("시작일시와 종료일시는 반드시 입력해야 합니다.");
-                return;
+                if (!startDateTime || !endDateTime) {
+                    alert("시작일시와 종료일시는 반드시 입력해야 합니다.");
+                    return;
+                }
+
+                if (new Date(startDateTime) > new Date(endDateTime)) {
+                    alert("종료일시는 시작일시 이후여야 합니다.");
+                    return;
+                }
             }
 
-            if (new Date(startDateTime) > new Date(endDateTime)) {
-                alert("종료일시는 시작일시 이후여야 합니다.");
-                return;
+            setLoadingPost(true);
+
+            const form = new FormData();
+
+            const approvalLineData = new Blob(
+                [JSON.stringify(
+                    approvalLine.map((a, idx) => ({
+                        assigner: a.id,
+                        orderLine: idx
+                    }))
+                )],
+                {type: "application/json"}
+            );
+
+            const approvalInfoBlob = new Blob(
+                [JSON.stringify({
+                    title: approvalInfos.title,
+                    content: approvalInfos.content,
+                    docTypeCode: approvalInfos.docTypeCode,
+                    docData: approvalInfos.docData
+                })],
+                {type: "application/json"}
+            );
+
+            form.append("approvalInfo", approvalInfoBlob);
+            form.append("approvalLine", approvalLineData);
+
+            for (const file of approvalInfos.files) {
+                form.append("files", file);
             }
-        }
 
-        const form = new FormData();
-
-        const approvalLineData = new Blob(
-            [JSON.stringify(
-                approvalLine.map((a, idx) => ({
-                    assigner: a.id,
-                    orderLine: idx
-                }))
-            )],
-            {type: "application/json"}
-        );
-
-        const approvalInfoBlob = new Blob(
-            [JSON.stringify({
-                title: approvalInfos.title,
-                content: approvalInfos.content,
-                docTypeCode: approvalInfos.docTypeCode,
-                docData: approvalInfos.docData
-            })],
-            {type: "application/json"}
-        );
-
-        form.append("approvalInfo", approvalInfoBlob);
-        form.append("approvalLine", approvalLineData);
-
-        for (const file of approvalInfos.files) {
-            form.append("files", file);
-        }
-
-        if (editMode) {
-            putAPI(form, id)
-                .then(() => navigate(`/approval/${id}`))
-                .then(() =>
-                    fileList
-                        .filter(f => f.toDelete)
-                        .forEach(f => deleteBoardFileAPI(f.id))
-                );
-        } else {
-            insertAPI(form).then(() => navigate(`/approval`));
+            if (editMode) {
+                putAPI(form, id)
+                    .then(() => navigate(`/approval/${id}`))
+                    .then(() =>
+                        fileList
+                            .filter(f => f.toDelete)
+                            .forEach(f => deleteBoardFileAPI(f.id))
+                    );
+            } else {
+                insertAPI(form).then(() => navigate(`/approval`));
+            }
+        } catch {
+            setLoadingPost(false);
+            alert("오류로 인해 업로드되지 않았습니다.");
         }
     };
+
+    if (loadingPost) {
+        return (
+            <div className="flex flex-col justify-center items-center h-full w-full">
+                <div className="mb-5">
+                    <span className="text-xl text-base-900">문서 업로드 중...</span>
+                </div>
+                <div>
+                    <span className="loading loading-spinner loading-xl"></span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4 p-6 bg-base-100 shadow-md rounded-lg h-[calc(100vh-120px)] overflow-y-auto">

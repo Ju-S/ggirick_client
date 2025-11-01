@@ -41,6 +41,7 @@ export default function BoardSidebar() {
                 <button
                     className="btn btn-primary w-full"
                     onClick={() => navigate("/board/posting")}
+                    disabled={!groupItems || groupItems.length <= 0}
                 >
                     글쓰기
                 </button>
@@ -74,7 +75,7 @@ export default function BoardSidebar() {
             {/* 그룹 dropdown */}
             {isGroupOpen && (
                 <div className="flex-1 overflow-y-auto bg-base-100 border-t border-base-300">
-                    {groupItems.length > 1 ? (
+                    {groupItems.length > 0 ? (
                         groupItems
                             .filter(group => group.id !== 1)
                             .map(group => (

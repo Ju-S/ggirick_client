@@ -20,13 +20,28 @@ import {LoginPage} from "@/pages/auth/LoginPage.jsx";
 import {checkResetRequiredAPI, verifyAPI} from "@/api/auth/authAPI.js";
 import ResetPasswordPage from "@/pages/auth/ResetPasswordPage.jsx";
 import VerifyToken from "@/pages/auth/VerifyToken.jsx";
+import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 
 export default function App() {
     const {isLogin, login, logout} = useAuthStore(state => state);
     const setAllCommonData = useCommonStore(state => state.setAllCommonData);
+    const {setEmployee} = useEmployeeStore();
     const [errorModalOpen, setErrorModalOpen] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [mustResetPw, setMustResetPw] = useState(false); // 초기비밀번호 여부 상태
+
+    useEffect(() => {
+        // 로그인한 직원 정보 가져오기
+        getMyInfoAPI().then(resp => {
+            const myInfo = resp.data;
+            if(myInfo) {
+                setEmployee(myInfo);
+            }else {
+                alert("정보를 불러오는데 실패했습니다.");
+            }
+        });
+    }, [])
 
     // 세션 로그인 복원
     useEffect(() => {

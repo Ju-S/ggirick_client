@@ -40,10 +40,10 @@ public class EmployeeController {
                                                         @RequestParam String phone,
                                                         @AuthenticationPrincipal UserTokenDTO userInfo) {
         String errorMsg = null;
-        if (employeeService.isEmailDuplicate(email)) {
+        if (employeeService.isEmailDuplicate(email, userInfo.getId())) {
             errorMsg = "존재하는 이메일입니다.";
         }
-        if (employeeService.isPhoneDuplicate(phone)) {
+        if (employeeService.isPhoneDuplicate(phone, userInfo.getId())) {
             String msg = "존재하는 전화번호입니다.";
             errorMsg = errorMsg == null ? msg : errorMsg + msg;
         }

@@ -222,14 +222,14 @@
     <select id="isEmailDuplicate" parameterType="string" resultType="int">
         SELECT COUNT(*)
         FROM EMPLOYEE
-        WHERE EMAIL = #{email}
+        WHERE EMAIL = #{email} AND id != #{userId}
     </select>
 
     <!-- 핸드폰 번호 중복 확인 -->
     <select id="isPhoneDuplicate" parameterType="string" resultType="int">
         SELECT COUNT(*)
         FROM EMPLOYEE
-        WHERE PHONE = #{phone}
+        WHERE PHONE = #{phone} AND id != #{userId}
     </select>
 
     <!-- 초기 비밀번호, 이메일, 핸드폰 번호 업데이트 -->

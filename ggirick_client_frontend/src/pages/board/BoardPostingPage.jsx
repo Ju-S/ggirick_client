@@ -11,6 +11,7 @@ export default function BoardPostingPage({editMode}) {
     const navigate = useNavigate();
     const [boardInfos, setBoardInfos] = useState({});
     const [fileList, setFileList] = useState([]);
+    const [loadingPost, setLoadingPost] = useState(false);
 
     const {id} = useParams();
     const fetchBoard = useBoardStore(state => state.fetchBoardInfo);
@@ -37,35 +38,41 @@ export default function BoardPostingPage({editMode}) {
 
     // 게시글 등록
     const postingHandler = () => {
-        const form = new FormData();
+        try {
+            setLoadingPost(true);
+            const form = new FormData();
 
-        // boardInfo를 JSON -> Blob 변환
-        const boardInfoBlob = new Blob(
-            [JSON.stringify({
-                title: boardInfos.title,
-                contents: boardInfos.contents,
-                boardGroupId: Number(boardInfos.boardGroupId),
-                isNotification: boardInfos.isNotification
-            })],
-            {type: "application/json"}
-        );
+            // boardInfo를 JSON -> Blob 변환
+            const boardInfoBlob = new Blob(
+                [JSON.stringify({
+                    title: boardInfos.title,
+                    contents: boardInfos.contents,
+                    boardGroupId: Number(boardInfos.boardGroupId),
+                    isNotification: boardInfos.isNotification
+                })],
+                {type: "application/json"}
+            );
 
-        form.append("boardInfo", boardInfoBlob);
+            form.append("boardInfo", boardInfoBlob);
 
-        // 파일 첨부
-        for (const file of boardInfos.files) {
-            form.append("files", file);
-        }
+            // 파일 첨부
+            for (const file of boardInfos.files) {
+                form.append("files", file);
+            }
 
-        if (editMode) {
-            putAPI(form, id)
-                .then(() => navigate(`/board/${id}`))
-                .then(() =>
-                    fileList
-                        .filter(f => f.toDelete)
-                        .forEach(f => deleteBoardFileAPI(f.id)));
-        } else {
-            insertAPI(form).then(() => navigate(`/board?groupId=${boardInfos.boardGroupId}`));
+            if (editMode) {
+                putAPI(form, id)
+                    .then(() => navigate(`/board/${id}`))
+                    .then(() =>
+                        fileList
+                            .filter(f => f.toDelete)
+                            .forEach(f => deleteBoardFileAPI(f.id)));
+            } else {
+                insertAPI(form).then(() => navigate(`/board?groupId=${boardInfos.boardGroupId}`));
+            }
+        } catch {
+            setLoadingPost(false);
+            alert("오류로 인해 업로드되지 않았습니다.");
         }
     };
 
@@ -104,6 +111,19 @@ export default function BoardPostingPage({editMode}) {
             prev.map(file => file.id === id ? {...file, toDelete: true} : file)
         );
     };
+
+    if (loadingPost) {
+        return (
+            <div className="flex flex-col justify-center items-center h-full w-full">
+                <div className="mb-5">
+                    <span className="text-xl text-base-900">문서 업로드 중...</span>
+                </div>
+                <div>
+                    <span className="loading loading-spinner loading-xl"></span>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="space-y-4 p-6 bg-base-100 shadow-md rounded-lg h-[calc(100vh-120px)] overflow-y-auto">

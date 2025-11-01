@@ -49,13 +49,13 @@ public class EmployeeDAO {
     }
 
     // 이메일 중복 여부 확인
-    public int isEmailDuplicate(String email) {
-        return mybatis.selectOne("Employee.isEmailDuplicate", email);
+    public int isEmailDuplicate(Map<String, Object> params) {
+        return mybatis.selectOne("Employee.isEmailDuplicate", params);
     }
 
     // 핸드폰 번호 중복 여부 확인
-    public int isPhoneDuplicate(String phone) {
-        return mybatis.selectOne("Employee.isPhoneDuplicate", phone);
+    public int isPhoneDuplicate(Map<String, Object> params) {
+        return mybatis.selectOne("Employee.isPhoneDuplicate", params);
     }
 
     // 아이디 리스트로 이름 목록 검색

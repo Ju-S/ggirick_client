@@ -20,24 +20,27 @@ public class TaskProjectDAO {
 
 
     //전체 프로젝트 가져오기ㅣ
-    public List<ProjectDTO> getProjects(){
+    public List<ProjectDTO> getProjects() {
         return mybatis.selectList("taskProject.findAllProjects");
     }
 
     //프로젝트 만들기
     public boolean createProject(ProjectDTO projectDTO) {
-        return mybatis.insert("taskProject.createProject", projectDTO)>0;
+        return mybatis.insert("taskProject.createProject", projectDTO) > 0;
     }
+
     //프로젝트 삭제하기
     public boolean deleteProjectById(Long id) {
-        return mybatis.delete("taskProject.deleteProjectById", id)>0;
+        return mybatis.delete("taskProject.deleteProjectById", id) > 0;
     }
+
     //프로젝트 업데이트 하기
     public boolean updateProject(ProjectDTO projectDTO) {
-        return mybatis.update("taskProject.updateProjectNameAndDesc", projectDTO)>0;
+        return mybatis.update("taskProject.updateProjectNameAndDesc", projectDTO) > 0;
     }
+
     //특정 사용자가 관여한 프로젝트 가져오기
-    public List<ProjectDTO> findProjectsByEmployeeId(String employeeId){
+    public List<ProjectDTO> findProjectsByEmployeeId(String employeeId) {
         return mybatis.selectList("taskProject.findMyProjectsById", employeeId);
     }
 
@@ -45,19 +48,19 @@ public class TaskProjectDAO {
 
 
     //프로젝트 멤버 가져오기
-    public List<ProjectMemberDTO> getMembers(long projectId){
+    public List<ProjectMemberDTO> getMembers(long projectId) {
         return mybatis.selectList("taskProject.findMembersByProjectId", projectId);
     }
 
     //프로젝트 단일 멤버 추가하기
-    public boolean insertProjectMember(ProjectMemberDTO member){
-        return mybatis.insert("taskProject.insertProjectMember", member)>0;
+    public boolean insertProjectMember(ProjectMemberDTO member) {
+        return mybatis.insert("taskProject.insertProjectMember", member) > 0;
     }
 
 
     //프로젝트 여러 멤버 추가하기
-    public  boolean insertProjectMembers(List<ProjectMemberDTO> members){
-        return mybatis.insert("taskProject.insertProjectMembers", members)>0;
+    public boolean insertProjectMembers(List<ProjectMemberDTO> members) {
+        return mybatis.insert("taskProject.insertProjectMembers", members) > 0;
     }
 
     //해당 멤버가 존재하는지 확인하기
@@ -68,7 +71,7 @@ public class TaskProjectDAO {
     }
 
     public boolean deleteProjectMember(ProjectMemberDTO member) {
-        return mybatis.delete("taskProject.deleteProjectMember", member)>0;
+        return mybatis.delete("taskProject.deleteProjectMember", member) > 0;
     }
 
     //업무 (Task)관련 DAO
@@ -76,23 +79,28 @@ public class TaskProjectDAO {
 
     //업무 만들기
     public boolean createTask(TaskDTO taskDTO) {
-        return mybatis.insert("taskProject.createTask", taskDTO)>0;
+        return mybatis.insert("taskProject.createTask", taskDTO) > 0;
     }
 
 
     //한 프로젝트 안에 있는 모든 업무 가져오기
-    public List<TaskDTO> getTasks(long projectId){
+    public List<TaskDTO> getTasks(long projectId) {
         return mybatis.selectList("taskProject.findTasksByProjectId", projectId);
+    }
+
+    //한 프로젝트 안에 있는 모든 업무 가져오기
+    public List<TaskDTO> getTasksOrderByCreatedAt(long projectId) {
+        return mybatis.selectList("taskProject.findTasksByProjectIdOrderByCreatedAt", projectId);
     }
 
     //업무 아이디로 업무 삭제하기
     public boolean deleteTaskById(Long id) {
-        return mybatis.delete("taskProject.deleteTaskById", id)>0;
+        return mybatis.delete("taskProject.deleteTaskById", id) > 0;
     }
 
     //업무 아이디 기준으로 업무 수정하기
     public boolean updateTaskById(Long id, TaskDTO taskDTO) {
-        return mybatis.update("taskProject.updateTaskById", taskDTO)>0;
+        return mybatis.update("taskProject.updateTaskById", taskDTO) > 0;
     }
 
     //업무 아이디로 하나의 업무 가져오기
@@ -103,7 +111,7 @@ public class TaskProjectDAO {
 
     //아이디 기준으로 업무 상태만 수정하기
     public boolean updateTaskStatusById(TaskDTO dto) {
-        return mybatis.update("taskProject.updateTaskStatusById", dto)>0;
+        return mybatis.update("taskProject.updateTaskStatusById", dto) > 0;
 
     }
 }

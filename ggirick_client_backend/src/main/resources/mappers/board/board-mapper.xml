@@ -14,6 +14,7 @@
         SELECT b.id,
         b.writer,
         b.title,
+        b.board_group_id,
         b.created_at,
         b.view_count,
         e.name,
@@ -43,7 +44,7 @@
                 </otherwise>
             </choose>
         </if>
-        GROUP BY b.id, b.writer, b.title, b.created_at, b.view_count, e.name
+        GROUP BY b.id, b.writer, b.title, b.created_at, b.view_count, b.board_group_id, e.name
         ORDER BY b.created_at DESC
         ) a
         WHERE ROWNUM&lt;=#{to}
@@ -61,6 +62,7 @@
                            b.title,
                            b.created_at,
                            b.view_count,
+                           b.board_group_id,
                            e.name,
                            COUNT(DISTINCT bc.id) AS comment_count,
                            COUNT(DISTINCT bf.id) AS file_count
@@ -70,7 +72,7 @@
                              LEFT JOIN board_comment bc ON b.id = bc.board_id
                     WHERE b.board_group_id = #{groupId}
                       AND is_notification = 'Y'
-                    GROUP BY b.id, b.writer, b.title, b.created_at, b.view_count, e.name
+                    GROUP BY b.id, b.writer, b.title, b.created_at, b.view_count, b.board_group_id, e.name
                     ORDER BY b.created_at DESC) a)
     </select>
 
