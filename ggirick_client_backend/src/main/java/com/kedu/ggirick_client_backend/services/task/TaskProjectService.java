@@ -220,4 +220,9 @@ public class TaskProjectService {
     public List<TaskDTO> getTaskByProjectId(long projectId) {
         return taskProjectDAO.getTasks(projectId);
     }
+
+    // 프로젝트 아이디로 프로젝트 업무 리스트 조회 만든 시간 순
+    public List<TaskDTO> getTasksOrderByCreatedAt(long projectId) {
+        return taskProjectDAO.getTasksOrderByCreatedAt(projectId);
+    }
 }
