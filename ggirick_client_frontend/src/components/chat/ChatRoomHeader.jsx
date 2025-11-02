@@ -68,22 +68,39 @@ export default function ChatRoomHeader({sendMessage}) {
     return (
         <>
             <header className="flex flex-wrap items-center justify-between border-b bg-base-100 p-4 gap-2">
-                <div className="flex items-center space-x-4">
-                    <div className="flex-1 min-w-[120px]">
-                        <h2 className="text-lg font-semibold text-base-content truncate">#{selectedChannel.name}</h2>
-                        <p className="text-sm text-base-content/60 truncate">{selectedChannel.description}</p>
-                    </div>
-                    <div className="flex -space-x-2">
-                        {memberAvatars || <span className="text-xs opacity-70">멤버 없음</span>}
-                    </div>
-                </div>
+                <div className="flex flex-wrap items-center justify-between gap-4">
+                    {/* 왼쪽: 채널 정보 */}
+                    <div className="flex items-center gap-4 min-w-0">
+                        <div className="flex-1 min-w-[120px]">
+                            <h2 className="text-lg font-semibold text-base-content truncate">
+                                #{selectedChannel.name}
+                            </h2>
+                            <p className="text-sm text-base-content/60 truncate">
+                                {selectedChannel.description || "채널 설명이 없습니다."}
+                            </p>
+                        </div>
 
-                <div className="flex flex-wrap items-center gap-2">
+                        {/* 멤버 아바타 */}
+                        <div className="flex -space-x-2">
+                            {memberAvatars?.length > 0 ? (
+                                memberAvatars
+                            ) : (
+                                <span className="text-xs opacity-70">멤버 없음</span>
+                            )}
+                        </div>
+                    </div>
+
+                    {/* 오른쪽: 화상회의 버튼 */}
                     <Link to="/videomeeting">
-                        <button className="btn bg-accent text-accent-content rounded-full px-4 py-2 text-base transition-all duration-200 ease-in-out sm:px-6 sm:py-3 sm:text-md lg:px-8 lg:py-4 lg:text-lg">
-                            📸화상회의
+                        <button className="btn-sm bg-accent text-accent-content rounded-full px-4 py-2 text-sm sm:px-6 sm:py-2.5 lg:px-8 lg:py-3 font-medium transition-all duration-200 ease-in-out hover:brightness-110">
+                            📸 화상회의
                         </button>
                     </Link>
+                </div>
+
+
+                <div className="flex flex-wrap items-center gap-2">
+
                     {!(selectedChannel.typeId === 3 || selectedChannel.type === "direct") && (
                     <button className="text-sm text-red-500 hover:underline transition-colors" onClick={()=> setShowDeleteModal(true) }>채널 삭제</button>
                     )}

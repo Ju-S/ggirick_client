@@ -56,7 +56,7 @@ export default function ChatSidebar() {
                                     alt={msg.senderName || "Unknown"}
                                 />
                                 <Message
-                                    key={msg.id}
+
                                     msg={msg}
                                     sendMessage={sendMessage}
                                     chatroom={false}

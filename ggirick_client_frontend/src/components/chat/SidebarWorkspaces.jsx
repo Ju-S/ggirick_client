@@ -8,11 +8,6 @@ export default function SidebarWorkspaces() {
     const MAX_WORKSPACES = 10;
 
 
-
-    useEffect(() => {
-        fetchWorkspaces();
-    }, []);
-
     function handleCreateWorkspace() {
         if (workspaces.length >= MAX_WORKSPACES) {
             alert(`워크스페이스는 최대 ${MAX_WORKSPACES}개까지만 생성할 수 있습니다.`);

@@ -11,36 +11,53 @@
     border-radius: 0 !important;
     color: inherit !important;
 }
+
 /* 타이틀 (예: 2025년 10월) */
 .fc-toolbar-title {
-    @apply text-lg font-bold text-base-content;
+    @apply text-sm md:text-lg font-bold text-base-content;
 }
-
 /* 버튼 공통 스타일 */
 .fc .fc-button {
-    @apply btn btn-sm btn-outline bg-accent hover:bg-accent-content;
-
+    @apply btn btn-xs sm:btn-sm btn-outline bg-accent hover:bg-accent-content flex items-center justify-center;
 }
+/* 모바일: 세로, sm 이상: 가로 */
+.fc .fc-button-group {
+    @apply flex flex-col sm:flex-row gap-1; /* gap-1으로 버튼 간격 */
+}
+
+
+
+/* 모바일에서 캘린더 높이 자동 조절 */
+.fc {
+    @apply w-full h-[calc(100vh-8rem)]; /* 화면 높이 - 상단 헤더 높이 */
+}
+
+/* sm 이상에서는 고정 높이 */
+@media (min-width: 640px) {
+    .fc {
+        @apply h-[calc(100vh-4rem)];
+    }
+}
+
 
 /* 현재 활성화된 버튼 (예: dayGridMonth 선택된 상태) */
 .fc .fc-button-active {
-    @apply bg-primary;
+    @apply bg-primary text-primary-content;
 }
-
 
 /* 오늘 날짜 버튼 강조 */
 .fc .fc-today-button {
-    @apply bg-accent hover:bg-accent-content ;
+    @apply bg-accent hover:bg-accent-content text-xs sm:text-sm; /* 모바일 글자 작게 */
 }
 
 /* 헤더 배경색 */
 .fc-theme-standard .fc-toolbar.fc-header-toolbar {
-    @apply bg-base-200 rounded-lg p-2;
+    @apply bg-base-200 rounded-lg p-1 sm:p-2; /* 모바일: p-1, sm 이상: p-2 */
 }
 
 /* 요일 헤더 (월, 화, 수...) */
 .fc-theme-standard th {
-    @apply bg-base-300 text-base-content font-semibold;
+    @apply bg-base-300 text-xs sm:text-base font-semibold; /* 모바일: 글자 작게 */
 }
 
 /* 오늘 날짜 셀 */
@@ -50,8 +67,10 @@
 
 /* 이벤트 */
 .fc-event {
-    @apply bg-primary text-primary-content border-none rounded-md px-1 py-0.5;
+    @apply bg-primary text-primary-content border-none rounded-md px-1 py-0.5 text-xs sm:text-sm; /* 모바일 글자 작게 */
 }
+
+
 .bn-container {
     @apply bg-base-100 text-base-content w-full max-w-full;
 }

@@ -25,8 +25,6 @@ export default function WorkspaceAddMemberModal({ open, onClose }) {
 
     const handleSave = async (members) => {
         try {
-            console.log("선택된 멤버:", members);
-
             // OWNER는 항상 포함
             const ownerMembers = (selectedWorkspaceMember || [])
                 .filter((m) => m.roleName === "OWNER")
@@ -39,17 +37,26 @@ export default function WorkspaceAddMemberModal({ open, onClose }) {
             const response = await chatAPI.syncWorkspaceMembers(selectedWorkspace.id, finalMembers);
 
             if (response.data.result) {
-                await chatAPI.fetchWorkspaceMembers(selectedWorkspace.id);
-
-                alert("멤버 변경에 성공했습니다.");
-
-                // 서버 반영 후 store 업데이트
-                const updatedMembers = selectedWorkspaceMember.map((m) => ({
-                    ...m,
-                    leftAt: finalMembers.includes(m.employeeId) ? null : m.leftAt || new Date().toISOString(),
-                }));
+                // 새로 추가된 멤버 찾아서 merge
+                const existingMap = new Map(selectedWorkspaceMember.map(m => [m.employeeId, m]));
+                const updatedMembers = finalMembers.map(id => {
+                    const existing = existingMap.get(id);
+                    if (existing) {
+                        return { ...existing, leftAt: null }; // 기존 멤버는 복구
+                    } else {
+                        // 새 멤버 기본 구조 추가
+                        return {
+                            employeeId: id,
+                            leftAt: null,
+                            roleName: "MEMBER",
+                            name: "(새 멤버)", // 필요시 OrganizationMemberModal에서 이름도 전달 가능
+                        };
+                    }
+                });
 
                 setSelectedWorkspaceMember(updatedMembers);
+
+                alert("멤버 변경에 성공했습니다.");
             } else {
                 alert("멤버 변경에 실패했습니다.");
             }
@@ -60,6 +67,7 @@ export default function WorkspaceAddMemberModal({ open, onClose }) {
 
         onClose();
     };
+
 
     return (
         <OrganizationMemberModal

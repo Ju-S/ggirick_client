@@ -2,33 +2,38 @@ import VideoHeader from "@/components/videoMeeting/VideoHeader.jsx";
 import ChatSidebar from "@/components/videoMeeting/ChatSidebar.jsx";
 import VideoFooter from "@/components/videoMeeting/VideoFooter.jsx";
 import VideoGrid from "@/components/videoMeeting/VideoGrid.jsx";
-import { Room } from 'livekit-client';
 import useChatStore from "@/store/chat/useChatStore.js";
-import {useVideoMeetingStore} from "@/store/chat/useVideoMeetingStore.js";
-import {useEffect, useState} from "react";
-import {useNavigate} from "react-router";
-import api from "@/api/common/apiInterceptor.js";
-import {useLivekitStore} from "@/store/chat/useLivekitStore.js";
-import {useStore} from "zustand/react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import { useLivekitStore } from "@/store/chat/useLivekitStore.js";
+import { useShallow } from "zustand/react/shallow";
 
-
-export default function VideoMeetingPage({ users = [], messages = [] }) {
-
-    const {selectedWorkspace, selectedChannel} = useChatStore();
-    const navigator = useNavigate();
+export default function VideoMeetingPage() {
+    const { selectedWorkspace, selectedChannel } = useChatStore();
+    const navigate = useNavigate();
     const [isChatSidebarOpen, setChatSidebarOpen] = useState(false);
 
+    // Livekit store 중 필요한 부분만 구독
+    const { joinRoom, leaveRoom } = useLivekitStore(
+        useShallow((state) => ({
+            joinRoom: state.joinRoom,
+            leaveRoom: state.leaveRoom,
+        }))
+    );
 
-    if(selectedChannel == null || selectedWorkspace == null){
-        navigator("/chat")
-    }
+    // 비디오 관련 상태만 별도로 구독
+    const { localVideoTrack, localAudioTrack, remoteTracks } = useLivekitStore(
+        useShallow((state) => ({
+            localVideoTrack: state.localVideoTrack,
+            localAudioTrack: state.localAudioTrack,
+            remoteTracks: state.remoteTracks,
+        }))
+    );
 
-
-    const { joinRoom, room, localVideoTrack, remoteTracks ,leaveRoom} = useLivekitStore();
-
+    // 채널이나 워크스페이스 없으면 리디렉션
     useEffect(() => {
         if (!selectedChannel || !selectedWorkspace) {
-            navigator("/chat");
+            navigate("/chat");
             return;
         }
 
@@ -38,45 +43,29 @@ export default function VideoMeetingPage({ users = [], messages = [] }) {
         init();
 
         return () => {
-            leaveRoom(); // cleanup 시 안전하게 호출
+            leaveRoom();
         };
     }, [selectedChannel, selectedWorkspace]);
 
-
-    const handleChatSidebar =  () => {
-        if(isChatSidebarOpen){
-            setChatSidebarOpen(false);
-        }else{
-            setChatSidebarOpen(true);
-        }
-    }
-
+    const handleChatSidebar = () => {
+        setChatSidebarOpen((prev) => !prev);
+    };
 
     return (
         <main className="flex flex-col h-screen pt-20 md:ml-64 bg-base-200">
-            {/* 상단 헤더 */}
-            <VideoHeader
+            <VideoHeader />
 
-                />
-
-            {/* 메인 영역 */}
             <div className="flex flex-1 overflow-hidden">
-                {/* 비디오 그리드 */}
                 <VideoGrid
                     localVideoTrack={localVideoTrack}
+                    localAudioTrack={localAudioTrack}
                     remoteTracks={remoteTracks}
                 />
 
-                {/* 채팅 사이드바 */}
-                {
-                    isChatSidebarOpen && (<ChatSidebar />)
-
-                }
-
+                {isChatSidebarOpen && <ChatSidebar />}
             </div>
 
-            {/* 하단 제어 */}
-            <VideoFooter handleChatSidebar = {handleChatSidebar}/>
+            <VideoFooter handleChatSidebar={handleChatSidebar} />
         </main>
     );
 }

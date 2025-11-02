@@ -7,7 +7,7 @@ import useAuthStore from "@/store/auth/authStore.js";
 import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {emailDuplCheck, updateEmployeeAPI} from "@/api/mypage/employeeAPI.js";
 
-export default function Nav() {
+export default function Nav({ toggleSidebar }) {
     const navigate = useNavigate();
     const logout = useAuthStore(state => state.logout);
     const {selectedEmployee, setEmployee} = useEmployeeStore();
@@ -102,6 +102,21 @@ export default function Nav() {
             <nav className="fixed top-0 right-0 left-0 z-50 border-b border-base-200 bg-base-100 px-4 py-2.5">
                 <div className="flex flex-wrap items-center justify-between">
                     <div className="flex items-center justify-start">
+                        <button
+                            className="mr-2 md:hidden btn btn-ghost btn-square"
+                            onClick={toggleSidebar}
+                        >
+                            <svg
+                                className="w-6 h-6"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth={2}
+                                viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+                            </svg>
+                        </button>
                         <button onClick={() => navigate("/")} className="mr-4 flex items-center justify-between">
                             <Logo width={120} height={50}/>
                         </button>

@@ -31,6 +31,10 @@ export default function App() {
     const [errorMessage, setErrorMessage] = useState("");
     const [mustResetPw, setMustResetPw] = useState(false); // 초기비밀번호 여부 상태
 
+    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
+    const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
+
     useEffect(() => {
         // 로그인한 직원 정보 가져오기
         getMyInfoAPI().then(resp => {
@@ -115,8 +119,8 @@ export default function App() {
                             ) : (
                                 <>
                                     {/* 상단 네비 */}
-                                    <Nav/>
-                                    <SideNav/>
+                                    <Nav toggleSidebar={toggleSidebar}/>
+                                    <SideNav isOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
                                     <Routes>
                                         {/* 메인 컨텐츠 */}
                                         <Route path="/*" element={
