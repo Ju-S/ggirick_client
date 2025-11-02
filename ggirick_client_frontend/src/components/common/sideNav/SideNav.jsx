@@ -1,15 +1,20 @@
 import {useNavigate} from 'react-router-dom';
 
-export default function SideNav() {
+export default function SideNav({ isOpen, toggleSidebar }) {
     const navigate = useNavigate();
 
     return (
         <aside
-            className="fixed top-0 left-0 z-40 h-screen w-64 -translate-x-full border-r border-base-300 bg-base-100 pt-14 transition-transform md:translate-x-0 text-base-content"
+            className={`fixed top-0 left-0 z-40 h-screen w-64 border-r border-base-300 bg-base-100 pt-14 transition-transform ${
+                isOpen ? "translate-x-0" : "-translate-x-full"
+            } md:translate-x-0`}
             aria-label="Sidenav"
             id="drawer-navigation"
         >
             <div className="h-full overflow-y-auto border-base-300 bg-base-100 px-3 py-5">
+                <div className="md:hidden mb-4">
+                    <button className="btn btn-sm" onClick={toggleSidebar}>닫기</button>
+                </div>
                 <form action="#" method="GET" className="mb-2 md:hidden">
                     <label htmlFor="sidebar-search" className="sr-only">
                         Search

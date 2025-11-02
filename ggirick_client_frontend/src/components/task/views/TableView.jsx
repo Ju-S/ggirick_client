@@ -22,7 +22,7 @@ export default function TableView() {
     }, [selectedProject, searchTerm]);
 
     return (
-        <div className="bg-base-100 rounded-lg border border-base-300 shadow-sm p-4 relative">
+        <div className=" bg-base-100 rounded-lg border border-base-300 shadow-sm p-4 relative">
             {/* 🔍 검색창 */}
             <div className="mb-3 flex justify-between items-center">
                 <h2 className="text-lg font-semibold text-base-content">업무 목록</h2>
@@ -35,8 +35,8 @@ export default function TableView() {
                 />
             </div>
 
-            {/* 📋 테이블 */}
-            <div className="overflow-x-auto">
+            {/* 📋 데스크탑서 볼때의 테이블 */}
+            <div className="hidden md:block overflow-x-auto">
                 <table className="min-w-full text-sm text-left">
                     <thead className="bg-base-200 text-base-content/70 uppercase">
                     <tr>
@@ -128,6 +128,49 @@ export default function TableView() {
                         검색 결과가 없습니다.
                     </div>
                 )}
+            </div>
+            {/* 모바일 카드형 */}
+            <div className="block md:hidden space-y-2">
+                {filteredTasks.map((task) => {
+                    const tags = getTagsFromTask(task);
+                    return (
+                        <div key={task.id} className="border rounded-lg p-3 bg-base-100 shadow-sm"
+                             onContextMenu={(e) => {
+                                 e.preventDefault();
+                                 setContextMenuTaskId(task.id);
+                             }}>
+                            <p className="font-semibold">{task.title}</p>
+                            <p className="text-sm text-base-content/80">
+                                담당자: {selectedProject.members.find(m => m.employeeId === task.assignee)?.name || "없음"}
+                            </p>
+                            <p className="text-sm">
+                                상태: <span className={`px-2 py-1 rounded text-xs font-medium ${
+                                task.status === "완료" ? "bg-success text-success-content" :
+                                    task.status === "진행 중" ? "bg-info text-info-content" :
+                                        "bg-neutral text-neutral-content"
+                            }`}>{task.status}</span>
+                            </p>
+                            <p className="text-sm text-base-content/80">기한: {formatDate(task.endedAt)}</p>
+                            <div className="flex flex-wrap gap-1">
+                                {tags.length > 0 ? tags.map((tag, idx) => {
+                                    const tagColors = ["primary", "secondary", "accent"];
+                                    const color = tagColors[idx % tagColors.length];
+                                    return (
+                                        <span key={idx} className={`bg-${color} text-${color}-content text-xs font-medium px-2 py-1 rounded`}>
+                #{tag}
+              </span>
+                                    );
+                                }) : <span className="text-xs text-base-content">태그 없음</span>}
+                            </div>
+                            <TaskClickMenu
+                                task={task}
+                                contextMenuTaskId={contextMenuTaskId}
+                                setContextMenuTaskId={setContextMenuTaskId}
+                            />
+                        </div>
+
+                    );
+                })}
             </div>
         </div>
     );

@@ -77,7 +77,7 @@ export default function ChatRoom() {
     }
 
     return (
-        <main className="flex flex-1 flex-col bg-base-200 text-base-content">
+        <main className="flex flex-1 flex-col bg-base-200 text-base-content pt-14  md:pt-0">
             <ChatRoomHeader  sendMessage={sendMessage}/>
             <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                 <div ref={topRef}></div>

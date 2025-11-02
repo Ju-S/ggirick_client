@@ -75,7 +75,7 @@ export const DatabaseView = () => {
     };
 
     return (
-        <div className="p-4 space-y-4">
+        <div className="p-4 space-y-4 overflow-x-auto">
             {/* 검색 + 필터 */}
             <div className="flex flex-wrap gap-2">
                 <input
@@ -105,7 +105,7 @@ export const DatabaseView = () => {
 
             {/* 테이블 */}
             <div className="overflow-x-auto rounded-lg border border-base-300 shadow-sm">
-                <table className="min-w-full text-sm table-auto border-collapse">
+                <table className="min-w-[800px] w-full text-sm table-fixed border-collapse">
                     <thead className="bg-base-200 sticky top-0 z-10">
                     <tr>
                         {["ID", "업무명", "담당자", "상태","시작일", "마감일", "프로젝트", "우선순위"].map((h, idx) => (

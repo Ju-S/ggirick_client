@@ -60,15 +60,25 @@ const useChatStore = create((set, get) => ({
         })),
 // 워크스페이스 불러오기
     fetchWorkspaces: async () => {
-        const {setLoading} = get();
+        const { setLoading, selectWorkspace } = get();
 
-        setLoading(true)
-        const data = await chatAPI.fetchWorkspaces();
-        set({ workspaces: data,});
+        setLoading(true);
+        try {
+            const data = await chatAPI.fetchWorkspaces();
+            set({ workspaces: data });
 
-        setLoading(false)
-
+            // 워크스페이스가 하나라도 있으면 첫 번째 자동 선택
+            if (data.length > 0) {
+                selectWorkspace(data[0]);
+            }
+        } catch (err) {
+            console.error("워크스페이스 불러오기 실패:", err);
+            set({ workspaces: [] });
+        } finally {
+            setLoading(false);
+        }
     },
+
 
     //해당하는 워크스페이스에서 내역할 불러오기
 
@@ -101,7 +111,7 @@ const useChatStore = create((set, get) => ({
             const channels = await chatAPI.fetchChannels(workspace.id);
             set({ channels });
             // 워크스페이스 멤버 가져오기
-            const members = await chatAPI.fetchWorkspaceMembers(workspace.id);
+            const [members] = await Promise.all([chatAPI.fetchWorkspaceMembers(workspace.id)]);
             set({ selectedWorkspaceMember: members });
 
             //워크스페이스에서의 내역할 세팅하기

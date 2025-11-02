@@ -144,15 +144,15 @@ export default function TaskPage() {
             <main className="flex flex-col h-screen bg-base-100 pt-20 md:ml-64 transition-colors duration-300">
                 {/* 🔹 프로젝트 헤더 */}
                 <header className="bg-primary text-primary-content border-b border-base-300 shadow-sm p-6">
-                    <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                        <div>
+                    <div className="flex flex-col md:flex-row justify-between gap-2 sm:gap-4 md:gap-6, items-start md:items-center">
+                        <div  className="flex flex-wrap md:flex-nowrap items-center gap-2 sm:gap-4 mt-2 md:mt-0 text-xs sm:text-sm">
                             <h1 className="text-2xl font-bold" onClick={() => setProjectInfoModalOpen(true)}>{selectedProject.name}</h1>
                             <p className="text-sm opacity-80 mt-1">{selectedProject.description}</p>
                             <p className="text-sm opacity-80 mt-1">프로젝트 주인: {selectedProject.createdByEmployeeName} </p>
                         </div>
 
-                        <div className="flex items-center gap-6 text-sm">
-                            <div className="flex items-center gap-2">
+                        <div className="flex flex-wrap md:flex-nowrap items-center gap-2 sm:gap-4 mt-2 md:mt-0 text-xs sm:text-sm">
+                            <div className="hidden sm:flex m:gap-2 shrink-0 flex-wrap items-center gap-2">
                                 <svg
                                     className="w-4 h-4"
                                     fill="none"
@@ -170,7 +170,7 @@ export default function TaskPage() {
                                 <span className="font-medium">{selectedProject.range || "기간 미정"}</span>
                             </div>
 
-                            <div className="flex -space-x-2">
+                            <div className=" -space-x-2 hidden sm:flex m:gap-2 shrink-0">
                                 {Array.isArray(selectedProject.members) && selectedProject.members.length > 0 ? (
                                     selectedProject.members.map((m, i) => (
                                         <div
@@ -210,20 +210,18 @@ export default function TaskPage() {
                 </header>
 
                 {/* 🔹 프로젝트 선택 및 뷰 전환 */}
-                <div className="p-4 bg-base-100 border-b border-base-300 flex items-center justify-between">
+                <div className="p-4 bg-base-100 border-b border-base-300 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4">
                     <select
                         value={selectedProjectId || ""}
                         onChange={(e) => setSelectedProjectId(Number(e.target.value))}
-                        className="border border-base-300 bg-base-100 rounded-md text-sm px-2 py-1"
+                        className="border border-base-300 bg-base-100 rounded-md w-full sm:w-auto text-sm px-2 py-1"
                     >
                         {projectOptions.map((p) => (
-                            <option key={p.id} value={p.id}>
-                                {p.name}
-                            </option>
+                            <option key={p.id} value={p.id}>{p.name}</option>
                         ))}
                     </select>
 
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 mt-2 justify-center sm:justify-end">
                         {[
                             ["kanban", "칸반"],
                             ["table", "테이블"],

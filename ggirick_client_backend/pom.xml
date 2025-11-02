@@ -69,6 +69,7 @@
             <version>2.0.1</version>
         </dependency>
         <!-- livekit java client-->
+
         <dependency>
             <groupId>io.livekit</groupId>
             <artifactId>livekit-server</artifactId>
