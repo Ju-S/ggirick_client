@@ -2,10 +2,13 @@ import {timestampToMonthDay, timestampToMonthDayTime} from "@/utils/common/dateF
 import useReservationStore from "@/store/reservation/useReservationStore.js";
 import useTaskProjectStore from "@/store/task/useTaskProjectStore.js";
 import useRecentActivitiesInfo from "@/hooks/dashboard/useRecentActivitiesInfo.js";
+import {useNavigate} from "react-router-dom";
 
 const descriptionAndNavigateURLByType = (e) => {
     let description = "";
-    let navigateURL = "";
+    let onClickEvent;
+
+    const navigate = useNavigate();
 
     const setActiveTab = useReservationStore(state => state.setActiveTab);
     const setSelectedProjectId = useTaskProjectStore(state => state.setSelectedProjectId);
@@ -40,8 +43,11 @@ const descriptionAndNavigateURLByType = (e) => {
                     </div>
                 </div>
             );
-            setActiveTab("myReservations");
-            navigateURL = "/reservation";
+
+            onClickEvent = () => {
+                setActiveTab("myReservations");
+                navigate("/reservation");
+            }
             break;
         }
         case "board":
@@ -79,7 +85,9 @@ const descriptionAndNavigateURLByType = (e) => {
                     </div>
                 </div>
             );
-            navigateURL = "/board/" + e.rawData?.id;
+            onClickEvent = () => {
+                navigate("/board/" + e.rawData?.id);
+            }
             break;
         }
         case "task": {
@@ -107,8 +115,11 @@ const descriptionAndNavigateURLByType = (e) => {
                     </div>
                 </div>
             );
-            setSelectedProjectId(e.rawData?.task?.projectId);
-            navigateURL = "/task";
+
+            onClickEvent = () => {
+                setSelectedProjectId(e.rawData?.task?.projectId);
+                navigate("/task");
+            }
             break;
         }
 
@@ -141,7 +152,10 @@ const descriptionAndNavigateURLByType = (e) => {
                     </div>
                 </div>
             );
-            navigateURL = "/approval/" + e.rawData?.id;
+
+            onClickEvent = () => {
+                navigate("/approval/" + e.rawData?.id);
+            }
             break;
         }
         case "calendar": {
@@ -185,16 +199,14 @@ const descriptionAndNavigateURLByType = (e) => {
                     </div>
                 </div>
             );
-            if (e.rawData?.groupId === null) {
-                navigateURL = "/calendar";
-            } else {
-                navigateURL = "/calendar?groupId=" + e.rawData?.groupId;
+
+            onClickEvent = () => {
+                navigate(`/calendar${e.rawData?.groupId === null ? "" : `?groupId=${e.rawData.groupId}`}`);
             }
-            break;
         }
     }
 
-    return {description: description, navigateURL: navigateURL};
+    return {description: description, onClickEvent: onClickEvent};
 }
 
 export default descriptionAndNavigateURLByType;

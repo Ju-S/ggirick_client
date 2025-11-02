@@ -1,11 +1,8 @@
 import {Card} from "flowbite-react";
 import useDashboardStore from "@/store/dashboard/useDashboardStore.js";
-import {useNavigate} from "react-router-dom";
 import descriptionAndNavigateURLByType from "@/utils/dashboard/descriptionAndNavigateURLByType.jsx";
 
 export default function DashboardRecentActivities() {
-    const navigate = useNavigate();
-
     const recentActivities = useDashboardStore(state => state.recentActivities);
 
     return (
@@ -34,12 +31,12 @@ export default function DashboardRecentActivities() {
                         <div className="flex flex-col gap-2 min-h-[200px]">
                             {recentActivities && recentActivities.length > 0 ? (
                                 recentActivities.map((e) => {
-                                    const {description, navigateURL} = descriptionAndNavigateURLByType(e);
+                                    const {description, onClickEvent} = descriptionAndNavigateURLByType(e);
 
                                     return (
                                         <Card
                                             key={e.id}
-                                            onClick={() => navigate(navigateURL)}
+                                            onClick={onClickEvent}
                                             className="h-14 w-full rounded-lg shadow-none border !border-base-300 !bg-base-100 hover:!bg-base-300 text-base-content-800 cursor-pointer"
                                         >
                                             {description}

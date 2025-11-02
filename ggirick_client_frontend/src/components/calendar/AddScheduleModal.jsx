@@ -37,11 +37,16 @@ export default function AddScheduleModal() {
                 color: "#dddddd"
             }
         );
-    }, [selectedSchedule]);
+    }, []);
 
     const handleSaveEvent = () => {
         if (!newEvent.title) {
             alert("제목을 입력해주세요.");
+            return;
+        }
+
+        if (newEvent.recurrence !== "none" && (newEvent.recurrenceEnd === null || newEvent.recurrenceEnd === undefined)) {
+            alert("반복 종료일을 입력해주세요.");
             return;
         }
 
