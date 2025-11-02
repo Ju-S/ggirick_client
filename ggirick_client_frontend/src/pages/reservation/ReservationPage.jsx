@@ -38,8 +38,28 @@ export default function ReservationPage() {
                 </div>
             </header>
 
+            <div className="flex-col md:hidden overflow-x-auto border-b bg-base-100 p-2 space-x-2 justify-between">
+                {[
+                    { id: "calendar", label: "캘린더" },
+                    { id: "resources", label: "리소스 목록" },
+                    { id: "myReservations", label: "나의 예약" },
+                ].map(({ id, label }) => (
+                    <button
+                        key={id}
+                        onClick={() => setActiveTab(id)}
+                        className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium ${
+                            activeTab === id
+                                ? "bg-accent text-accent-content"
+                                : "bg-base-200 text-base-content hover:bg-base-300"
+                        }`}
+                    >
+                        {label}
+                    </button>
+                ))}
+            </div>
+
             <div className="flex flex-1 overflow-hidden">
-                <aside className="w-48 overflow-y-auto border-r bg-base-100 p-4">
+                <aside className="w-48 hidden md:block overflow-y-auto border-r bg-base-100 p-4">
                     <h2 className="mb-2 text-sm font-semibold">예약 관리</h2>
                     <ul className="space-y-1">
                         <li

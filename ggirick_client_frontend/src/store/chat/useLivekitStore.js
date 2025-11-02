@@ -17,7 +17,8 @@ export const useLivekitStore = create((set, get) => ({
     cameraEnabled: true,
     screenSharing: false,
     messages: [],
-
+    chatOnly: false,  // 추가
+    setChatOnly: (flag) => set({ chatOnly: flag }),
     myHandRaised: false,                  // 나만의 손 상태
     raisedParticipants: {},               // 다른 참가자 포함 모든 참가자 상태
     handAnimations: [], // [{ id: string, participantId: string }]
@@ -41,6 +42,7 @@ export const useLivekitStore = create((set, get) => ({
     setLocalAudioTrack: (track) => set({localAudioTrack: track}),
     setLocalVideoTrack: (track) => set({ localVideoTrack: track }),
     setCameraEnabled: (isCameraOn) => set({cameraEnabled: isCameraOn}),
+    setMicEnabled: (micEnabled) => set({micEnabled}),
     addRemoteTrack: (trackInfo) => set((state) => ({
         remoteTracks: [...state.remoteTracks, trackInfo]
     })),
@@ -50,108 +52,94 @@ export const useLivekitStore = create((set, get) => ({
     clearRoom: () => set({ room: null, token: null, localVideoTrack: null, remoteTracks: [] }),
 
     joinRoom: async function(roomName) {
-        const { setRoom, setToken, setLocalVideoTrack, addRemoteTrack,removeRemoteTrack ,setLocalAudioTrack} = get();
+        const { setRoom, setToken, setLocalVideoTrack, setLocalAudioTrack, addRemoteTrack, removeRemoteTrack } = get();
 
         try {
             // 1️⃣ 서버에서 JWT 토큰 발급
             const res = await api.post('/openvidu/token', { roomName });
             const data = res.data;
-            console.log("openvidu3 = 토큰 데이터:" + data)
-
             if (!data.token) throw new Error(data.errorMessage || 'Failed to get token');
 
             const token = data.token;
             setToken(token);
 
-            //  LiveKit Room 객체 생성
+            // 2️⃣ LiveKit Room 객체 생성 및 연결
             const room = new Room({ adaptiveStream: true, dynacast: true });
-
-            //  서버에서 받은 JWT 토큰으로 접속
-            const LIVEKIT_URL = OPENVIDU_LIVEKIT_URL;
-            await room.connect(LIVEKIT_URL, token);
+            await room.connect(OPENVIDU_LIVEKIT_URL, token);
             console.log('✅ Connected to LiveKit room', roomName);
 
-            //  이벤트 핸들러 등록
+            //  이벤트 등록 (생략 가능)
             room.on(RoomEvent.ParticipantConnected, (participant) => {
-                console.log('Participant connected:', participant.identity);
+                console.log('👤 Participant connected:', participant.identity);
             });
-
             room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-                console.log('Track subscribed:', participant.identity, track.kind);
+                console.log('🎧 Track subscribed:', participant.identity, track.kind);
                 addRemoteTrack({ trackPublication: publication, participantIdentity: participant.identity });
             });
-
             room.on(RoomEvent.TrackUnsubscribed, (_track, publication) => {
                 removeRemoteTrack(publication.trackSid);
             });
-
-            room.on(RoomEvent.DataReceived, (payload, participant, kind) => {
+            room.on(RoomEvent.DataReceived, (payload, participant) => {
                 const message = JSON.parse(new TextDecoder().decode(payload));
-                 console.log(`💬 ${participant.identity}`);
-              console.log(message)
-
                 if (message.type === "raiseHand") {
-
-                    if(message.raised){
-                        get().updateRaisedParticipant(participant.identity, true);
-                        // 보내진 애니메이션 정보 사용
-                        get().addHandAnimation(message.animation);
-                    }else{
-                        get().updateRaisedParticipant(participant.identity, false);
-                    }
-
-                }else if(message.type === "user"){
+                    get().updateRaisedParticipant(participant.identity, message.raised);
+                    if (message.raised) get().addHandAnimation(message.animation);
+                } else if (message.type === "user") {
                     set((state) => ({ messages: [...state.messages, normalizeMessage(message)] }));
                 }
-
-
             });
 
-
-            // 장치 확인
+            // ⃣ 장치 탐색
             const devices = await navigator.mediaDevices.enumerateDevices();
             const hasCamera = devices.some(d => d.kind === "videoinput");
             const hasMic = devices.some(d => d.kind === "audioinput");
             console.log(`🎥 카메라: ${hasCamera}, 🎤 마이크: ${hasMic}`);
 
-            // 🔹 로컬 트랙 생성 (중복 방지)
-            const localTracks = await createLocalTracks({
-                audio: hasMic,
-                video: hasCamera
-                    ? {
-                        resolution: '1080p', // 720p는 'hd', 1080p는 'fullhd'
-                        frameRate: 30,
-                        facingMode: 'user',
-                        simulcast: true
-                    }
-                    : false,
-            });
+            //  로컬 트랙 생성 (실패해도 계속 진행)
+            try {
+                const localTracks = await createLocalTracks({
+                    audio: hasMic,
+                    video: hasCamera
+                        ? {
+                            resolution: '1080p',
+                            frameRate: 30,
+                            facingMode: 'user',
+                            simulcast: true
+                        }
+                        : false,
+                });
 
-            for(const track of localTracks) {
-                await room.localParticipant.publishTrack(track);
-                if(track.kind === "video") setLocalVideoTrack(track);
-                else if(track.kind === "audio") setLocalAudioTrack(track);
+                for (const track of localTracks) {
+                    const publication = await room.localParticipant.publishTrack(track);
+                    if (track.kind === "video") setLocalVideoTrack(publication.track);
+                    else if (track.kind === "audio") setLocalAudioTrack(publication.track);
+                }
+
+
+            } catch (err) {
+                console.warn("⚠️ 로컬 트랙 생성 실패 (채팅 전용 모드로 진행):", err);
+                // 트랙이 없어도 계속 진행 (chat-only)
             }
 
-            // 기존 remoteParticipants 트랙 추가
-            room.remoteParticipants.forEach(participant => {
-                participant.videoTrackPublications.forEach(pub => {
-                    if(pub.track) addRemoteTrack({ trackPublication: pub, participantIdentity: participant.identity });
-                });
-                participant.audioTrackPublications.forEach(pub => {
-                    if(pub.track) addRemoteTrack({ trackPublication: pub, participantIdentity: participant.identity });
+            // 6 기존 참가자 트랙 등록
+            room.remoteParticipants.forEach((participant) => {
+                participant.tracks.forEach(pub => {
+                    if (pub.track) {
+                        addRemoteTrack({ trackPublication: pub, participantIdentity: participant.identity });
+                    }
                 });
             });
 
-            //  store에 Room 저장
+            // 7️⃣ store에 room 저장
             setRoom(room);
-
             return room;
+
         } catch (err) {
             console.error('❌ Failed to join room:', err);
             get().clearRoom();
         }
     },
+
 
     leaveRoom: async function() {
 
@@ -173,29 +161,33 @@ export const useLivekitStore = create((set, get) => ({
 
 
     },
-    toggleMic: function() {
-        const { room, micEnabled, setMicEnabled } = get();
+    toggleMic: async function () {
+        const { room, micEnabled, localAudioTrack, setLocalAudioTrack, setMicEnabled } = get();
         if (!room) return;
 
-        // 안전하게 Map에서 첫 번째 트랙 가져오기
-        const audioTrackPublication = Array.from(room.localParticipant.audioTracks.values())[0];
-        const localAudio = audioTrackPublication?.track;
-
-        if (!localAudio) {
-            console.warn("⚠️ 토글할 로컬 오디오 트랙이 없습니다.");
-            return;
-        }
+        const localParticipant = room.localParticipant;
 
         if (micEnabled) {
-            // 음소거
-            localAudio.disable();
+            // 🔇 마이크 끄기
+            if (localAudioTrack) {
+                await localParticipant.unpublishTrack(localAudioTrack);
+                localAudioTrack.stop();
+                setLocalAudioTrack(null);
+            }
+            console.log("🎤 마이크 끔");
         } else {
-            // 음 켜기
-            localAudio.enable();
+            // 🔈 마이크 켜기
+            const newTrack = await createLocalTracks({ audio: true })
+                .then(([track]) => track); // createLocalTracks는 배열 반환
+            const pub = await localParticipant.publishTrack(newTrack);
+            setLocalAudioTrack(pub.track);
+            console.log("🎤 마이크 켜짐");
         }
 
         setMicEnabled(!micEnabled);
-    },
+    }
+    ,
+
 
 
     toggleCamera: async function () {

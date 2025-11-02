@@ -1,20 +1,35 @@
 import { useState } from "react";
 import VideoTile from "@/components/videoMeeting/VideoTile.jsx";
 import {Grid, Grid2x2, Grid3x3, Maximize2, Minimize2, PersonStanding} from "lucide-react";
-import {TbGrid4X4} from "react-icons/tb"; // 아이콘 사용 (lucide-react 설치 필요)
+import {TbGrid4X4} from "react-icons/tb";
+import useEmployeeStore from "@/store/hr/employeeStore.js"; // 아이콘 사용 (lucide-react 설치 필요)
 
-export default function VideoGrid({ localVideoTrack, remoteTracks }) {
+export default function VideoGrid({ localVideoTrack,localAudioTrack, remoteTracks }) {
     const [layoutCols, setLayoutCols] = useState(2); // 기본 2열
     const [presentingIndex, setPresentingIndex] = useState(null);
 
+
+    const {selectedEmployee} = useEmployeeStore();
+
     // 🔹 전체 트랙 목록 구성
     const tracks = [];
-    if (localVideoTrack) tracks.push({ track: localVideoTrack, name: "Me", local: true });
+    tracks.push({
+        track: localVideoTrack ?? null,
+        name: selectedEmployee.name,
+        local: true,
+        hasAudio: !!localAudioTrack, // 오디오 여부
+    });
+
+// remote
     remoteTracks.forEach(({ trackPublication, participantIdentity }) => {
-        const track = trackPublication.videoTrack ?? trackPublication.track;
-        if (track && track.kind === "video") {
-            tracks.push({ track, name: participantIdentity, local: false });
-        }
+        const videoTrack = trackPublication.videoTrack ?? trackPublication.track;
+        const audioTrack = trackPublication.audioTrack; // 오디오 정보
+        tracks.push({
+            track: videoTrack ?? null,
+            name: participantIdentity,
+            local: false,
+            hasAudio: !!audioTrack,
+        });
     });
 
     //  Grid Class 계산

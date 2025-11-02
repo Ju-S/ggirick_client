@@ -23,7 +23,7 @@ export default function GanttView() {
     const completedTasks = ganttTasks.filter(t => t.status === "완료");
 
     return (
-        <div className="p-4 bg-base-200 min-h-[calc(100vh-10rem)] transition-colors duration-300">
+        <div className="p-2 sm:p-4 bg-base-200 min-h-[calc(100vh-10rem)] transition-colors duration-300">
             <div className="bg-base-100 rounded-lg border border-base-300 shadow-sm p-6">
                 <h3 className="text-lg font-semibold mb-6 text-primary">📊 간트 차트</h3>
                 <div className="space-y-4">
