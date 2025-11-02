@@ -57,6 +57,17 @@ export default function ChatInput({onSend}) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+
+      const filteredContent = editor.document.filter(block => {
+          if (!block.content || block.content.length === 0) return false;
+          return block.content.some(item => item.text?.trim() !== "");
+      });
+
+      if (filteredContent.length === 0 && uploadedFiles.length === 0) {
+          alert("채팅을 입력해주세요");
+          return;
+      }
+
     if (editor.isEmpty) {
       alert("채팅을 입력해주세요");
       return;
@@ -74,6 +85,7 @@ export default function ChatInput({onSend}) {
             }
 
             console.log("입력창 페이로드:"+JSON.stringify(payload));
+
           onSend( payload);
           editor.replaceBlocks(editor.document, [{ type: "paragraph", content: [] }]);
           setUploadedFiles([])

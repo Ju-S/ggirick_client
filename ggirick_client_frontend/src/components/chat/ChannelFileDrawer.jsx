@@ -127,6 +127,9 @@ export default function ChannelFileDrawer({ isOpen, onClose, workspaceId, channe
                 >
                     {viewMode === "grid" ? "리스트 보기" : "갤러리 보기"}
                 </button>
+                <button onClick={onClose}>
+                    X
+                </button>
             </div>
 
             {/* 로딩/에러 */}
@@ -212,6 +215,7 @@ export default function ChannelFileDrawer({ isOpen, onClose, workspaceId, channe
                                 >
                                     다운로드
                                 </button>
+                                
                             </div>
                         );
                     })}

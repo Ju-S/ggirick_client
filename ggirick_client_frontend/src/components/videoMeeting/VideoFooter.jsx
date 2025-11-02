@@ -14,7 +14,8 @@ export default function VideoFooter({handleChatSidebar}) {
         micEnabled,
         cameraEnabled,
         screenSharing,
-        toggleScreenShare
+        toggleScreenShare,
+        chatOnly,
 
     } = useLivekitStore();
     const navigate = useNavigate()
@@ -36,6 +37,7 @@ export default function VideoFooter({handleChatSidebar}) {
                     {/* 마이크 토글 */}
                     <button
                         className={`btn btn-outline ${micEnabled ? "btn-success" : ""}`}
+                        disabled={chatOnly}
                         onClick={() => toggleMic()}
                     >
                         🎤 {micEnabled ? "끄기" : "켜기"}
@@ -44,6 +46,7 @@ export default function VideoFooter({handleChatSidebar}) {
                     {/* 카메라 토글 */}
                     <button
                         className={`btn btn-outline ${cameraEnabled ? "btn-success" : ""}`}
+                        disabled={chatOnly}
                         onClick={() => toggleCamera()}
                     >
                         📷 {cameraEnabled ? "끄기" : "켜기"}

@@ -60,7 +60,7 @@ public class EmployeeDAO {
 
     // 아이디 리스트로 이름 목록 검색
     public List<String> selectEmployeeNamesByIds(List<String> idLists) {
-        return mybatis.selectList("hr.employee.selectEmployeeNamesByIds", idLists);
+        return mybatis.selectList("Employee.selectEmployeeNamesByIds", idLists);
     }
 
     public int updatePasswordAndEmailAndPhone(Map<String, String> params) {

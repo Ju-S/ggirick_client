@@ -22,6 +22,7 @@ export default function SidebarChannels() {
         workspaceRole
     } = useChatStore();
 
+
     const { selectedEmployee, setEmployee } = useEmployeeStore();
 
     const [modalOpen, setModalOpen] = useState(false);

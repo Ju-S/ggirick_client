@@ -48,14 +48,14 @@ export default function KanbanView() {
 
   return (
     <DragDropContext onDragEnd={onDragEnd}>
-      <div className="grid grid-cols-3 gap-4 p-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {Object.entries(columns).map(([col, colTasks]) => (
           <Droppable key={col} droppableId={col}>
             {(provided, snapshot) => (
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className={`border-base-300 rounded-lg border p-4 transition-colors ${
+                className={`border-base-300 rounded-lg border p-2 sm:p-4 transition-colors ${
                   snapshot.isDraggingOver ? "bg-primary/10" : "bg-base-200"
                 }`}
               >
@@ -88,7 +88,7 @@ export default function KanbanView() {
                             setContextMenuTaskId(task.id);
                           }}
                         >
-                          <p className="text-sm font-medium">{task.title}</p>
+                          <p className="text-xs sm:text-sm font-medium">{task.title}</p>
 
                           <div className="text-base-content/70 mt-1 flex items-center justify-between text-xs">
                             <div>
