@@ -5,15 +5,14 @@ import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalDelegateDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalHistoryDTO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalLineDTO;
-import com.kedu.ggirick_client_backend.dto.hr.VacationUsageLogDTO;
 import com.kedu.ggirick_client_backend.services.hr.VacationService;
+import com.kedu.ggirick_client_backend.services.workmanagement.WorkSummaryDailyService;
 import com.kedu.ggirick_client_backend.utils.approval.DocDataUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +29,7 @@ public class ApprovalProcessService {
     private final ApprovalDelegateService approvalDelegateService;
 
     private final VacationService vacationService;
+    private final WorkSummaryDailyService workSummaryDailyService;
 
     private final DocDataUtil docDataUtil;
 
@@ -74,6 +74,7 @@ public class ApprovalProcessService {
                 if (approvalHistoryInfo.getTypeId() == TYPE_APPROVE &&
                         approvalLineService.getLastOrderLine(approvalHistoryInfo.getApprovalId()) == approvalLine.getOrderLine()) {
                     approvalService.updateType(TYPE_APPROVE, approvalHistoryInfo.getApprovalId());
+                    ApprovalDTO approvalInfo = approvalService.getById(approvalHistoryInfo.getApprovalId());
 
                     // 문서 승인 후, 문서 종류에 따라 다른 로직 수행
                     // 대리결재자가 필요한 경우, 대리결재자 등록 service 사용 필요
@@ -83,7 +84,6 @@ public class ApprovalProcessService {
 
                         }
                         case DOC_TYPE_VACATION -> {
-                            ApprovalDTO approvalInfo = approvalService.getById(approvalHistoryInfo.getApprovalId());
                             // 휴가신청일 경우, 대리결재자 등록
                             if (approvalInfo.getDocTypeCode().equals(DOC_TYPE_VACATION) && approvalInfo.getDocData().get("delegatorList") != null) {
                                 for (Map<String, Object> delegator : (List<Map<String, Object>>) approvalInfo.getDocData().get("delegatorList")) {
@@ -97,25 +97,16 @@ public class ApprovalProcessService {
                                 }
                             }
 
-//                            ApprovalDTO approvalInfo = approvalService.getById(approvalHistoryInfo.getApprovalId());
-//
-//                            VacationUsageLogDTO dto = new VacationUsageLogDTO();
-//                            dto.setEmployeeId(approvalInfo.getWriter());
-//                            dto.setApprovalId(approvalInfo.getId());
-//                            dto.setGrantId(vacationService.getCurrentGrantId(approvalInfo.getWriter()));
-//                            dto.setStartDate(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), true));
-//                            dto.setEndDate(docDataUtil.convertToTimestamp(approvalInfo.getDocData(), false));
-//                            dto.setVacationType((String) approvalInfo.getDocData().get("vacationType"));
-//
-//                            vacationService.registerVacationUsage(dto);
-//
-
+                            // DB 업데이트
+                            vacationService.applyApprovedVacation(approvalInfo);
                         }
                         case DOC_TYPE_HOLIDAY -> {
-
+                            // DB 업데이트
+                            workSummaryDailyService.approveDailyWorkSummary(approvalInfo);
                         }
                         case DOC_TYPE_OVERTIME -> {
-
+                            // DB 업데이트
+                            workSummaryDailyService.approveDailyWorkSummary(approvalInfo);
                         }
                         case DOC_TYPE_WORK_CHECK -> {
 

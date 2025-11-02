@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="WorkAttendanceSummary">
+    <!-- 근태 요약 UPSERT -->
+    <update id="mergeWorkAttendanceSummary" parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkAttendanceSummaryDTO">
+        MERGE INTO work_attendance_summary t
+        USING (SELECT #{employeeId} AS employee_id, #{workDate} AS work_date FROM dual) s
+        ON (t.employee_id = s.employee_id AND t.work_date = s.work_date)
+        WHEN MATCHED THEN
+        UPDATE SET
+        t.status = #{status},
+        t.work_hours = #{workHours},
+        t.updated_at = SYSDATE
+        WHEN NOT MATCHED THEN
+        INSERT (id, employee_id, work_date, status, work_hours, created_at)
+        VALUES (work_attendance_summary_seq.NEXTVAL, #{employeeId}, #{workDate}, #{status}, #{workHours}, SYSDATE)
+    </update>
+</mapper>

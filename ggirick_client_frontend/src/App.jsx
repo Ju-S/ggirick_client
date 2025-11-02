@@ -34,7 +34,7 @@ export default function App() {
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
     const toggleSidebar = () => setIsSidebarOpen(prev => !prev);
-
+    
     useEffect(() => {
         // 로그인한 직원 정보 가져오기
         getMyInfoAPI().then(resp => {

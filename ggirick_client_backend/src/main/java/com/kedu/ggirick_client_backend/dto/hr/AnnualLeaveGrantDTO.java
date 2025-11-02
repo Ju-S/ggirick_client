@@ -6,7 +6,7 @@ import java.util.Date;
 
 @Data
 public class AnnualLeaveGrantDTO {
-    private Long grantId; // 연차 부여 고유 ID (PK)
+    private int grantId; // 연차 부여 고유 ID (PK)
     private String employeeId; // 직원 ID (employee.id 참조)
     private Date grantDate; // 연차 발생일 (보통 입사기준 또는 매년 1월 1일)
     private Date expireDate; // 연차 만료일 (보통 1년 뒤)

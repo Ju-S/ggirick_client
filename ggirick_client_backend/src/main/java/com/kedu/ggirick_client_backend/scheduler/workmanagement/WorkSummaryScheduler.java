@@ -36,7 +36,7 @@ public class WorkSummaryScheduler {
         // 어제 근무기록 요약
         try {
             log.info("[WorkSummaryScheduler] {} 기준 근무요약 데이터 생성 시작", yyyyMMdd);
-            workSummaryDailyService.aggregateDailyWorkSummary(targetDate);
+            workSummaryDailyService.dailyWorkSummary(targetDate);
             log.info("[WorkSummaryScheduler] {} 근무요약 데이터 생성 완료 ✅", yyyyMMdd);
         } catch (Exception e) {
             log.error("[WorkSummaryScheduler] {} 처리 중 예외 발생 ❌: {}", yyyyMMdd, e.getMessage(), e);

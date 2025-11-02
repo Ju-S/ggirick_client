@@ -12,31 +12,7 @@ import java.util.Date;
  */
 @Data
 public class VacationLogDTO {
-
-    /** 고유 ID (PK, vacation_log_seq) */
-    private Long id;
-
-    /** 직원 ID */
-    private String employeeId;
-
-    /** 결재(approval) ID */
-    private Long approvalId;
-
-    /** 휴가 시작일 */
-    private Date startDate;
-
-    /** 휴가 종료일 */
-    private Date endDate;
-
-    /** 사용일수 */
-    private Integer daysUsed;
-
-    /** 휴가 종류 (연차, 반차, 병가, 외출 등) */
-    private String vacationType;
-
-    /** 등록일시 */
-    private Date createdAt;
-
-    /** 수정일시 */
-    private Date updatedAt;
+    private int id; // 고유 ID (PK, vacation_log_seq)
+    private String employeeId; // 직원 ID
+    private int approvalId; // 결재(approval)
 }
