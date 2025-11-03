@@ -5,7 +5,7 @@ const useEmployeeStore = create((set) => ({
     employeeList: [],
 
     // 사원 정보 (상세/수정용)
-    employee: {
+    selectedEmployee: {
         id: "",
         name: "",
         phone: "",
@@ -42,13 +42,13 @@ const useEmployeeStore = create((set) => ({
         })),
 
     // 사용자 등록
-    setEmployee: (employee) => set({ employee: employee }),
+    setEmployee: (employee) => set({ selectedEmployee: employee }),
 
     // 사용자 수정
     updateEmployee: (field, value) =>
         set((state) => ({
-            employee: {
-                ...state.employee,
+            selectedEmployee: {
+                ...state.selectedEmployee,
                 [field]: value,
             },
         })),
@@ -59,7 +59,7 @@ const useEmployeeStore = create((set) => ({
     // 사용자 삭제
     deleteEmployee: () =>
         set({
-            employee: {
+            selectedEmployee: {
                 id: "",
                 name: "",
                 phone: "",

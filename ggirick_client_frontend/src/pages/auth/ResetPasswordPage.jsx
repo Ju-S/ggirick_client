@@ -8,7 +8,7 @@ import useAuthStore from "@/store/auth/authStore.js";
 
 export function ResetPasswordPage() {
     const navigate = useNavigate();
-    const employee = useEmployeeStore(state => state.employee);
+    const employee = useEmployeeStore(state => state.selectedEmployee);
     const logout = useAuthStore(state => state.logout);
     const [passwordMatch, setPasswordMatch] = useState(null); // true / false / null
     const [emailCheck, setEmailCheck] = useState(false);

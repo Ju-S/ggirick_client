@@ -31,7 +31,7 @@ export default function ApprovalList({approvalInfos}) {
                     {timestampToMonthDay(e.createdAt)}
                 </td>
                 <td className="text-center text-sm">
-                    {e.typeId == null ? (e.lastAssigner !== selectedEmployee.id && e.writer != selectedEmployee.id)? "대기" : "진행중" : e.typeId === 1 ? e.writer === selectedEmployee.id ? "기안" : "결재" : "반려"}
+                    {e.typeId == null ? (e.lastAssigner !== selectedEmployee.id && e.writer !== selectedEmployee.id)? "대기" : "진행중" : e.typeId === 1 ? e.writer === selectedEmployee.id ? "기안" : "결재" : "반려"}
                 </td>
             </tr>
         ));

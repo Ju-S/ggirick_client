@@ -37,15 +37,14 @@ export default function App() {
     
     useEffect(() => {
         // 로그인한 직원 정보 가져오기
-        getMyInfoAPI().then(resp => {
-            const myInfo = resp.data;
-            if(myInfo) {
-                setEmployee(myInfo);
+        getMyInfoAPI().then(res => {
+            if(res.status === 200 && res.data) {
+                setEmployee(res.data);
             }else {
                 alert("정보를 불러오는데 실패했습니다.");
             }
         });
-    }, [])
+    }, []);
 
     // 세션 로그인 복원
     useEffect(() => {
@@ -54,7 +53,7 @@ export default function App() {
 
         if (token && authority) login({token, authority});
         else logout();
-    }, [login, logout]);
+    }, []);
 
     // 로그인 시 HR 메타데이터 + 초기비밀번호 여부 확인
     useEffect(() => {

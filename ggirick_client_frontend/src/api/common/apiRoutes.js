@@ -542,7 +542,7 @@ const apiRoutes = {
          */
         resourceList: {url: "/reservations/resource", method: "GET"},
     },
-    employee: {
+    selectedEmployee: {
         /**
          * 현재 사용자 정보 조회 API<br>
          * GET /employee/me<br>
