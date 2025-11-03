@@ -147,6 +147,14 @@ const chatAPI = {
             params: {fileId: fileId}
         });
         return response.data;
+    },
+    isMyChannel: async (workspaceId, channelId) => {
+        const route = apiRoutes.chat.isMyChannel(workspaceId,channelId);
+
+        return await api.request({
+            url: route.url,
+            method: route.method
+        });
     }
 };
 

@@ -23,6 +23,7 @@ export default function OrganizationMemberModal({
         const fetchStructure = async () => {
             try {
                 const res = await getHrMetaStructureAPI();
+                console.log(res.data);
                 setOrganizationStructure(res.data || []);
             } catch (err) {
                 console.error("조직도 가져오기 실패:", err);

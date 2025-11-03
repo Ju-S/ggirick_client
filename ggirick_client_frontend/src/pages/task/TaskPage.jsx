@@ -9,6 +9,7 @@ import FullCalenderView from "@/components/task/views/FullCalenderView.jsx";
 import ProjectCreateModal from "@/components/task/ProjectCreateModal.jsx";
 import ProjectAddMemberModal from "@/components/task/ProjectAddMemberModal.jsx";
 import ProjectInfoModal from "@/components/task/ProjectInfoModal.jsx";
+import MemberAvatars from "@/components/common/MemberAvatars.jsx";
 export default function TaskPage() {
     const {
         projects,
@@ -171,18 +172,19 @@ export default function TaskPage() {
                             </div>
 
                             <div className=" -space-x-2 hidden sm:flex m:gap-2 shrink-0">
-                                {Array.isArray(selectedProject.members) && selectedProject.members.length > 0 ? (
-                                    selectedProject.members.map((m, i) => (
-                                        <div
-                                            key={i}
-                                            className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-primary-content text-xs font-semibold border-2 border-base-100 shadow-sm"
-                                        >
-                                            {m.name?.[0] || "?"}
-                                        </div>
-                                    ))
-                                ) : (
-                                    <span className="text-xs opacity-70">멤버 없음</span>
-                                )}
+                               <MemberAvatars activeMembers={selectedProject.members}/>
+                                {/*{Array.isArray(selectedProject.members) && selectedProject.members.length > 0 ? (*/}
+                                {/*    selectedProject.members.map((m, i) => (*/}
+                                {/*        <div*/}
+                                {/*            key={i}*/}
+                                {/*            className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-primary-content text-xs font-semibold border-2 border-base-100 shadow-sm"*/}
+                                {/*        >*/}
+                                {/*            {m.name?.[0] || "?"}*/}
+                                {/*        </div>*/}
+                                {/*    ))*/}
+                                {/*) : (*/}
+                                {/*    <span className="text-xs opacity-70">멤버 없음</span>*/}
+                                {/*)}*/}
                             </div>
 
                             <button

@@ -27,12 +27,13 @@ export function BlockActions({ onLike, onCopy,onViewer, like = 0, viewer = [],li
     }, [like]);
     // 읽음 애니메이션
     useEffect(() => {
+
         if (viewer.length > prevViewerCount) {
             setViewerAnim(true);
             setTimeout(() => setViewerAnim(false), 800);
         }
         setPrevViewerCount(viewer.length);
-    }, [viewer.length]);
+    }, [viewer]);
 
 
     // 클릭한 반응에 누가 눌렀는지 모달 띄우기
@@ -150,7 +151,7 @@ export function BlockActions({ onLike, onCopy,onViewer, like = 0, viewer = [],li
                     >
                         👀 {viewer.length}
                         {viewerAnim && (
-                            <span className="absolute -top-2 -right-2 text-lg animate-ping text-blue-400">️️👁️</span>
+                            <span className="absolute -top-2 -right-2 text-lg animate-ping ">️️👁️</span>
                         )}
                     </button>
                 </div>

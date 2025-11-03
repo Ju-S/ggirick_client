@@ -35,6 +35,7 @@
         <result property="name" column="emp_name"/>
         <result property="email" column="emp_email"/>
         <result property="jobName" column="job_name"/>
+        <result property="profileUrl" column="profile_url"/>
         <result property="rankOrder" column="rank_order"/>
         <result property="deptCode" column="dept_code"/>
         <result property="deptName" column="dept_name"/>
@@ -67,7 +68,8 @@
         emp.emp_name,
         emp.emp_email,
         emp.job_name,
-        emp.rank_order
+        emp.rank_order,
+        emp.profile_url
         FROM organization o
         INNER JOIN department_organization do ON do.org_code = o.code
         INNER JOIN department d ON d.code = do.dept_code
@@ -76,6 +78,7 @@
         e.id AS emp_id,
         e.name AS emp_name,
         e.email AS emp_email,
+        e.profile_url as profile_url,
         j.name AS job_name,
         j.rank_order,
         ed.department_code,
