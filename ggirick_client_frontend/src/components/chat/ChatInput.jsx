@@ -1,15 +1,11 @@
 import React, { useState, useEffect } from "react";
 import {
     useCreateBlockNote,
-    FilePanelController,
-    FormattingToolbar,
-    FormattingToolbarController, getFormattingToolbarItems, FileReplaceButton,
 } from "@blocknote/react";
 import { BlockNoteView } from "@blocknote/mantine";
 import "@blocknote/core/style.css";
 import "@blocknote/mantine/style.css";
 import { ko } from "@blocknote/core/locales";
-import chatAPI from "@/api/chat/chatAPI.js";
 import useChatStore from "@/store/chat/useChatStore.js";
 import FileAPI from "@/api/common/FileAPI.js";
 import {getUploadFolder} from "@/utils/common/fileFolderUtil.js";
@@ -55,11 +51,30 @@ export default function ChatInput({onSend}) {
     return () => unsubscribe();
   }, [editor]);
 
+
+    // BlockNote 블록 안에 텍스트가 존재하는지 검사하는 재귀 함수
+    function hasTextDeep(block) {
+        if (!block || !block.content) return false;
+
+        for (const item of block.content) {
+            if (item.type === "text" && item.text?.trim() !== "") {
+                return true;
+            }
+            // table, paragraph, list 등 중첩 구조 안에 content가 있으면 다시 검사
+            if (item.content && hasTextDeep(item)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
   const handleSubmit = (e) => {
     e.preventDefault();
 
       const filteredContent = editor.document.filter(block => {
           if (!block.content || block.content.length === 0) return false;
+          if (block.content.type === "tableContent") return true;
+
           return block.content.some(item => item.text?.trim() !== "");
       });
 

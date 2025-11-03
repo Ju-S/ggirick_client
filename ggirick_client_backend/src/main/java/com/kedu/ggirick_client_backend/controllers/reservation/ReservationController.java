@@ -63,6 +63,7 @@ public class ReservationController {
     @PutMapping("/{reservationId}")
     public ResponseEntity<ReservationDTO> updateReservation(@PathVariable Long reservationId, @RequestBody ReservationDTO reservationDto, @AuthenticationPrincipal UserTokenDTO userInfo) {
         try {
+
             ReservationDTO updatedReservation = reservationService.updateReservation(reservationId, reservationDto, userInfo.getId());
             if(updatedReservation == null){
                 return ResponseEntity.badRequest().build();

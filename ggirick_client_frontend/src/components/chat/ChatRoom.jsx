@@ -6,7 +6,7 @@ import { useChatWebSocket } from "@/hooks/chat/useChatWebSocket.js";
 import { Message as BaseMessage } from "@/components/chat/Message.jsx";
 import ChatRoomHeader from "@/components/chat/ChatRoomHeader.jsx";
 import ChannelFileDrawer from "@/components/chat/ChannelFileDrawer.jsx";
-
+import { BlockNoteConverterProvider } from "@/providers/BlockNoteConverterProvider.jsx";
 const Message = memo(BaseMessage);
 
 export default function ChatRoom() {
@@ -79,6 +79,7 @@ export default function ChatRoom() {
     return (
         <main className="flex flex-1 flex-col bg-base-200 text-base-content pt-14  md:pt-0">
             <ChatRoomHeader  sendMessage={sendMessage}/>
+
             <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                 <div ref={topRef}></div>
 
@@ -101,7 +102,7 @@ export default function ChatRoom() {
                         </button>
                     </div>
                 )}
-
+                <BlockNoteConverterProvider>
                 {messages.map(msg => {
                     if (msg.type === "user") {
                         return (
@@ -119,6 +120,7 @@ export default function ChatRoom() {
                                     msg={msg}
                                     sendMessage={sendMessage}
                                     chatroom={true}
+
                                 />
                             </div>
                         );
@@ -144,6 +146,7 @@ export default function ChatRoom() {
 
 
                 <div ref={bottomRef}></div>
+                </BlockNoteConverterProvider>
             </div>
 
             <ChatInput onSend={sendMessage} />
