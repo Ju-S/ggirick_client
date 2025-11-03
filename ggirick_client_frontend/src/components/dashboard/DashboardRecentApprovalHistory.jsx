@@ -77,7 +77,7 @@ export default function DashboardRecentApprovalHistory() {
                                     </div>
 
                                     {/* 하단: 결재자 + 날짜 (한 줄) */}
-                                    <span className="text-xs text-base-content-700 relative bottom-3 truncate">
+                                    <span className="text-xs text-base-content-700 relative bottom-3">
                                                 {e.history.name} -> {e.history.typeId === 1 ? "승인" : e.history.typeId === 2 ? "반려" : "의견"} • {timestampToMonthDay(e.history.recordedAt)}
                                             </span>
                                 </Card>
