@@ -1,10 +1,12 @@
 package com.kedu.ggirick_client_backend.dto.workmanagement;
 
+import lombok.Builder;
 import lombok.Data;
 
 import java.sql.Date;
 
 @Data
+@Builder
 public class WorkAttendanceSummaryDTO {
     private int id;
     private String employeeId;

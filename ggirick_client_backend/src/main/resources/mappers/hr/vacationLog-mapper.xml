@@ -8,12 +8,11 @@
     <!-- 휴가 사용 로그 등록 -->
     <insert id="insertVacationLog">
         INSERT INTO vacation_log (
-        id, employee_id, approval_id, created_at
+        id, employee_id, approval_id
         ) VALUES (
         vacation_log_seq.NEXTVAL,
         #{employeeId},
-        #{approvalId},
-        SYSDATE
+        #{approvalId}
         )
     </insert>
 

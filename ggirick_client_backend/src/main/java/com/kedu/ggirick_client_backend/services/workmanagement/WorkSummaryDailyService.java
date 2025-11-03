@@ -17,6 +17,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
@@ -33,27 +34,26 @@ public class WorkSummaryDailyService {
     private final DocDataUtil dataUtil;
     private final Gson gson;
 
-    // 1. 하루 근무 요약 (스케줄러 / 일반 호출)
+    // 1. 하루 근무 요약 (스케줄러 / 수동 호출)
+    // 1. 하루 근무 요약 (스케줄러 / 수동 호출)
     @Transactional
     public void dailyWorkSummary(Date targetDate) {
-        log.info("[WorkSummaryDailyService] {} 근무기록 요약 시작", targetDate);
+        log.info("[WorkSummaryDailyService] {} 근무요약 시작", targetDate);
 
-        // 1. 근무정책 전체 조회
+        // 근무정책 전체 조회
         List<EmployeeWorkPolicyDTO> policies = employeeWorkPolicyService.getAllWithPolicyDetails();
 
-        // 2. 해당 날짜의 전체 근무기록 조회
+        // 해당 날짜 전체 근무기록 조회
         List<WorkTimeLogDTO> allLogs = workTimeLogService.getAllLogsByDate(targetDate);
 
-        // 3. 직원별 근무요약 계산
+        // 직원별 근무요약 생성
         for (EmployeeWorkPolicyDTO policy : policies) {
             String empId = policy.getEmployeeId();
 
             // 직원별 로그 필터링
             List<WorkTimeLogDTO> logs = new ArrayList<>();
             for (WorkTimeLogDTO log : allLogs) {
-                if (empId.equals(log.getEmployeeId())) {
-                    logs.add(log);
-                }
+                if (empId.equals(log.getEmployeeId())) logs.add(log);
             }
 
             LocalTime startTime = policy.getWorkStartTime();
@@ -71,27 +71,71 @@ public class WorkSummaryDailyService {
             cal.setTime(targetDate);
             int dayOfWeek = cal.get(Calendar.DAY_OF_WEEK);
 
-            // 4. 근무기록이 없는 경우
+            // 근무로그가 없는 경우 → 휴가 또는 결근 판정
             if (logs.isEmpty()) {
                 if (isWeekend(dayOfWeek)) continue;
 
                 List<ApprovalDTO> vacDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "VAC");
-                boolean hasVacation = false;
                 for (ApprovalDTO doc : vacDocs) {
-                    if (isDateInRange(targetDate, doc)) {
-                        hasVacation = true;
+                    if (isDateInRange(doc, targetDate)) {
+                        Map<String, Object> data = doc.getDocData();
+                        String startDateStr = (String) data.get("startDate");
+                        String endDateStr = (String) data.get("endDate");
+                        String startTimeStr = (String) data.get("startTime");
+                        String endTimeStr = (String) data.get("endTime");
+
+                        LocalDate startDate = LocalDate.parse(startDateStr);
+                        LocalDate endDate = LocalDate.parse(endDateStr);
+                        LocalDate target = targetDate.toLocalDate();
+
+                        LocalTime vacStart;
+                        LocalTime vacEnd;
+
+                        // 1일짜리 휴가
+                        if (target.equals(startDate) && target.equals(endDate)) {
+                            vacStart = LocalTime.parse(startTimeStr);
+                            vacEnd = LocalTime.parse(endTimeStr);
+                        }
+                        // 첫날
+                        else if (target.equals(startDate)) {
+                            vacStart = LocalTime.parse(startTimeStr);
+                            vacEnd = endTime;
+                        }
+                        // 마지막날
+                        else if (target.equals(endDate)) {
+                            vacStart = startTime;
+                            vacEnd = LocalTime.parse(endTimeStr);
+                        }
+                        // 중간날
+                        else {
+                            vacStart = startTime;
+                            vacEnd = endTime;
+                        }
+
+                        double policyHours = Duration.between(startTime, endTime).toHours();
+                        double vacHours = Duration.between(vacStart, vacEnd).toHours();
+
+                        // 휴가 시간 기준으로 상태 판정
+                        if (vacHours >= policyHours - 1) { // 하루 전체 휴가
+                            status = "LEAVE";
+                            leaveHours = 8.0;
+                        } else if (vacHours >= 3) { // 3시간 이상이면 반차로 인정
+                            status = "HALF_LEAVE";
+                            leaveHours = 4.0;
+                        } else {
+                            status = "ABSENT";
+                        }
+
                         break;
                     }
                 }
 
-                if (hasVacation) {
-                    status = "LEAVE";
-                    leaveHours = 8.0;
-                } else {
+                if ("NORMAL".equals(status)) {
                     status = "ABSENT";
                 }
+
             } else {
-                // 5. 출퇴근 로그 추출
+                // 출퇴근 로그 존재 시
                 start = getFirstTimestamp(logs, "IN");
                 end = getLastTimestamp(logs, "OUT");
 
@@ -103,6 +147,9 @@ public class WorkSummaryDailyService {
                 } else {
                     long diffMillis = end.getTime() - start.getTime();
                     totalHours = diffMillis / (1000.0 * 60 * 60);
+
+                    // 점심시간 1시간 제외
+                    totalHours = Math.max(totalHours - 1, 0);
 
                     LocalTime startLocal = start.toLocalDateTime().toLocalTime();
                     LocalTime endLocal = end.toLocalDateTime().toLocalTime();
@@ -121,10 +168,10 @@ public class WorkSummaryDailyService {
                         }
                     }
 
-                    // 연장근무
+                    // 연장근무 승인 확인
                     List<ApprovalDTO> owrDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "OWR");
                     for (ApprovalDTO doc : owrDocs) {
-                        if (!isDateInRange(targetDate, doc)) continue;
+                        if (!isDateInRange(doc, targetDate)) continue;
                         double[] ref = calculateOvertimeAndNightHours(empId, policy.getPolicyId(), doc);
                         overtimeHours = ref[0];
                         nightHours = ref[1];
@@ -132,11 +179,11 @@ public class WorkSummaryDailyService {
                         break;
                     }
 
-                    // 휴일근무
+                    // 휴일근무 확인
                     List<ApprovalDTO> hwrDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "HWR");
                     boolean hasHolidayWork = false;
                     for (ApprovalDTO doc : hwrDocs) {
-                        if (isDateInRange(targetDate, doc)) {
+                        if (isDateInRange(doc, targetDate)) {
                             hasHolidayWork = true;
                             break;
                         }
@@ -145,63 +192,44 @@ public class WorkSummaryDailyService {
                     if (hasHolidayWork || isWeekend(dayOfWeek)) {
                         status = "HOLIDAY_WORK";
                     }
-
-                    // 반차휴가 (지각/조퇴 시 4시간 인정)
-                    if ("EARLY_LEAVE".equals(status) || "LATE".equals(status)) {
-                        List<ApprovalDTO> vacDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "VAC");
-                        for (ApprovalDTO doc : vacDocs) {
-                            if (isDateInRange(targetDate, doc)) {
-                                leaveHours = 4.0;
-                                break;
-                            }
-                        }
-                    }
                 }
             }
 
-            // 6. 근무요약 MERGE
-            WorkSummaryDailyDTO summary = new WorkSummaryDailyDTO();
-            summary.setEmployeeId(empId);
-            summary.setWorkDate(targetDate);
-            summary.setStartTime(start);
-            summary.setEndTime(end);
-            summary.setTotalHours(totalHours);
-            summary.setOvertimeHours(overtimeHours);
-            summary.setNightHours(nightHours);
-            summary.setLeaveHours(leaveHours);
-            summary.setStatus(status);
-            workSummaryDailyDAO.merge(summary);
+            // 근무요약 MERGE
+            workSummaryDailyDAO.merge(WorkSummaryDailyDTO.builder()
+                    .employeeId(empId)
+                    .workDate(targetDate)
+                    .startTime(start)
+                    .endTime(end)
+                    .totalHours(totalHours)
+                    .overtimeHours(overtimeHours)
+                    .nightHours(nightHours)
+                    .leaveHours(leaveHours)
+                    .status(status)
+                    .build());
 
-            // 7. 근태 상태 MERGE
-            WorkAttendanceSummaryDTO attendance = new WorkAttendanceSummaryDTO();
-            attendance.setEmployeeId(empId);
-            attendance.setWorkDate(targetDate);
-            attendance.setStatus(status);
-            attendance.setWorkHours(totalHours);
-            workAttendanceSummaryService.mergeWorkAttendanceSummary(attendance);
+            // 근태 요약 MERGE
+            workAttendanceSummaryService.mergeWorkAttendanceSummary(WorkAttendanceSummaryDTO.builder()
+                    .employeeId(empId)
+                    .workDate(targetDate)
+                    .status(status)
+                    .workHours(totalHours)
+                    .build());
         }
 
         log.info("[WorkSummaryDailyService] {} 근무요약 완료", targetDate);
     }
 
-    // 8. 연장/야간근무 계산 (근무정책 기준 4시간 or 3시간 구분)
+    // 연장 / 야간근무 계산
     private double[] calculateOvertimeAndNightHours(String empId, Integer policyId, ApprovalDTO doc) {
-
-        // JSON 파싱 추가
-        parseDocDataIfNeeded(doc);
-
-        double overtimeHours = 0;
-        double nightHours = 0;
-
-        Timestamp startTimestamp = dataUtil.convertToTimestamp(doc.getDocData(), true);
-        Timestamp endTimestamp = dataUtil.convertToTimestamp(doc.getDocData(), false);
+        Map<String, Object> data = doc.getDocData();
+        Timestamp startTimestamp = dataUtil.convertToTimestamp(data, true);
+        Timestamp endTimestamp = dataUtil.convertToTimestamp(data, false);
         if (startTimestamp == null || endTimestamp == null) return new double[]{0, 0};
 
         int threshold = (policyId != null && policyId == 2) ? 3 : 4;
-
         LocalDateTime startLdt = startTimestamp.toLocalDateTime();
         LocalDateTime endLdt = endTimestamp.toLocalDateTime();
-
         LocalDateTime sixPM = LocalDateTime.of(startLdt.toLocalDate(), LocalTime.of(18, 0));
         LocalDateTime nightBoundary = LocalDateTime.of(startLdt.toLocalDate(), LocalTime.of(22, 0));
 
@@ -218,6 +246,8 @@ public class WorkSummaryDailyService {
             nightBoundaryHours = nightMillis / (1000.0 * 60 * 60);
         }
 
+        double overtimeHours = 0;
+        double nightHours = 0;
         if (after6Hours <= threshold) {
             overtimeHours = after6Hours;
         } else {
@@ -232,7 +262,7 @@ public class WorkSummaryDailyService {
         return new double[]{overtimeHours, nightHours};
     }
 
-    // 9. 출근/퇴근 로그 추출
+    // 출근/퇴근 로그 추출
     private Timestamp getFirstTimestamp(List<WorkTimeLogDTO> logs, String type) {
         Timestamp result = null;
         for (WorkTimeLogDTO log : logs) {
@@ -257,27 +287,56 @@ public class WorkSummaryDailyService {
         return result;
     }
 
-    // 10. 날짜 범위 체크
-    private boolean isDateInRange(Date targetDate, ApprovalDTO doc) {
+    // 10. 날짜 범위 체크 (결재문서의 날짜+시간이 targetDate(YYYY-MM-DD)에 포함되는지)
+    private boolean isDateInRange(ApprovalDTO doc, Date targetDate) {
+        System.out.println("======================================");
+        System.out.println("[DEBUG] 실행된 문서 ID: " + doc.getId());
+        System.out.println("[DEBUG] targetDate(Date): " + targetDate);
+
+        if (doc == null || doc.getDocData() == null) {
+            System.out.println("[DEBUG] docData가 null → false 반환");
+            return false;
+        }
+
+        Map<String, Object> data = doc.getDocData();
+        System.out.println("[DEBUG] docData 내용: " + data);
+
+        String startDateStr = (String) data.get("startDate");
+        String endDateStr = (String) data.get("endDate");
+        String startTimeStr = (String) data.get("startTime");
+        String endTimeStr = (String) data.get("endTime");
+
+        System.out.println("[DEBUG] startDateStr=" + startDateStr + ", endDateStr=" + endDateStr);
+        System.out.println("[DEBUG] startTimeStr=" + startTimeStr + ", endTimeStr=" + endTimeStr);
+
+        if (startDateStr == null || endDateStr == null) {
+            System.out.println("[DEBUG] startDate 또는 endDate 누락 → false 반환");
+            return false;
+        }
+
         try {
-            // ✅ JSON → Map 보장
-            parseDocDataIfNeeded(doc);
-
-            Map<String, Object> data = doc.getDocData();
-            if (data == null || data.isEmpty()) return false;
-
-            LocalDate start = LocalDate.parse((String) data.get("startDate"));
-            LocalDate end   = LocalDate.parse((String) data.get("endDate"));
+            LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+            LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ISO_LOCAL_DATE);
             LocalDate target = targetDate.toLocalDate();
 
-            return !target.isBefore(start) && !target.isAfter(end);
+            System.out.println("[DEBUG] startDate(LocalDate): " + startDate);
+            System.out.println("[DEBUG] endDate(LocalDate): " + endDate);
+            System.out.println("[DEBUG] target(LocalDate): " + target);
+
+            boolean inRange = !target.isBefore(startDate) && !target.isAfter(endDate);
+            System.out.println("[DEBUG] 비교결과 inRange=" + inRange);
+            System.out.println("======================================");
+            return inRange;
         } catch (Exception e) {
-            log.warn("[WorkSummaryDailyService] 날짜 비교 실패: {}", e.getMessage());
+            System.out.println("[DEBUG] 날짜 파싱 실패 → " + e.getMessage());
+            e.printStackTrace();
+            System.out.println("======================================");
             return false;
         }
     }
 
-    // 11. 주말 체크
+
+    // 주말 여부 체크
     private boolean isWeekend(int dayOfWeek) {
         return dayOfWeek == Calendar.SATURDAY || dayOfWeek == Calendar.SUNDAY;
     }
@@ -286,41 +345,67 @@ public class WorkSummaryDailyService {
     @Transactional
     public void approveDailyWorkSummary(ApprovalDTO approvalInfo) {
         try {
+            // 1. 결재문서 데이터 가져오기
             Map<String, Object> data = approvalInfo.getDocData();
-            if (data == null) return;
+            if (data == null) {
+                log.warn("[WorkSummaryDailyService] DOC_DATA가 비어 있음 (문서 ID: {})", approvalInfo.getId());
+                return;
+            }
 
+            // 2. 시작일 / 종료일 추출
             String startDateStr = (String) data.get("startDate");
             String endDateStr = (String) data.get("endDate");
-            if (startDateStr == null || endDateStr == null) return;
+            if (startDateStr == null || endDateStr == null) {
+                log.warn("[WorkSummaryDailyService] startDate 또는 endDate 누락 (문서 ID: {})", approvalInfo.getId());
+                return;
+            }
 
+            // 3. 문자열 → LocalDate 변환
             LocalDate startDate = LocalDate.parse(startDateStr);
             LocalDate endDate = LocalDate.parse(endDateStr);
+
+            // 4. 문서 타입 확인 (연장근무, 휴일근무, 휴가만 처리)
             String docType = approvalInfo.getDocTypeCode();
+            if (!("OWR".equals(docType) || "HWR".equals(docType) || "VAC".equals(docType))) {
+                log.info("[WorkSummaryDailyService] 해당 문서타입({})은 근무요약 반영 대상 아님", docType);
+                return;
+            }
 
-            if (!("OWR".equals(docType) || "HWR".equals(docType) || "VAC".equals(docType))) return;
-
+            // 5. 작성자(직원) 정보
             String empId = approvalInfo.getWriter();
             LocalDate current = startDate;
+
+            // 6. 지정된 기간 동안 반복 처리
             while (!current.isAfter(endDate)) {
                 Date targetDate = Date.valueOf(current);
                 log.info("[WorkSummaryDailyService] 승인결재 반영 중 → {} / 직원: {}", targetDate, empId);
+
+                // 하루 단위 근무요약 재계산
                 this.dailyWorkSummary(targetDate);
+
                 current = current.plusDays(1);
             }
+
+            log.info("[WorkSummaryDailyService] 문서 {} 근무요약 반영 완료", approvalInfo.getId());
 
         } catch (Exception e) {
             log.error("[WorkSummaryDailyService] 결재 근무요약 반영 실패", e);
         }
     }
 
-    // 13. 통계 조회용
+
+    // 14. 통계 조회용 (일간 / 주간 / 월간 / 연간)
     public WorkSummaryDTO getWorkSummary(String employeeId, LocalDate startDate, LocalDate endDate) {
         Map<String, Object> params = new HashMap<>();
         params.put("employeeId", employeeId);
         params.put("startDate", Date.valueOf(startDate));
         params.put("endDate", Date.valueOf(endDate));
 
+        // 근무 요약 데이터 조회
         WorkSummaryDTO summary = workSummaryDailyDAO.getWorkSummary(params);
+        if (summary == null) summary = new WorkSummaryDTO();
+
+        // 근무계획(Plan) 데이터로 소정근로시간 계산
         List<WorkPlanDTO> plans = workPlanService.getPlansByPeriod(employeeId, startDate, endDate);
 
         int totalPlannedHours = 0;
@@ -328,7 +413,7 @@ public class WorkSummaryDailyService {
             LocalDateTime start = plan.getStartDateTime();
             LocalDateTime end = plan.getEndDateTime();
             if (start != null && end != null) {
-                int diffHours = (int) Duration.between(start, end).toHours() - 1;
+                int diffHours = (int) Duration.between(start, end).toHours() - 1; // 점심 1시간 제외
                 if (diffHours < 0) diffHours = 0;
                 totalPlannedHours += diffHours;
             }
@@ -338,22 +423,4 @@ public class WorkSummaryDailyService {
         return summary;
     }
 
-    // Approval 문서 JSON 파싱 (docDataJson → docData)
-    private void parseDocDataIfNeeded(ApprovalDTO doc) {
-        try {
-            // 이미 파싱된 경우 스킵
-            if (doc.getDocData() != null && !doc.getDocData().isEmpty()) return;
-
-            // JSON 문자열이 비어있는 경우도 스킵
-            if (doc.getDocDataJson() == null || doc.getDocDataJson().isBlank()) return;
-
-            // Gson 또는 ObjectMapper 이용 (dataUtil에도 가능)
-            Map<String, Object> parsed = gson.fromJson(doc.getDocDataJson(), Map.class);
-            doc.setDocData(parsed);
-
-            log.debug("[WorkSummaryDailyService] DOC_DATA 파싱 완료 (문서 ID: {})", doc.getId());
-        } catch (Exception e) {
-            log.warn("[WorkSummaryDailyService] DOC_DATA 파싱 실패 (문서 ID: {}): {}", doc.getId(), e.getMessage());
-        }
-    }
 }
