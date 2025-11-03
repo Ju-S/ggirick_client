@@ -8,12 +8,14 @@ import useEmployeeStore from "@/store/hr/employeeStore.js";
 import { getMyInfoAPI } from "@/api/mypage/employeeAPI.js";
 import WorkspaceSettingModal from "@/components/chat/Modal/WorkspaceSettingModal.jsx";
 import { useVideoMeetingStore } from "@/store/chat/useVideoMeetingStore.js";
+import MemberAvatars from "@/components/common/MemberAvatars.jsx";
 export default function SidebarChannels() {
     const CHANNEL_TYPE_DIRECT = "DIRECT";
     const CHANNEL_TYPE_DIRECT_CODE = 3;
     const MAX_CHANNELS = 30;
 
     const {
+
         channels,
         setChannel,
         selectedWorkspace,
@@ -24,6 +26,9 @@ export default function SidebarChannels() {
 
 
     const { selectedEmployee, setEmployee } = useEmployeeStore();
+
+
+
 
     const [modalOpen, setModalOpen] = useState(false);
     const [workspaceSettingOpen, setWorkspaceSettingOpen] = useState(false);
@@ -99,20 +104,7 @@ export default function SidebarChannels() {
                     </div>
 
                     {/* 멤버 목록 */}
-                    <div className="flex -space-x-2 items-center">
-                        {activeMembers.length > 0 ? (
-                            activeMembers.map((m, i) => (
-                                <div
-                                    key={m.employeeId || i}
-                                    className="w-8 h-8 flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-secondary text-primary-content text-xs font-semibold border-2 border-base-100 shadow-sm"
-                                >
-                                    {m.name?.[0] || "?"}
-                                </div>
-                            ))
-                        ) : (
-                            <span className="text-xs opacity-70">멤버 없음</span>
-                        )}
-                    </div>
+                   <MemberAvatars activeMembers={activeMembers} />
 
                     {/* 버튼 그룹 */}
                     <div className="flex flex-col gap-2 pt-2">
