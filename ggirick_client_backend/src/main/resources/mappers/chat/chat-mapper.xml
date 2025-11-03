@@ -114,9 +114,11 @@
         SELECT COUNT(*)
         FROM CHAT_MESSAGE_VIEWER
         WHERE MESSAGE_ID = #{parentId}
+        AND EMPLOYEE_ID = #{senderId}
         AND workspace_id = #{workspaceId}
         and channel_id = #{channelId}
     </select>
+
 
     <!-- 메시지 id로 읽었음 한 유저 알아오기 -->
     <select id="getViewersMap" parameterType="list" resultType="map">

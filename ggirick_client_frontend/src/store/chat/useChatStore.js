@@ -1,11 +1,12 @@
 import { create } from "zustand";
 import chatAPI from "@/api/chat/chatAPI.js";
 import normalizeMessage from "@/utils/chat/nomalizeMessage.js";
-
+import useEmployeeStore from "@/store/hr/employeeStore.js";
 
 
 
 const useChatStore = create((set, get) => ({
+
     workspaces: [],
     channels: [],
     workspaceId: null,
@@ -123,12 +124,33 @@ const useChatStore = create((set, get) => ({
             set({ channels: [] });
         }
     },
+    enterChannel: async (channel) => {
+        const {selectedWorkspace, setSelectedChannel,fetchChannels} = get();
+
+
+        try {
+            const check = await chatAPI.isMyChannel(selectedWorkspace.id, channel.id);
+            if (!check.data.success) {
+                alert("탈퇴했거나, 사용자가 속한 채널이 아닙니다.");
+                fetchChannels(); // 서버에서 내 채널 목록 갱신
+                setSelectedChannel(null);
+                return;
+            }
+            setSelectedChannel(channel); // 정상 진입
+        } catch (err) {
+            console.error(err);
+            alert("채널 확인 중 오류가 발생했습니다.");
+        }
+    },
 
 
     // 채널 설정 + 메시지 불러오기 + 채널 구독
     setChannel: async (channel) => {
-        const {setLoading, getChannelMessages,selectedWorkspace,} = get();
+        const {setLoading, getChannelMessages,selectedWorkspace,enterChannel} = get();
         if(!selectedWorkspace) return;
+
+        //내가 속한 채널인지 확인
+        enterChannel(channel)
 
         set({selectedChannel: channel,messages:[]})
 
@@ -213,10 +235,18 @@ const useChatStore = create((set, get) => ({
                             // 필요하면 상태 업데이트 가능
                             break;
 
-                        case "CHANNEL_MEMBERS_REMOVED":
-                            console.log("멤버 제거 알림:", content.removedMemberNames);
-                            // 필요하면 상태 업데이트 가능
+                        case "CHANNEL_MEMBERS_REMOVED": {
+
+                            const myId = useEmployeeStore.getState().selectedEmployee?.id;
+
+                            const removedMembers = content.removedMembers || [];
+                            if (removedMembers.includes(String(myId)) && selectedChannel?.id === content.channelId) {
+                                alert(selectedChannel.name + " 채널에서 탈퇴되었습니다.");
+                                set({ selectedChannel: null });
+                                window.location.reload();
+                            }
                             break;
+                        }
 
                         default:
                             break;

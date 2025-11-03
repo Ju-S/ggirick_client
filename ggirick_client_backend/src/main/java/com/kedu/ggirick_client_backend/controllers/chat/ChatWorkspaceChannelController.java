@@ -49,6 +49,16 @@ public class ChatWorkspaceChannelController {
         return channelService.selectChannelParticipantsByChannelId(channelId, loginId);
     }
 
+    //채널 내 채널인지 확인하기
+    @GetMapping("/{workspaceId}/channels/{channelId}/myChannel")
+    public ResponseEntity<Map<String,Boolean>> isMyChannel(@PathVariable Long workspaceId, @PathVariable Long channelId, @AuthenticationPrincipal UserTokenDTO userInfo) {
+        String loginId = userInfo.getId();
+        boolean success = channelService.selectChannelIsMyChannel(channelId, loginId);
+        Map<String,Boolean> map = new HashMap<>();
+        map.put("success",success);
+        return ResponseEntity.ok(map);
+    }
+
     //워크스페이스 생성
     @PostMapping
     public void createWorkspace(@RequestBody ChatWorkspaceDTO workspace,

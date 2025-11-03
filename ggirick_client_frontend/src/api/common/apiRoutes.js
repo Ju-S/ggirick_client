@@ -785,6 +785,10 @@ const apiRoutes = {
         deleteFile: () => ({
             url: 'chat/delete',
             method: "DELETE"
+        }),
+        isMyChannel: (workspaceId, channelId) => ({
+            url: `/workspace/${workspaceId}/channels/${channelId}/myChannel`,
+            method:'GET'
         })
 
     },
