@@ -22,7 +22,7 @@ public class WorkSummaryTestController {
         java.util.Date parsed = new SimpleDateFormat("yyyy-MM-dd").parse(dateStr);
         Date sqlDate = new Date(parsed.getTime());
 
-        workSummaryDailyService.aggregateDailyWorkSummary(sqlDate);
+        workSummaryDailyService.dailyWorkSummary(sqlDate);
 
         return "✅ " + dateStr + " 근무 요약 생성 완료!";
     }

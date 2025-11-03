@@ -5,24 +5,7 @@
 
 <mapper namespace="Vacation">
 
-    <!-- 1. 연차 부여 등록 -->
-    <insert id="insertAnnualLeaveGrant">
-        INSERT INTO annual_leave_grant (
-        grant_id, employee_id, grant_date, expire_date,
-        days_granted, days_used, reason, created_at
-        ) VALUES (
-        annual_leave_grant_seq.NEXTVAL,
-        #{employeeId},
-        #{grantDate},
-        #{expireDate},
-        #{daysGranted},
-        NVL(#{daysUsed}, 0),
-        #{reason},
-        SYSDATE
-        )
-    </insert>
-
-    <!-- 2. 휴가 사용 기록 등록 -->
+    <!-- 휴가 사용 기록 등록 -->
     <insert id="insertVacationUsageLog">
         INSERT INTO vacation_usage_log (
         usage_id, employee_id, approval_id, grant_id,
@@ -41,7 +24,7 @@
         )
     </insert>
 
-    <!-- 3. 미사용 휴가 알림 로그 등록 -->
+    <!-- 미사용 휴가 알림 로그 등록 -->
     <insert id="insertVacationNotification">
         INSERT INTO vacation_notification_log (
         id, employee_id, grant_id, notice_type, sent_date, message, created_at
@@ -55,38 +38,6 @@
         SYSDATE
         )
     </insert>
-
-    <!-- 4. 직원별 연차 목록 조회 -->
-    <select id="getAnnualLeaveByEmployee" resultType="com.kedu.ggirick_client_backend.dto.hr.AnnualLeaveGrantDTO">
-        SELECT *
-        FROM annual_leave_grant
-        WHERE employee_id = #{employeeId}
-        ORDER BY grant_date DESC
-    </select>
-
-    <!--  남은 연차 일수 합계 조회 -->
-    <select id="getRemainingVacation" resultType="int">
-        SELECT NVL(SUM(days_granted - days_used), 0)
-        FROM annual_leave_grant
-        WHERE employee_id = #{employeeId}
-        AND expire_date >= SYSDATE
-    </select>
-
-    <!-- 현재 사용일수 조회 -->
-    <select id="getUsedDays" resultType="int">
-        SELECT NVL(days_used, 0)
-        FROM annual_leave_grant
-        WHERE grant_id = #{grantId}
-    </select>
-
-    <!-- 사용일수 갱신 -->
-    <update id="updateUsedDays">
-        UPDATE annual_leave_grant
-        SET
-            days_used = #{daysUsed},
-            updated_at = SYSDATE
-        WHERE grant_id = #{grantId}
-    </update>
 
     <!-- 휴가 사용 로그 단건 조회 -->
     <select id="getVacationUsageById" resultType="com.kedu.ggirick_client_backend.dto.hr.VacationUsageLogDTO">

@@ -11,23 +11,44 @@ const useEmployeeStore = create((set) => ({
         phone: "",
         extension: "",
         email: "",
-        profile_url: "",
-        employment_status: "", // ACTIVE / LEAVE / RESIGNED / RETIRED / SUSPENDED
-        employee_authority: ""
+        profileUrl: "",
+        departmentCode: "",
+        departmentName: "",
+        jobCode: "",
+        jobName: "",
+        organizationCode: "",
+        organizationName: "",
+        hireDate: "",
+        status: "", // ACTIVE / LEAVE / RESIGNED / RETIRED / SUSPENDED,
+        statusName: "",
+        authority: "", // user / manager / admin
     },
 
+    // 선택한 사원의 재직 이력 리스트
+    employmentHistory: [],
+
     // CRUD 메서드들
-    // 전체 사원 목록
+    // 전체 리스트 한 번에 세팅
     setEmployeeList: (list) => set({ employeeList: list }),
 
+    // 특정 직원 1명만 업데이트
+    updateEmployeeList: (updatedEmp) =>
+        set((state) => ({
+            employeeList: Array.isArray(state.employeeList)
+                ? state.employeeList.map((emp) =>
+                    emp.id === updatedEmp.id ? { ...updatedEmp } : emp
+                )
+                : [updatedEmp],
+        })),
+
     // 사용자 등록
-    setEmployee: (employee) => set({ selectedEmployee: employee }),
+    setEmployee: (employee) => set({ employee: employee }),
 
     // 사용자 수정
     updateEmployee: (field, value) =>
         set((state) => ({
-            selectedEmployee: {
-                ...state.selectedEmployee,
+            employee: {
+                ...state.employee,
                 [field]: value,
             },
         })),
@@ -38,14 +59,22 @@ const useEmployeeStore = create((set) => ({
     // 사용자 삭제
     deleteEmployee: () =>
         set({
-            selectedEmployee: {
+            employee: {
                 id: "",
                 name: "",
                 phone: "",
                 extension: "",
                 email: "",
-                profile_url: "",
-                employment_status: "",
+                profileUrl: "",
+                departmentCode: "",
+                departmentName: "",
+                jobCode: "",
+                jobName: "",
+                organizationCode: "",
+                organizationName: "",
+                hireDate: "",
+                status: "", // ACTIVE / LEAVE / RESIGNED / RETIRED / SUSPENDED
+                authority: "", // user / manager / admin
             },
         }),
 }));

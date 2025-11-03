@@ -16,7 +16,7 @@ public class VacationLogDAO {
     }
 
     // 휴가 로그 삭제 - 기존 vacation_log 테이블에서 기록 삭제 (usageId 기준)
-    public int deleteVacationLog(Long usageId) {
-        return mybatis.delete("VacationLog.deleteVacationLog", usageId);
+    public int deleteVacationLog(int approvalId) {
+        return mybatis.delete("VacationLog.deleteVacationLog", approvalId);
     }
 }
