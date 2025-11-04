@@ -219,7 +219,7 @@
     </select>
 
     <!-- 이메일 중복 확인 -->
-    <select id="isEmailDuplicate" parameterType="string" resultType="int">
+    <select id="isEmailDuplicate" parameterType="map" resultType="int">
         SELECT COUNT(*)
         FROM EMPLOYEE
         WHERE EMAIL = #{email} AND id != #{userId}

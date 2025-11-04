@@ -1,9 +1,9 @@
 package com.kedu.ggirick_client_backend.controllers.dashboard;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
-import com.kedu.ggirick_client_backend.services.approval.ApprovalHistoryService;
 import com.kedu.ggirick_client_backend.services.approval.ApprovalService;
 import com.kedu.ggirick_client_backend.services.dashboard.DashboardService;
+import com.kedu.ggirick_client_backend.services.hr.VacationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -20,13 +20,14 @@ import java.util.Map;
 public class DashboardController {
     private final DashboardService dashboardService;
     private final ApprovalService approvalService;
+    private final VacationService vacationService;
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getDashboardNews(@AuthenticationPrincipal UserTokenDTO userInfo) {
         Map<String, Object> news = new HashMap<>();
 
-        // 읽지않은 메일 수
-
+        // 잔여 휴가 수
+        news.put("vacationCount", vacationService.getRemainingVacation(userInfo.getId()));
 
         // 오늘 일정(todayScheduleSize)
         // 다가오는 일정(3개)(upcomingScheduleList)

@@ -28,8 +28,8 @@
         wp.work_end_time
         FROM employee_work_policy ewp
         JOIN work_policy wp ON ewp.policy_id = wp.policy_id
-        JOIN employment_status es ON ewp.employee_id = es.employee_id
-        WHERE es.status = 'ACTIVE'
+        JOIN employment_status es ON ewp.employee_id = es.emp_id
+        WHERE es.employment_status = 'ACTIVE'
     </select>
 
     <!-- 직원 한명의 근무정책 + 근무시간 조회 -->

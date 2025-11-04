@@ -31,6 +31,18 @@ public class ChatChannelService {
     @Autowired
     private ChatDAO chatDAO;
 
+    //내가 속한 채널인지 확인하기
+    public boolean selectChannelIsMyChannel(Long channelId, String userId){
+        // 1. 사용자가 속한 채널 목록 조회
+        List<ChatChannelDTO> myChannels = chatChannelDAO.selectChannelsByUserId(userId);
+        // 2. 요청한 channelId가 내가 속한 채널인지 확인
+        boolean belongs = myChannels.stream()
+                .anyMatch(ch -> ch.getId().equals(channelId));
+
+        return belongs;
+
+    }
+
 
     //채널 아이디 참가자 확인하기
     public List<ChatChannelParticipantDTO> selectChannelParticipantsByChannelId(Long channelId, String userId) {
@@ -88,6 +100,11 @@ public class ChatChannelService {
         // 변경된 멤버 구분하여 전달
         chatNotificationService.notifyChannelMembersUpdated(workspaceId, channelId, toAdd, toRemove);
 
+        //만약 빈 배열이 넘어왔다면, 채널 삭제
+        if(employeeIds.isEmpty()) {
+            chatWorkspaceDAO.deleteChannel(channelId);
+        }
+
         return true;
     }
 
@@ -110,7 +127,7 @@ public class ChatChannelService {
         dm.setTypeId(ChatConfig.CHANNEL_DIRECT_CODE); // DM 타입
         dm.setName("다이렉트 메시지 채널"); // DM은 이름 없음
         dm.setDescription("1:1 대화방 입니다");
-        chatWorkspaceDAO.insertChannel(dm); // 생성 후 dm.id 세팅됨 (selectKey)
+        chatWorkspaceDAO.insertChannel(dm); // 생성 후 dm.id 세팅됨
 
         // 3. 참여자 추가 - 중복 insert 대비
         Arrays.asList(myId, targetId).forEach(id -> {

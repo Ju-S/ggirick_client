@@ -1,6 +1,7 @@
 import {Route, Routes} from "react-router-dom";
 import {lazy, Suspense, useEffect} from "react";
 import "flowbite/dist/flowbite.css";
+import OrganizationPage from "@/pages/organization/OrganizationPage.jsx";
 
 // Lazy 로드
 const Dashboard = lazy(() => import("@/pages/dashboard/Dashboard.jsx"));
@@ -40,7 +41,7 @@ export default function EmployeeRoutes() {
                 <Route path="/chat" element={<ChatPage/>}/>
                 <Route path="/videomeeting" element={<VideoMeetingPage/>}/>
                 <Route path="/drive" element={<>drive</>}/>
-                <Route path="/organization" element={<>organization</>}/>
+                <Route path="/organization" element={<OrganizationPage/>}/>
                 <Route path="*" element={<>error</>}/>
             </Routes>
         </Suspense>

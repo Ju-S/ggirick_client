@@ -19,15 +19,15 @@ public class VacationController {
 
     // 직원별 연차 목록 조회
     @GetMapping("/list")
-    public ResponseEntity<List<AnnualLeaveGrantDTO>> getAnnualLeaveList(@AuthenticationPrincipal UserTokenDTO userInfo) {
-        List<AnnualLeaveGrantDTO> list = vacationService.getAnnualLeaveByEmployee(userInfo.getId());
+    public ResponseEntity<List<AnnualLeaveGrantDTO>> getAnnualLeaveListByEmployeeId(@AuthenticationPrincipal UserTokenDTO userInfo) {
+        List<AnnualLeaveGrantDTO> list = vacationService.getAnnualLeaveListByEmployeeId(userInfo.getId());
         return ResponseEntity.ok(list);
     }
 
     // 잔여 휴가 조회
     @GetMapping("/remaining")
-    public ResponseEntity<Integer> getRemainingVacation(@AuthenticationPrincipal UserTokenDTO userInfo) {
-        int remaining = vacationService.getRemainingVacation(userInfo.getId());
+    public ResponseEntity<Double> getRemainingVacation(@AuthenticationPrincipal UserTokenDTO userInfo) {
+        double remaining = vacationService.getRemainingVacation(userInfo.getId());
         return ResponseEntity.ok(remaining);
     }
 

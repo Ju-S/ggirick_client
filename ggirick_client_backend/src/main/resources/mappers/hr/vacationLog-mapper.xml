@@ -8,23 +8,17 @@
     <!-- 휴가 사용 로그 등록 -->
     <insert id="insertVacationLog">
         INSERT INTO vacation_log (
-        id, employee_id, approval_id, start_date, end_date,
-        days_used, vacation_type, created_at
+        id, employee_id, approval_id
         ) VALUES (
         vacation_log_seq.NEXTVAL,
         #{employeeId},
-        #{approvalId},
-        #{startDate},
-        #{EndDate},
-        #{daysUsed},
-        #{vacationType},
-        SYSDATE
+        #{approvalId}
         )
     </insert>
 
     <!-- 휴가 로그 삭제 -->
     <delete id="deleteVacationLog">
-        DELETE FROM vacation_log WHERE id = #{usageId}
+        DELETE FROM vacation_log WHERE approval_id = #{approvalId}
     </delete>
 
 </mapper>

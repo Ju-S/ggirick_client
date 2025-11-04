@@ -15,6 +15,7 @@ public class OrgEmployeeDTO {
     private String email;
     private String jobName;      // 직급명
     private Integer rankOrder;   // 직급 순서
+    private String profileUrl;
     private String deptCode;
     private String deptName;
     private String orgCode;
