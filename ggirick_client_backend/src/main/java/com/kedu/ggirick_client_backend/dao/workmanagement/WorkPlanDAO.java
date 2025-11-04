@@ -3,6 +3,7 @@ package com.kedu.ggirick_client_backend.dao.workmanagement;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkPlanDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.session.SqlSession;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Date;
@@ -15,7 +16,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class WorkPlanDAO {
 
-    private final SqlSession mybatis;
+    private final SqlSessionTemplate mybatis;
 
     // 기간별 근무계획 조회
     public List<WorkPlanDTO> getPlansByPeriod(Map<String, Object> params) {

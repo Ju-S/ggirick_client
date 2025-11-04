@@ -13,13 +13,29 @@
     </select>
 
     <!-- 근무계획 등록 -->
-    <insert id="insertPlan" parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkPlanDTO"
-            useGeneratedKeys="true" keyProperty="planId" keyColumn="plan_id">
+    <insert id="insertPlan"
+            parameterType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkPlanDTO"
+            useGeneratedKeys="true"
+            keyProperty="planId"
+            keyColumn="plan_id">
         INSERT INTO work_plan (
-        plan_id, employee_id, plan_date, start_datetime, end_datetime, type, status, created_at
+        plan_id,
+        employee_id,
+        plan_date,
+        start_datetime,
+        end_datetime,
+        type,
+        status,
+        created_at
         ) VALUES (
-        work_plan_seq.NEXTVAL, #{employeeId}, #{planDate}, #{startDatetime},
-        #{endDatetime}, #{type}, #{status}, sysdate
+        work_plan_seq.NEXTVAL,
+        #{employeeId},
+        #{planDate},
+        #{startDateTime},
+        #{endDateTime},
+        #{type},
+        #{status},
+        sysdate
         )
     </insert>
 
