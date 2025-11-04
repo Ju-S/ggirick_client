@@ -8,7 +8,7 @@ import {
 } from "@/api/workmanagement/workManagementAPI.js";
 
 export default function useWorkCheck() {
-    const { employee } = useEmployeeStore(); // ✅ 로그인 직원 정보
+    const { selectedEmployee } = useEmployeeStore(); // ✅ 로그인 직원 정보
     const [workTimeLogs, setWorkTimeLogs] = useState({ daily: [] });
     const [workTimeTypes, setWorkTimeTypes] = useState([]);
     const [hasCheckedIn, setHasCheckedIn] = useState(false);
@@ -60,7 +60,7 @@ export default function useWorkCheck() {
     const handleCheck = async (type) => {
         try {
             const workTimeLog = {
-                employeeId: employee.id, // ✅ 누락된 부분 추가
+                employeeId: selectedEmployee.id, // ✅ 누락된 부분 추가
                 type,
                 recordedAt: dayjs().toISOString(), // ✅ WorkDashboard 구조 맞춤
             };

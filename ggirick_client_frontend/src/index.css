@@ -94,7 +94,6 @@
 
 pre .bn-inline-content{
 
-    @apply text-white;
+    @apply text-white whitespace-pre-line;
     /* DaisyUI에서 사용하는 방식으로 가정: (h s l) 값이 변수에 들어있음 */
 }
-
