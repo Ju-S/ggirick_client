@@ -1,22 +1,26 @@
 package com.kedu.ggirick_client_backend.services.hr;
 
-import com.kedu.ggirick_client_backend.dao.hr.EmployeeVacationDAO;
 import com.kedu.ggirick_client_backend.dao.hr.VacationDAO;
 import com.kedu.ggirick_client_backend.dao.hr.VacationLogDAO;
 import com.kedu.ggirick_client_backend.dto.approval.ApprovalDTO;
-import com.kedu.ggirick_client_backend.dto.hr.*;
+import com.kedu.ggirick_client_backend.dto.hr.AnnualLeaveGrantDTO;
+import com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO;
+import com.kedu.ggirick_client_backend.dto.hr.VacationLogDTO;
+import com.kedu.ggirick_client_backend.dto.hr.VacationUsageLogDTO;
+import com.kedu.ggirick_client_backend.dto.workmanagement.EmployeeWorkPolicyDTO;
+import com.kedu.ggirick_client_backend.services.workmanagement.EmployeeWorkPolicyService;
 import com.kedu.ggirick_client_backend.utils.approval.DocDataUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.sql.Timestamp;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.Period;
-import java.time.ZoneId;
+import java.time.*;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * VacationService
@@ -31,6 +35,7 @@ public class VacationService {
     private final AnnualLeaveGrantService annualLeaveGrantService;
     private final EmployeeService employeeService;
     private final EmployeeVacationService employeeVacationService;
+    private final EmployeeWorkPolicyService employeeWorkPolicyService;
     private final DocDataUtil dateUtil;
 
     // 입사일 기준 연차 자동 계산 및 등록
@@ -165,21 +170,53 @@ public class VacationService {
         Timestamp startTimestamp = dateUtil.convertToTimestamp(docData, true);
         Timestamp endTimestamp = dateUtil.convertToTimestamp(docData, false);
 
-        // 3. 기간 차이 계산 (밀리초 → 일수)
-        long diffMillis = endTimestamp.getTime() - startTimestamp.getTime();
-        double diffDays = diffMillis / (1000.0 * 60 * 60 * 24);
+        // 3. 직원 근무정책 조회
+        List<EmployeeWorkPolicyDTO> policyList = employeeWorkPolicyService.getAllActiveWithPolicyDetails();
+        EmployeeWorkPolicyDTO policy = policyList.stream()
+                .filter(p -> p.getEmployeeId().equals(empId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("해당 직원의 근무정책 정보를 찾을 수 없습니다."));
 
-        // 4. 반차 / 연차 타입 지정
-        String vacationType = (diffDays % 1.0 != 0) ? "HALF" : "FULL";
+        // 근무정책 시작·종료시간 (LocalTime)
+        LocalTime workStart = policy.getWorkStartTime();
+        LocalTime workEnd = policy.getWorkEndTime();
+        long policyHours = Duration.between(workStart, workEnd).toHours();
 
-        // 5. 최신 연차 부여 이력 조회
+        // 4. 휴가 사용기간 계산 (날짜 단위로 구분)
+        LocalDate startDate = startTimestamp.toLocalDateTime().toLocalDate();
+        LocalDate endDate = endTimestamp.toLocalDateTime().toLocalDate();
+        long totalDaysBetween = ChronoUnit.DAYS.between(startDate, endDate);
+
+        // 5. 마지막날 근무시간 계산
+        LocalTime endTime = endTimestamp.toLocalDateTime().toLocalTime();
+        long lastDayUsedHours = Duration.between(workStart, endTime).toHours();
+
+        // 6. 휴가 총합 계산
+        double totalDaysUsed = totalDaysBetween; // 중간 날은 전부 FULL로 처리
+        if (lastDayUsedHours < policyHours) {
+            totalDaysUsed += 0.5; // 마지막날 반차
+        } else {
+            totalDaysUsed += 1;   // 마지막날 온종일
+        }
+
+        // 7. 휴가 타입 지정
+        String vacationType;
+        if (totalDaysUsed % 1 == 0.5) {
+            vacationType = "FULL&HALF"; // 예: 2.5일, 1.5일
+        } else if (totalDaysUsed % 1 == 0) {
+            vacationType = "FULL";      // 예: 1일, 2일
+        } else {
+            vacationType = "HALF";      // 0.5일만 사용 시
+        }
+
+        // 8. 최신 연차 부여 이력 조회
         AnnualLeaveGrantDTO grantDTO = annualLeaveGrantService.getLatestGrantByEmployee(empId);
         if (grantDTO == null) {
             System.out.println("연차 부여 이력이 없습니다. 휴가 반영 불가: " + empId);
             return null;
         }
 
-        // 6. 유효기간 / 남은 연차 확인
+        // 9. 유효기간 / 남은 연차 확인
         Date now = new Date();
         boolean isExpired = grantDTO.getExpireDate().before(now); // 유효기간 만료 여부
         boolean hasNoRemaining = grantDTO.getDaysGranted() <= grantDTO.getDaysUsed(); // 남은 연차 없음
@@ -189,18 +226,19 @@ public class VacationService {
             return null;
         }
 
-        // 7. DTO 생성 및 값 세팅
+        // 10. DTO 생성 및 값 세팅
         VacationUsageLogDTO dto = new VacationUsageLogDTO();
         dto.setEmployeeId(empId);
         dto.setApprovalId(approvalInfo.getId());
         dto.setStartDate(startTimestamp);
         dto.setEndDate(endTimestamp);
-        dto.setDaysUsed(diffDays);
+        dto.setDaysUsed(totalDaysUsed);
         dto.setVacationType(vacationType);
         dto.setGrantId(grantDTO.getGrantId());
 
         return dto;
     }
+
 
     // vacation_usage_log 테이블 insert
     private void insertVacationUsageLog(VacationUsageLogDTO dto) {
@@ -277,7 +315,7 @@ public class VacationService {
     }
 
     // 잔여휴가 조회
-    public int getRemainingVacation(String employeeId) {
+    public double getRemainingVacation(String employeeId) {
         return annualLeaveGrantService.getRemainingVacation(employeeId);
     }
 }

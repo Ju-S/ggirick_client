@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="EmployeeVacation">
+
+    <!-- 직원별 잔여 휴가 재계산 후 업데이트 -->
+    <update id="updateRemaining" parameterType="string">
+        MERGE INTO employee_vacation ev
+        USING (
+        SELECT
+        #{employeeId} AS employee_id,
+        NVL(SUM(days_granted - days_used), 0) AS remaining_vacation
+        FROM annual_leave_grant
+        WHERE employee_id = #{employeeId}
+        ) src
+        ON (ev.employee_id = src.employee_id)
+        WHEN MATCHED THEN
+        UPDATE SET ev.remaining_vacation = src.remaining_vacation
+        WHEN NOT MATCHED THEN
+        INSERT (id, employee_id, remaining_vacation)
+        VALUES (employee_vacation_seq.NEXTVAL, src.employee_id, src.remaining_vacation)
+    </update>
+
+    <!-- 잔여 휴가 조회 -->
+    <select id="getRemaining" resultType="int">
+        SELECT NVL(remaining_vacation, 0)
+        FROM employee_vacation
+        WHERE employee_id = #{employeeId}
+    </select>
+
+</mapper>

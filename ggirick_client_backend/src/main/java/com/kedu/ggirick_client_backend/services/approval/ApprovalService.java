@@ -62,7 +62,7 @@ public class ApprovalService {
 
     // 개별 문서 조회
     public ApprovalDTO getById(int approvalId) {
-        ApprovalDTO approval =  approvalDAO.getById(approvalId);
+        ApprovalDTO approval = approvalDAO.getById(approvalId);
         Gson gson = new Gson();
         approval.setDocData(gson.fromJson(approval.getDocDataJson(), Map.class));
         return approval;
@@ -94,11 +94,22 @@ public class ApprovalService {
         approvalDAO.delete(approvalId);
     }
 
-     // 특정 직원의 승인 완료된 문서를 유형별로 조회 (VAC, OWR, HWR 등)
-     public List<ApprovalDTO> getApprovedDocsByEmployeeAndType(String employeeId, String docTypeCode) {
-         Map<String, Object> params = new HashMap<>();
-         params.put("employeeId", employeeId);
-         params.put("docTypeCode", docTypeCode);
-         return approvalDAO.getApprovedDocsByEmployeeAndType(params);
-     }
+    // 특정 직원의 승인 완료된 문서를 유형별로 조회 (VAC, OWR, HWR 등)
+    public List<ApprovalDTO> getApprovedDocsByEmployeeAndType(String employeeId, String docTypeCode) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("employeeId", employeeId);
+        params.put("docTypeCode", docTypeCode);
+
+        Gson gson = new Gson();
+        List<ApprovalDTO> approvalList = approvalDAO.getApprovedDocsByEmployeeAndType(params).stream()
+                .peek(item -> {
+                    if (item.getDocDataJson() != null) {
+                        Map<String, Object> parsed = gson.fromJson(item.getDocDataJson(), Map.class);
+                        item.setDocData(parsed);
+                    }
+                })
+                .toList();
+
+        return approvalList;
+    }
 }

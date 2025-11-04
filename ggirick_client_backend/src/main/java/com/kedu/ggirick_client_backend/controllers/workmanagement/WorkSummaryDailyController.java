@@ -1,6 +1,7 @@
 package com.kedu.ggirick_client_backend.controllers.workmanagement;
 
 import com.kedu.ggirick_client_backend.dto.UserTokenDTO;
+import com.kedu.ggirick_client_backend.dto.workmanagement.WorkAttendanceSummaryDTO;
 import com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDTO;
 import com.kedu.ggirick_client_backend.services.workmanagement.WorkSummaryDailyService;
 import lombok.RequiredArgsConstructor;
@@ -31,4 +32,14 @@ public class WorkSummaryDailyController {
         return ResponseEntity.ok(summary);
     }
 
+    // 통합 근무요약 API (일간 / 주간 / 연간 / 직접 기간)
+//    @GetMapping("/attendance")
+//    public ResponseEntity<WorkAttendanceSummaryDTO> getWorkSummary(
+//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+//            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+//            @AuthenticationPrincipal UserTokenDTO userInfo
+//    ) {
+//        WorkAttendanceSummaryDTO attendance = workSummaryDailyService.getWorkSummary(userInfo.getId(), startDate, endDate);
+//        return ResponseEntity.ok(attendance);
+//    }
 }

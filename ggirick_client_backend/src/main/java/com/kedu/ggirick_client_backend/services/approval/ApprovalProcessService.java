@@ -115,8 +115,8 @@ public class ApprovalProcessService {
                 }
                 return;
             }
-            throw new Exception();
         }
+        throw new Exception();
     }
 
     // 결재 문서 생성

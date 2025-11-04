@@ -43,7 +43,7 @@
     </select>
 
     <!--  남은 연차 일수 합계 조회 -->
-    <select id="getRemainingVacation" resultType="int">
+    <select id="getRemainingVacation" resultType="double">
         SELECT NVL(SUM(days_granted - days_used), 0)
         FROM annual_leave_grant
         WHERE employee_id = #{employeeId}
