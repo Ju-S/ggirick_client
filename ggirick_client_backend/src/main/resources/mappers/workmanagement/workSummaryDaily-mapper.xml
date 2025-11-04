@@ -54,26 +54,44 @@
             resultType="com.kedu.ggirick_client_backend.dto.workmanagement.WorkSummaryDTO">
 
         SELECT
-        NVL(SUM(CASE WHEN s.STATUS = 'LATE' THEN 1 ELSE 0 END), 0) late_count,
-        NVL(SUM(CASE WHEN s.STATUS = 'EARLY_LEAVE' THEN 1 ELSE 0 END), 0) early_leave_count,
-        NVL(SUM(CASE WHEN s.STATUS = 'MISSING_OUT' THEN 1 ELSE 0 END), 0) missing_out_count,
-        NVL(SUM(CASE WHEN s.STATUS = 'ABSENT' THEN 1 ELSE 0 END), 0) absent_count,
+            -- 지각 카운트 (LATE 또는 LATE_EARLY_LEAVE 포함)
+            NVL(SUM(CASE WHEN s.STATUS LIKE '%LATE%' THEN 1 ELSE 0 END), 0) AS late_count,
 
-        NVL(SUM(CASE WHEN s.STATUS != 'ABSENT' THEN 1 ELSE 0 END), 0) work_days,
-        ROUND(NVL(SUM(s.TOTAL_HOURS), 0), 1) total_hours,           -- 🔹 총 근무시간 소수점 1자리
-        ROUND(NVL(AVG(NVL(s.TOTAL_HOURS, 0)), 0), 1) avg_hours,     -- 🔹 평균 근무시간 소수점 1자리
-        NVL(MAX(g.remaining_vacation), 0) remaining_vacation
+            -- 조퇴 카운트
+            NVL(SUM(CASE WHEN s.STATUS LIKE '%EARLY_LEAVE%' THEN 1 ELSE 0 END), 0) AS early_leave_count,
+
+            -- 미퇴근
+            NVL(SUM(CASE WHEN s.STATUS LIKE '%MISSING_OUT%' THEN 1 ELSE 0 END), 0) AS missing_out_count,
+
+            -- 결근
+            NVL(SUM(CASE WHEN s.STATUS LIKE '%ABSENT%' THEN 1 ELSE 0 END), 0) AS absent_count,
+
+            -- 근무일수 (결근 제외)
+            NVL(SUM(CASE WHEN s.STATUS NOT LIKE '%ABSENT%' THEN 1 ELSE 0 END), 0) AS work_days,
+
+            -- 총 근무시간
+            ROUND(NVL(SUM(s.TOTAL_HOURS), 0), 1) AS total_hours,
+
+            -- 평균 근무시간
+            ROUND(NVL(AVG(NVL(s.TOTAL_HOURS, 0)), 0), 1) AS avg_hours,
+
+            -- 🔹 잔여연차 (소수점 유지)
+            ROUND(NVL(MAX(g.remaining_vacation), 0), 1) AS remaining_vacation,
+
+            -- 총 휴가 사용시간
+            ROUND(NVL(SUM(s.LEAVE_HOURS), 0), 1) AS leave_hours
 
         FROM WORK_SUMMARY_DAILY s
-        LEFT JOIN (
-        SELECT employee_id, SUM(days_granted - days_used) remaining_vacation
-        FROM ANNUAL_LEAVE_GRANT
-        WHERE expire_date >= SYSDATE
-        GROUP BY employee_id
+                 LEFT JOIN (
+            SELECT employee_id,
+                   SUM((days_granted - days_used) * 1.0) AS remaining_vacation
+            FROM ANNUAL_LEAVE_GRANT
+            WHERE expire_date >= SYSDATE
+            GROUP BY employee_id
         ) g ON g.employee_id = s.employee_id
 
         WHERE s.employee_id = #{employeeId}
-        AND s.work_date BETWEEN #{startDate} AND #{endDate}
+          AND s.work_date BETWEEN #{startDate} AND #{endDate}
 
     </select>
 </mapper>

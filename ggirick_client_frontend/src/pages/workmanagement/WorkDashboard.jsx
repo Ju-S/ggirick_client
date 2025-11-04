@@ -136,7 +136,7 @@ export default function WorkDashboard() {
                 if (dailyResp?.data?.length) {
                     const plan = dailyResp.data[0];
 
-                    // ✅ 포맷해서 저장 (예: 'HH:mm' 형식)
+                    // 포맷해서 저장 (예: 'HH:mm' 형식)
                     const formattedPlan = {
                         ...plan,
                         startDateTime: dayjs(plan.startDateTime).format("HH:mm"),
@@ -719,7 +719,7 @@ export default function WorkDashboard() {
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    {/* ✅ 소정 */}
+                                    {/* 소정 */}
                                     <tr>
                                         <td className="font-semibold">소정</td>
                                         {/* 기준근무 — 8시간 × 근무일수 */}
@@ -743,7 +743,7 @@ export default function WorkDashboard() {
                                         </td>
                                     </tr>
 
-                                    {/* ✅ 연장, 휴일 */}
+                                    {/* 연장, 휴일 */}
                                     <tr>
                                         <td className="font-semibold">연장, 휴일</td>
                                         <td>-</td>
@@ -753,7 +753,7 @@ export default function WorkDashboard() {
                                         <td>-</td>
                                     </tr>
 
-                                    {/* ✅ 총 근무 */}
+                                    {/* 총 근무 */}
                                     <tr>
                                         <td className="font-semibold">총 근무</td>
                                         <td>{(workSummary.monthly.workDays ?? 0) * 8}시간</td>

@@ -28,7 +28,7 @@ public class AnnualLeaveGrantService {
     }
 
     // 남은 연차 일수 조회
-    public int getRemainingVacation(String employeeId) {
+    public double getRemainingVacation(String employeeId) {
         return annualLeaveGrantDAO.getRemainingVacation(employeeId);
     }
 

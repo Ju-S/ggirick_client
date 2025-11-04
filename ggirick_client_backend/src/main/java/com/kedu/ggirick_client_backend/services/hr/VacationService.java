@@ -315,7 +315,7 @@ public class VacationService {
     }
 
     // 잔여휴가 조회
-    public int getRemainingVacation(String employeeId) {
+    public double getRemainingVacation(String employeeId) {
         return annualLeaveGrantService.getRemainingVacation(employeeId);
     }
 }

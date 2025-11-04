@@ -21,3 +21,10 @@ export const getWorkSummaryAPI = (startDate, endDate) =>
         params: {startDate, endDate}
     });
 
+// 연간 근무 현황 조회 - 지각/조퇴/퇴근누락/결근 횟수용
+export const getWorkAttendanceAPI = (startDate, endDate) =>
+    api({
+        ...apiRoutes.workmanagement.getWorkAttendanceAPI,
+        params: {startDate, endDate}
+    });
+

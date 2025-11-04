@@ -29,7 +29,7 @@ public class AnnualLeaveGrantDAO {
     }
 
     // 남은 연차 일수 조회
-    public int getRemainingVacation(String employeeId) {
+    public double getRemainingVacation(String employeeId) {
         return mybatis.selectOne("AnnualLeaveGrant.getRemainingVacation", employeeId);
     }
 

@@ -902,7 +902,7 @@ const apiRoutes = {
 
         /**
          * 근무 통계 조회 (기간 단위 자유)
-         * GET /worktimelog/summary?period=${period}&startDate=${startDate}&endDate=${endDate}
+         * GET /worktimelog/summary?&startDate=${startDate}&endDate=${endDate}
          * Query Params:
          *  - startDate : 조회 시작일 (YYYY-MM-DD)
          *  - endDate   : 조회 종료일 (YYYY-MM-DD)
@@ -910,6 +910,17 @@ const apiRoutes = {
          * Response: WorkSummaryDTO
          */
         getWorkSummary: {url: `/worksummarydaily/summary`, method: "GET"},
+
+        /**
+         * 근무 통계 조회 (기간 단위 자유)
+         * GET /worktimelog/attendance?period=${period}&startDate=${startDate}&endDate=${endDate}
+         * Query Params:
+         *  - startDate : 조회 시작일 (YYYY-MM-DD)
+         *  - endDate   : 조회 종료일 (YYYY-MM-DD)
+         *
+         * Response: WorkAttendanceSummaryDTO
+         */
+        getWorkAttendanceAPI: {url: `/worksummarydaily/attendance`, method: "GET"},
 
         /**
          * 근무현황 기록 유형 목록 조회 API<br>

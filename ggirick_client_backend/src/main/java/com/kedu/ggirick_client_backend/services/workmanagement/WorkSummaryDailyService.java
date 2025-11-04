@@ -35,7 +35,6 @@ public class WorkSummaryDailyService {
     private final Gson gson;
 
     // 1. 하루 근무 요약 (스케줄러 / 수동 호출)
-    // 1. 하루 근무 요약 (스케줄러 / 수동 호출)
     @Transactional
     public void dailyWorkSummary(Date targetDate) {
         log.info("[WorkSummaryDailyService] {} 근무요약 시작", targetDate);
@@ -77,7 +76,7 @@ public class WorkSummaryDailyService {
 
                 List<ApprovalDTO> vacDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "VAC");
                 for (ApprovalDTO doc : vacDocs) {
-                    if (isDateInRange(doc, targetDate)) {
+                    if (isDateInRange(doc, targetDate, "VAC")) {
                         Map<String, Object> data = doc.getDocData();
                         String startDateStr = (String) data.get("startDate");
                         String endDateStr = (String) data.get("endDate");
@@ -171,8 +170,8 @@ public class WorkSummaryDailyService {
                     // 연장근무 승인 확인
                     List<ApprovalDTO> owrDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "OWR");
                     for (ApprovalDTO doc : owrDocs) {
-                        if (!isDateInRange(doc, targetDate)) continue;
-                        double[] ref = calculateOvertimeAndNightHours(empId, policy.getPolicyId(), doc);
+                        if (!isDateInRange(doc, targetDate, "OWR")) continue;
+                        double[] ref = calculateOvertimeAndNightHours(policy, doc);
                         overtimeHours = ref[0];
                         nightHours = ref[1];
                         status = (nightHours > 0) ? "NIGHT_WORK" : "OVERTIME_WORK";
@@ -183,7 +182,7 @@ public class WorkSummaryDailyService {
                     List<ApprovalDTO> hwrDocs = approvalService.getApprovedDocsByEmployeeAndType(empId, "HWR");
                     boolean hasHolidayWork = false;
                     for (ApprovalDTO doc : hwrDocs) {
-                        if (isDateInRange(doc, targetDate)) {
+                        if (isDateInRange(doc, targetDate, "HWR")) {
                             hasHolidayWork = true;
                             break;
                         }
@@ -220,46 +219,78 @@ public class WorkSummaryDailyService {
         log.info("[WorkSummaryDailyService] {} 근무요약 완료", targetDate);
     }
 
-    // 연장 / 야간근무 계산
-    private double[] calculateOvertimeAndNightHours(String empId, Integer policyId, ApprovalDTO doc) {
+    // 연장 / 야간근무 계산 (근무정책 DTO 직접 전달)
+    private double[] calculateOvertimeAndNightHours(EmployeeWorkPolicyDTO policy, ApprovalDTO doc) {
         Map<String, Object> data = doc.getDocData();
-        Timestamp startTimestamp = dataUtil.convertToTimestamp(data, true);
-        Timestamp endTimestamp = dataUtil.convertToTimestamp(data, false);
-        if (startTimestamp == null || endTimestamp == null) return new double[]{0, 0};
 
-        int threshold = (policyId != null && policyId == 2) ? 3 : 4;
-        LocalDateTime startLdt = startTimestamp.toLocalDateTime();
-        LocalDateTime endLdt = endTimestamp.toLocalDateTime();
-        LocalDateTime sixPM = LocalDateTime.of(startLdt.toLocalDate(), LocalTime.of(18, 0));
-        LocalDateTime nightBoundary = LocalDateTime.of(startLdt.toLocalDate(), LocalTime.of(22, 0));
+        try {
+            // 1️⃣ 프론트에서 받은 문자열 시간 파싱
+            String startDateTimeStr = (String) data.get("startDateTime");
+            String endDateTimeStr = (String) data.get("endDateTime");
 
-        double after6Hours = 0;
-        if (endLdt.isAfter(sixPM)) {
-            Timestamp sixPMTs = Timestamp.valueOf(sixPM);
-            long after6Millis = endTimestamp.getTime() - Math.max(startTimestamp.getTime(), sixPMTs.getTime());
-            after6Hours = after6Millis / (1000.0 * 60 * 60);
+            if (startDateTimeStr == null || endDateTimeStr == null) {
+                System.out.println("[DEBUG] startDateTime 또는 endDateTime 누락 → 0 반환");
+                return new double[]{0, 0};
+            }
+
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+            LocalDateTime startLdt = LocalDateTime.parse(startDateTimeStr, formatter);
+            LocalDateTime endLdt = LocalDateTime.parse(endDateTimeStr, formatter);
+
+            // 2️⃣ 근무정책에서 퇴근 기준시간 조회
+            LocalTime startTime = policy.getWorkStartTime(); // 예: 09:00
+            LocalTime endTime = policy.getWorkEndTime();     // 예: 18:00
+
+            // 3️⃣ 기준시간 계산
+            LocalDateTime normalEnd = LocalDateTime.of(startLdt.toLocalDate(), endTime);
+            LocalDateTime nightBoundary = LocalDateTime.of(startLdt.toLocalDate(), LocalTime.of(22, 0));
+
+            // 4️⃣ 퇴근 이후 근무 시간
+            double afterWorkHours = 0;
+            if (endLdt.isAfter(normalEnd)) {
+                long afterWorkMillis = Timestamp.valueOf(endLdt).getTime() -
+                        Math.max(Timestamp.valueOf(startLdt).getTime(),
+                                Timestamp.valueOf(normalEnd).getTime());
+                afterWorkHours = afterWorkMillis / (1000.0 * 60 * 60);
+            }
+
+            // 5️⃣ 야간 근무 시간
+            double nightBoundaryHours = 0;
+            if (endLdt.isAfter(nightBoundary)) {
+                long nightMillis = Timestamp.valueOf(endLdt).getTime() -
+                        Timestamp.valueOf(nightBoundary).getTime();
+                nightBoundaryHours = nightMillis / (1000.0 * 60 * 60);
+            }
+
+            // 6️⃣ 정책별 threshold (정책 ID로 구분)
+            int threshold = (policy.getPolicyId() != null && policy.getPolicyId() == 2) ? 3 : 4;
+
+            double overtimeHours;
+            double nightHours;
+
+            if (afterWorkHours <= threshold) {
+                overtimeHours = afterWorkHours;
+                nightHours = 0;
+            } else {
+                overtimeHours = threshold;
+                nightHours = afterWorkHours - threshold;
+            }
+
+            // 7️⃣ 야간 보정
+            if (nightBoundaryHours > 0 && nightHours < nightBoundaryHours) {
+                nightHours = Math.max(nightHours, nightBoundaryHours);
+            }
+
+            System.out.printf("[DEBUG] empId=%s, start=%s, end=%s, endTime=%s, afterWork=%.2f, overtime=%.2f, night=%.2f%n",
+                    policy.getEmployeeId(), startLdt, endLdt, endTime, afterWorkHours, overtimeHours, nightHours);
+
+            return new double[]{overtimeHours, nightHours};
+
+        } catch (Exception e) {
+            System.out.println("[DEBUG] 연장/야간근무 계산 오류 → " + e.getMessage());
+            e.printStackTrace();
+            return new double[]{0, 0};
         }
-
-        double nightBoundaryHours = 0;
-        if (endLdt.isAfter(nightBoundary)) {
-            long nightMillis = endTimestamp.getTime() - Timestamp.valueOf(nightBoundary).getTime();
-            nightBoundaryHours = nightMillis / (1000.0 * 60 * 60);
-        }
-
-        double overtimeHours = 0;
-        double nightHours = 0;
-        if (after6Hours <= threshold) {
-            overtimeHours = after6Hours;
-        } else {
-            overtimeHours = threshold;
-            nightHours = after6Hours - threshold;
-        }
-
-        if (nightBoundaryHours > 0 && nightHours < nightBoundaryHours) {
-            nightHours = Math.max(nightHours, nightBoundaryHours);
-        }
-
-        return new double[]{overtimeHours, nightHours};
     }
 
     // 출근/퇴근 로그 추출
@@ -288,7 +319,7 @@ public class WorkSummaryDailyService {
     }
 
     // 10. 날짜 범위 체크 (결재문서의 날짜+시간이 targetDate(YYYY-MM-DD)에 포함되는지)
-    private boolean isDateInRange(ApprovalDTO doc, Date targetDate) {
+    private boolean isDateInRange(ApprovalDTO doc, Date targetDate, String type) {
         System.out.println("======================================");
         System.out.println("[DEBUG] 실행된 문서 ID: " + doc.getId());
         System.out.println("[DEBUG] targetDate(Date): " + targetDate);
@@ -301,22 +332,54 @@ public class WorkSummaryDailyService {
         Map<String, Object> data = doc.getDocData();
         System.out.println("[DEBUG] docData 내용: " + data);
 
-        String startDateStr = (String) data.get("startDate");
-        String endDateStr = (String) data.get("endDate");
-        String startTimeStr = (String) data.get("startTime");
-        String endTimeStr = (String) data.get("endTime");
-
-        System.out.println("[DEBUG] startDateStr=" + startDateStr + ", endDateStr=" + endDateStr);
-        System.out.println("[DEBUG] startTimeStr=" + startTimeStr + ", endTimeStr=" + endTimeStr);
-
-        if (startDateStr == null || endDateStr == null) {
-            System.out.println("[DEBUG] startDate 또는 endDate 누락 → false 반환");
-            return false;
-        }
-
         try {
-            LocalDate startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ISO_LOCAL_DATE);
-            LocalDate endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+            LocalDate startDate;
+            LocalDate endDate;
+
+            // 휴가(VAC) 문서
+            if (type.equals("VAC")) {
+                String startDateStr = (String) data.get("startDate");
+                String endDateStr = (String) data.get("endDate");
+
+                System.out.println("[DEBUG] startDateStr=" + startDateStr + ", endDateStr=" + endDateStr);
+
+                if (startDateStr == null || endDateStr == null) {
+                    System.out.println("[DEBUG] startDate 또는 endDate 누락 → false 반환");
+                    return false;
+                }
+
+                startDate = LocalDate.parse(startDateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+                endDate = LocalDate.parse(endDateStr, DateTimeFormatter.ISO_LOCAL_DATE);
+            }
+
+            // 외근/연장근무(OWR) 문서
+            else if (type.equals("OWR")) {
+                String startDateTimeStr = (String) data.get("startDateTime");
+                String endDateTimeStr = (String) data.get("endDateTime");
+
+                System.out.println("[DEBUG] startDateTimeStr=" + startDateTimeStr + ", endDateTimeStr=" + endDateTimeStr);
+
+                if (startDateTimeStr == null || endDateTimeStr == null) {
+                    System.out.println("[DEBUG] startDateTime 또는 endDateTime 누락 → false 반환");
+                    return false;
+                }
+
+                // 프론트에서 yyyy-MM-dd'T'HH:mm 포맷으로 전달됨
+                DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
+
+                LocalDateTime startDateTime = LocalDateTime.parse(startDateTimeStr, formatter);
+                LocalDateTime endDateTime = LocalDateTime.parse(endDateTimeStr, formatter);
+
+                startDate = startDateTime.toLocalDate();
+                endDate = endDateTime.toLocalDate();
+            }
+
+            // 정의되지 않은 타입
+            else {
+                System.out.println("[DEBUG] 지원되지 않는 type: " + type);
+                return false;
+            }
+
             LocalDate target = targetDate.toLocalDate();
 
             System.out.println("[DEBUG] startDate(LocalDate): " + startDate);
@@ -327,6 +390,7 @@ public class WorkSummaryDailyService {
             System.out.println("[DEBUG] 비교결과 inRange=" + inRange);
             System.out.println("======================================");
             return inRange;
+
         } catch (Exception e) {
             System.out.println("[DEBUG] 날짜 파싱 실패 → " + e.getMessage());
             e.printStackTrace();
@@ -334,7 +398,6 @@ public class WorkSummaryDailyService {
             return false;
         }
     }
-
 
     // 주말 여부 체크
     private boolean isWeekend(int dayOfWeek) {
@@ -392,7 +455,6 @@ public class WorkSummaryDailyService {
             log.error("[WorkSummaryDailyService] 결재 근무요약 반영 실패", e);
         }
     }
-
 
     // 14. 통계 조회용 (일간 / 주간 / 월간 / 연간)
     public WorkSummaryDTO getWorkSummary(String employeeId, LocalDate startDate, LocalDate endDate) {

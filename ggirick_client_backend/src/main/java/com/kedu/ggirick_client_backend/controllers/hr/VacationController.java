@@ -26,8 +26,8 @@ public class VacationController {
 
     // 잔여 휴가 조회
     @GetMapping("/remaining")
-    public ResponseEntity<Integer> getRemainingVacation(@AuthenticationPrincipal UserTokenDTO userInfo) {
-        int remaining = vacationService.getRemainingVacation(userInfo.getId());
+    public ResponseEntity<Double> getRemainingVacation(@AuthenticationPrincipal UserTokenDTO userInfo) {
+        double remaining = vacationService.getRemainingVacation(userInfo.getId());
         return ResponseEntity.ok(remaining);
     }
 
