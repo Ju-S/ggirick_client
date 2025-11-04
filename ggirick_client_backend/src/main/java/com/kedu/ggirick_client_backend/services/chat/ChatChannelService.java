@@ -127,7 +127,7 @@ public class ChatChannelService {
         dm.setTypeId(ChatConfig.CHANNEL_DIRECT_CODE); // DM 타입
         dm.setName("다이렉트 메시지 채널"); // DM은 이름 없음
         dm.setDescription("1:1 대화방 입니다");
-        chatWorkspaceDAO.insertChannel(dm); // 생성 후 dm.id 세팅됨 (selectKey)
+        chatWorkspaceDAO.insertChannel(dm); // 생성 후 dm.id 세팅됨
 
         // 3. 참여자 추가 - 중복 insert 대비
         Arrays.asList(myId, targetId).forEach(id -> {

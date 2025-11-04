@@ -1,35 +1,40 @@
-import { useCreateBlockNote } from "@blocknote/react";
-import { BlockNoteView } from "@blocknote/mantine";
+import React, { useEffect, useState } from "react";
 import { BlockActions } from "@/components/chat/BlockAction.jsx";
-import React from "react";
 import useChatStore from "@/store/chat/useChatStore.js";
+import {useBlockNoteConverter} from "@/providers/BlockNoteConverterProvider.jsx";
 
-export function Message({ msg,  viewer, reactions, sendMessage, chatroom }) {
-    const { addReaction,selectedWorkspace,selectedChannel} = useChatStore();
+export function Message({ msg, viewer, reactions, sendMessage, chatroom }) {
+    const { addReaction, selectedWorkspace, selectedChannel } = useChatStore();
+    const { convertBlocksToHTML } = useBlockNoteConverter();
 
+    const [htmlContent, setHtmlContent] = useState("<p>로딩중...</p>");
 
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                const blocks = msg.content || [{ type: "paragraph", content: [] }];
+                const html = await convertBlocksToHTML(blocks);
+                if (mounted) setHtmlContent(html);
+            } catch (err) {
+                console.error("문서 변환 에러:", err);
+                if (mounted) setHtmlContent("<p>메시지를 불러올 수 없습니다.</p>");
+            }
+        })();
+        return () => {
+            mounted = false;
+        };
+    }, [msg.content, convertBlocksToHTML]);
 
-
-    // 메시지 전용 읽기 전용 editor 인스턴스 생성
-    const editor = useCreateBlockNote({
-        initialContent: msg.content || [{ type: "paragraph", content: [] }],
-    });
-
-    // 좋아요 클릭
+    // 좋아요, 읽음, 복사 등 기존 핸들러 유지
     const handleLike = () => {
-
-        sendMessage({ type: "like", parentId: msg.id })
+        sendMessage({ type: "like", parentId: msg.id });
     };
-
-    //읽음 클릭
     const handleViewer = () => {
-        sendMessage({type:"viewer", parentId: msg.id})
-    }
-
-    // 복사 기능
+        sendMessage({ type: "viewer", parentId: msg.id });
+    };
     const handleCopy = (contentToCopy) => {
         if (!contentToCopy) return;
-
         const plainText = contentToCopy
             .map((block) => block.content?.map((inline) => inline.text).join("") || "")
             .filter((t) => t.length > 0)
@@ -51,32 +56,31 @@ export function Message({ msg,  viewer, reactions, sendMessage, chatroom }) {
                 {msg.senderName || msg.sender} • {msg.time}
             </div>
 
-            {/* BlockNote 읽기 전용 렌더링 */}
-            <div className="w-full blocknote-content">
-                <BlockNoteView editor={editor}
-                               className="w-full"
-                               editable={false}
+            {/* 변환된 HTML 출력 (빠름) */}
+            <div
+                className="w-full blocknote-content prose max-w-none text-sm text-base-content"
+                dangerouslySetInnerHTML={{ __html: htmlContent }}
+            />
+
+            {chatroom && (
+                <BlockActions
+                    onLike={handleLike}
+                    onCopy={handleCopy}
+                    onViewer={handleViewer}
+                    like={msg.like || 0}
+                    likeUsers={msg.likeUsers || []}
+                    viewer={msg.viewer || []}
+                    reactions={msg.reactions || []}
+                    content={msg.content || [{ type: "paragraph", content: [{ type: "text", text: "" }] }]}
+                    onAddReaction={(emoji) => {
+                        sendMessage({
+                            type: "emoji",
+                            parentId: msg.id,
+                            emoji,
+                        });
+                    }}
                 />
-            </div>
-
-            {chatroom && ( <BlockActions
-                onLike={handleLike}
-                onCopy={handleCopy}
-                onViewer={handleViewer}
-                like={msg.like || 0}
-                likeUsers = {msg.likeUsers || []}
-                viewer={msg.viewer || []}
-                reactions={msg.reactions || []}
-                content={msg.content ||  [{ type: "paragraph", content: [{ type: "text", text: "" }] }]}
-                onAddReaction={(emoji) => {
-                    sendMessage({
-                        type: "emoji",
-                        parentId: msg.id,
-                        emoji,
-                    });
-                }}
-
-            />)}
+            )}
         </div>
     );
 }

@@ -4,7 +4,7 @@ import React, {useEffect, useMemo, useRef, useState} from "react";
 import useChatStore from "@/store/chat/useChatStore.js";
 import {useLivekitStore} from "@/store/chat/useLivekitStore.js";
 import {Message} from "@/components/chat/Message.jsx";
-
+import { BlockNoteConverterProvider } from "@/providers/BlockNoteConverterProvider.jsx";
 export default function ChatSidebar() {
     const {
 
@@ -42,7 +42,7 @@ export default function ChatSidebar() {
             <h2 className="font-semibold mb-2">Chat</h2>
             <div ref={containerRef} className="flex-1 overflow-y-auto p-4 space-y-4">
                 <div ref={topRef}></div>
-
+                <BlockNoteConverterProvider>
                 {messages.map(msg => {
                     if (msg.type === "user") {
                         return (
@@ -85,6 +85,7 @@ export default function ChatSidebar() {
 
 
                 <div ref={bottomRef}></div>
+                    </BlockNoteConverterProvider>
             </div>
            <ChatInput onSend={sendMessage} />
         </aside>
