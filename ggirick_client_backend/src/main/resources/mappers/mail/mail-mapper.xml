@@ -1,31 +1,170 @@
-<?xml version="1.0" encoding="UTF-8" ?>
+<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<!-- 메일  -->
 <mapper namespace="Mail">
-    <!-- uid 중복방지 -->
+
+    <!-- UID 중복 방지 -->
     <select id="existsByUid" parameterType="string" resultType="int">
-        SELECT 1
-        FROM mail
-        WHERE mail_uid = #{mailUid}
+        SELECT 1 FROM mail WHERE mail_uid = #{mailUid}
     </select>
 
-    <!-- mail insert -->
+    <!-- IMAP 수신용 메일 insert -->
     <insert id="addMail" parameterType="com.kedu.ggirick_client_backend.dto.mail.MailDTO">
         <selectKey order="BEFORE" keyProperty="id" resultType="int">
-            select mail_seq.nextval from dual
+            SELECT mail_seq.nextval FROM dual
         </selectKey>
-        insert into mail values(#{id},#{sender},#{title},#{content},#{status},#{sentAt},#{mailUid})
+        INSERT INTO mail (id, sender, title, content, sent_at, mail_uid)
+        VALUES (#{id}, #{sender}, <![CDATA[#{title}]]>, <![CDATA[#{content}]]>, #{sentAt,jdbcType=TIMESTAMP}, #{mailUid})
     </insert>
 
-    <!-- mail_receiver insert -->
-    <insert id="addMailReceiver" parameterType="com.kedu.ggirick_client_backend.dto.mail.MailReceiverDTO">
-        <selectKey order="BEFORE" keyProperty="id" resultType="int">
-            select mail_receiver_seq.nextval from dual
+    <!-- 발신 메일 저장 -->
+    <insert id="sendMail" parameterType="com.kedu.ggirick_client_backend.dto.mail.MailSendDTO">
+        <selectKey keyProperty="id" resultType="int" order="BEFORE">
+            SELECT mail_seq.nextval FROM dual
         </selectKey>
-        insert into mail_receiver values(#{id},#{mailId},#{receiver},#{receivedAt},#{typeId},#{statusId})
+        INSERT INTO mail (
+        id, sender, title, content, scheduled
+        <if test="sendAt != null">, sent_at</if>
+        )
+        VALUES (
+        #{id}, #{sender}, <![CDATA[#{subject}]]>, <![CDATA[#{content}]]>, #{scheduled}
+        <if test="sendAt != null">, #{sendAt,jdbcType=TIMESTAMP}</if>
+        )
     </insert>
+
+    <!-- 수신자 1명 insert -->
+    <insert id="insertReceiver" parameterType="com.kedu.ggirick_client_backend.dto.mail.MailReceiverDTO">
+        INSERT INTO mail_receiver (id, mail_id, receiver, type_id, status_id, received_at)
+        VALUES (mail_receiver_seq.nextval, #{mailId}, #{receiver}, #{typeId}, #{statusId}, #{receivedAt,jdbcType=TIMESTAMP})
+    </insert>
+
+    <!-- 첨부파일 단일 insert -->
+    <insert id="sendAttachmentsSingle" parameterType="map">
+        INSERT INTO mail_file (id, name, url, mail_id)
+        VALUES (mail_file_seq.nextval, #{filename}, #{fileUrl}, #{mailId})
+    </insert>
+
+    <!-- 여러 첨부용 foreach -->
+    <insert id="sendAttachments" parameterType="com.kedu.ggirick_client_backend.dto.mail.MailSendDTO">
+        <foreach collection="fileUrlMap" item="fileUrl" index="fileName" separator=";">
+            INSERT INTO mail_file (id, name, url, mail_id)
+            VALUES (mail_file_seq.nextval, #{fileName}, #{fileUrl}, #{id})
+        </foreach>
+    </insert>
+
+    <!-- 예약메일 목록 조회 -->
+    <select id="getScheduledMails" resultType="com.kedu.ggirick_client_backend.dto.mail.MailSendDTO">
+        SELECT * FROM mail WHERE scheduled = 1 AND (sent_at IS NULL OR sent_at &lt;= SYSDATE)
+    </select>
+
+    <!-- 예약 메일 수신자 조회 -->
+    <select id="getMailReceivers" resultType="com.kedu.ggirick_client_backend.dto.mail.MailReceiverDTO" parameterType="int">
+        SELECT id, mail_id AS mailId, receiver, received_at AS receivedAt, type_id AS typeId, status_id AS statusId
+        FROM mail_receiver WHERE mail_id = #{mailId}
+    </select>
+
+    <!-- mark as sent -->
+    <update id="markAsSent" parameterType="int">
+        UPDATE mail SET scheduled = 0 WHERE id = #{mailId}
+    </update>
+
+    <!-- update sent_at -->
+    <update id="updateSentAt" parameterType="map">
+        UPDATE mail SET sent_at = #{sentAt,jdbcType=TIMESTAMP} WHERE id = #{mailId}
+    </update>
+
+    <!-- 전체메일 (all) — 로그인 사용자 기준: receiver 로 JOIN (폴더 없음) -->
+    <select id="selectAllMailsByEmployee" resultType="com.kedu.ggirick_client_backend.dto.mail.MailDTO" parameterType="string">
+        SELECT * FROM (
+                          -- 내가 받은 메일
+                          SELECT
+                              m.ID, m.SENDER, m.TITLE AS title, m.CONTENT AS content,
+                              m.SENT_AT AS sentAt, m.MAIL_UID AS mailUid
+                          FROM mail m
+                                   JOIN mail_receiver r ON m.ID = r.MAIL_ID
+                          WHERE r.RECEIVER = #{email}
+
+                          UNION
+
+                          -- 내가 보낸 메일
+                          SELECT
+                              m.ID, m.SENDER, m.TITLE AS title, m.CONTENT AS content,
+                              m.SENT_AT AS sentAt, m.MAIL_UID AS mailUid
+                          FROM mail m
+                          WHERE m.SENDER = #{email}
+                      )
+        ORDER BY sentAt DESC NULLS LAST
+    </select>
+
+    <!-- 받은메일 (type_id = 1) -->
+    <select id="selectInboxMails" resultType="com.kedu.ggirick_client_backend.dto.mail.MailDTO" parameterType="string">
+        SELECT m.ID, m.SENDER, m.TITLE AS title, m.CONTENT AS content, m.SENT_AT AS sentAt, m.MAIL_UID AS mailUid
+        FROM mail m JOIN mail_receiver r ON m.ID = r.MAIL_ID
+        WHERE r.RECEIVER = #{email} AND r.TYPE_ID = 1
+        ORDER BY m.SENT_AT DESC
+    </select>
+
+    <!-- 보낸메일 (sender == email) -->
+    <select id="selectSentMails" resultType="com.kedu.ggirick_client_backend.dto.mail.MailDTO" parameterType="string">
+        SELECT m.ID, m.SENDER, m.TITLE AS title, m.CONTENT AS content, m.SENT_AT AS sentAt, m.MAIL_UID AS mailUid
+        FROM mail m
+        WHERE m.SENDER = #{email}
+        ORDER BY m.SENT_AT DESC
+    </select>
+
+    <!-- 중요메일 (status_id = 3) -->
+    <select id="selectImportantMails" resultType="com.kedu.ggirick_client_backend.dto.mail.MailDTO" parameterType="string">
+        SELECT m.ID, m.SENDER, m.TITLE AS title, m.CONTENT AS content, m.SENT_AT AS sentAt, m.MAIL_UID AS mailUid
+        FROM mail m JOIN mail_receiver r ON m.ID = r.MAIL_ID
+        WHERE r.RECEIVER = #{email} AND r.STATUS_ID = 3
+        ORDER BY m.SENT_AT DESC
+    </select>
+
+    <!-- 스팸 (status_id = 4) -->
+    <select id="selectSpamMails" resultType="com.kedu.ggirick_client_backend.dto.mail.MailDTO" parameterType="string">
+        SELECT m.ID, m.SENDER, m.TITLE AS title, m.CONTENT AS content, m.SENT_AT AS sentAt, m.MAIL_UID AS mailUid
+        FROM mail m JOIN mail_receiver r ON m.ID = r.MAIL_ID
+        WHERE r.RECEIVER = #{email} AND r.STATUS_ID = 4
+        ORDER BY m.SENT_AT DESC
+    </select>
+
+    <!-- 휴지통 (status_id = 5) -->
+    <select id="selectTrashMails" resultType="com.kedu.ggirick_client_backend.dto.mail.MailDTO" parameterType="string">
+        SELECT m.ID, m.SENDER, m.TITLE AS title, m.CONTENT AS content, m.SENT_AT AS sentAt, m.MAIL_UID AS mailUid
+        FROM mail m JOIN mail_receiver r ON m.ID = r.MAIL_ID
+        WHERE r.RECEIVER = #{email} AND r.STATUS_ID = 5
+        ORDER BY m.SENT_AT DESC
+    </select>
+
+    <!-- 특정 메일 상세 조회 -->
+    <select id="selectMailById" resultType="com.kedu.ggirick_client_backend.dto.mail.MailDTO" parameterType="int">
+        SELECT m.ID, m.SENDER, m.TITLE AS title, m.CONTENT AS content, m.SENT_AT AS sentAt, m.MAIL_UID AS mailUid
+        FROM mail m WHERE m.ID = #{id}
+    </select>
+
+    <!-- 수신자 상태 변경 중요/휴지통/스팸로 이동 -->
+    <update id="updateReceiverStatus" parameterType="map">
+        UPDATE mail_receiver
+        SET status_id = #{statusId}
+        WHERE mail_id = #{mailId}
+          AND receiver = #{email}
+    </update>
+
+    <!-- 메일 본문(메일) 삭제 -->
+    <delete id="deleteMailReceiver" parameterType="int">
+        DELETE FROM mail_receiver WHERE id = #{id}
+    </delete>
+
+    <!-- 메일과 연관된 첨부파일 조회 -->
+    <select id="getMailFiles" resultType="map" parameterType="int">
+        SELECT id, name, url, mail_id AS mailId FROM mail_file WHERE mail_id = #{mailId}
+    </select>
+
+    <!-- 메일 파일들 삭제 -->
+    <delete id="deleteMailFilesByMailId" parameterType="int">
+        DELETE FROM mail_file WHERE mail_id = #{mailId}
+    </delete>
 
 </mapper>

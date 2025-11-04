@@ -619,6 +619,33 @@ const apiRoutes = {
         structure: {url: `/hr-meta/org-structure `, method: "GET"}
     },
 
+    mail:{
+      sendMail: (formData) => ({
+        url: "/mail/send",
+        method: "POST",
+        data: formData,
+      }),
+      // folder, email
+      getList: (folder = "all", email) => ({
+        url: `/mail/${folder}`,
+        method: "GET",
+        params: { email },
+      }),
+      getDetail: (id) => ({
+        url: `/mail/detail/${id}`,
+        method: "GET",
+      }),
+      changeReceiverStatus: () => ({
+        url: "/mail/receiver/status",
+        method: "POST",
+      }),
+      deleteReceiver: (id) => ({
+        url: `/mail/receiver/${id}`,
+        method: "DELETE",
+      })
+
+    },
+
     address: {
         getGroupType: {
             url: "/address/group-type",

@@ -1,4 +1,6 @@
 import React from "react";
+import "flowbite";
+
 import { Inbox, Star, Send, FileText, AlertCircle, Trash2, Mail } from "lucide-react";
 
 export default function MailSidebar({ onSelectFolder,onCompose }) {
@@ -14,7 +16,7 @@ export default function MailSidebar({ onSelectFolder,onCompose }) {
   ];
 
   return (
-    <div className="w-64 bg-white border-r border-gray-200 h-full flex flex-col gap-2 p-4 rounded-lg shadow-sm">
+    <div className="w-64 bg-base-100 border-r border-gray-200 h-full flex flex-col gap-2 p-4 rounded-lg shadow-sm">
       {/* 글쓰기 버튼 */}
       <div className="p-4 border-b border-gray-200">
         <div className="border-b p-2">
@@ -29,7 +31,7 @@ export default function MailSidebar({ onSelectFolder,onCompose }) {
 
       {/* 메일함 리스트 */}
       <nav className="flex-1 overflow-y-auto px-2 py-2">
-        <h3 className="mb-2 text-xs text-gray-500 uppercase">Channels</h3>
+        <h3 className="mb-2 text-xs text-base-content uppercase">Channels</h3>
         <ul className="space-y-1">
           {folders.map(folder => (
             <li key={folder.id} className="rounded px-3 py-2 hover:bg-gray-100">
