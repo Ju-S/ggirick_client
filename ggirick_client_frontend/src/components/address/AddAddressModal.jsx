@@ -85,25 +85,87 @@ export default function AddAddressModal() {
     });
   };
 
-  return (
-    <Modal show={openModal} size="lg" onClose={closeModal}>
-      <ModalHeader>{editMode ? "연락처 수정" : "새 연락처 추가"}</ModalHeader>
-      <ModalBody>
-        <TextInput name="name" placeholder="이름" value={form.name} onChange={handleChange} required />
-        <TextInput name="companyName" placeholder="회사" value={form.companyName} onChange={handleChange} />
-        <TextInput name="department" placeholder="부서" value={form.department} onChange={handleChange} />
-        <TextInput name="rank" placeholder="직급" value={form.rank} onChange={handleChange} />
-        <TextInput name="email" placeholder="이메일" value={form.email} onChange={handleChange} required />
-        <TextInput name="phone" placeholder="전화번호" value={form.phone} onChange={handleChange} required />
-        <TextInput name="address" placeholder="주소" value={form.address} onChange={handleChange} />
+    return (
+        <Modal show={openModal} size="lg" onClose={closeModal}>
+            <div className="bg-base-300 text-base-content text-lg px-6 py-3">
+                {editMode ? "연락처 수정" : "새 연락처 추가"}
+            </div>
 
-        <div className="flex justify-end gap-2 mt-4">
-          <Button color="gray" onClick={closeModal}>취소</Button>
-          <Button color={editMode ? "success" : "blue"} onClick={handleSubmit}>
-            {editMode ? "수정" : "추가"}
-          </Button>
-        </div>
-      </ModalBody>
-    </Modal>
-  );
+            <ModalBody className="bg-base-100 text-base-content p-6">
+                <div className="flex flex-col gap-3">
+                    <input
+                        type="text"
+                        className="input input-bordered w-full"
+                        name="name"
+                        placeholder="이름"
+                        value={form.name}
+                        onChange={handleChange}
+                        required
+                    />
+                    <input
+                        type="text"
+                        className="input input-bordered w-full"
+                        name="companyName"
+                        placeholder="회사"
+                        value={form.companyName}
+                        onChange={handleChange}
+                    />
+                    <input
+                        type="text"
+                        className="input input-bordered w-full"
+                        name="department"
+                        placeholder="부서"
+                        value={form.department}
+                        onChange={handleChange}
+                    />
+                    <input
+                        type="text"
+                        className="input input-bordered w-full"
+                        name="rank"
+                        placeholder="직급"
+                        value={form.rank}
+                        onChange={handleChange}
+                    />
+                    <input
+                        type="email"
+                        className="input input-bordered w-full"
+                        name="email"
+                        placeholder="이메일"
+                        value={form.email}
+                        onChange={handleChange}
+                        required
+                    />
+                    <input
+                        type="tel"
+                        className="input input-bordered w-full"
+                        name="phone"
+                        placeholder="전화번호"
+                        value={form.phone}
+                        onChange={handleChange}
+                        required
+                    />
+                    <input
+                        type="text"
+                        className="input input-bordered w-full"
+                        name="address"
+                        placeholder="주소"
+                        value={form.address}
+                        onChange={handleChange}
+                    />
+                </div>
+
+                <div className="flex justify-end gap-2 mt-6">
+                    <button className="btn btn-ghost" onClick={closeModal}>
+                        취소
+                    </button>
+                    <button
+                        className={editMode ? "btn btn-success" : "btn btn-primary"}
+                        onClick={handleSubmit}
+                    >
+                        {editMode ? "수정" : "추가"}
+                    </button>
+                </div>
+            </ModalBody>
+        </Modal>
+    );
 }

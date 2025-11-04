@@ -203,13 +203,13 @@ export function Address() {
 
   // ------------------- 렌더 -------------------
   return (
-    <main className="flex max-h-screen min-h-screen flex-col bg-base-100 border-r border-base-300 p-4 pt-20 md:ml-64">
+    <main className="flex max-h-screen min-h-screen flex-col bg-base-300 border-r border-base-300 p-4 pt-20 md:ml-64">
       {/* 주소록 모달 */}
       <AddAddressModal />
 
       <div className="grid flex-1 grid-cols-6 gap-4 min-h-0">
         {/* 좌측 사이드바: 개인/공유 주소록 + 소분류 */}
-        <aside className="col-span-1 flex flex-col gap-2 p-4 rounded-lg border border-base-300 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <aside className="col-span-1 flex flex-col gap-2 p-4 rounded-lg border border-base-300 bg-base-100 shadow-sm">
           <div className="flex flex-col gap-2">
             {/* 개인 주소록 버튼 + 소분류 추가 */}
             <div className="flex items-center gap-2">
@@ -249,13 +249,12 @@ export function Address() {
           {editingSubGroup["personal"] && (
             <div className="ml-0 mt-2 flex flex-col gap-1">
               <div className="flex gap-1">
-                <TextInput
+                <input
                   type="text"
                   placeholder="소분류 이름 입력"
-                  className="w-full text-sm"
+                  className="w-full text-sm input"
                   value={newSubGroupName["personal"] || ""}
                   onChange={(e) => setNewSubGroupName({ personal: e.target.value })}
-                  sizing="sm"
                 />
                 <button className="bg-primary px-2 text-white" onClick={handleCreateSubGroup}>
                   +
@@ -314,11 +313,11 @@ export function Address() {
         </aside>
 
         {/* 주소록 테이블 */}
-        <section className="col-span-5 flex flex-col rounded-lg border border-base-300 bg-base-200 p-5 shadow-sm dark:border-gray-700 dark:bg-gray-900 h-full min-h-0">
+        <section className="col-span-5 flex flex-col rounded-lg border border-base-300 bg-base-100 p-5 shadow-sm h-full min-h-0">
           {/* 검색/필터 */}
           <div className="flex items-center justify-left gap-3 mb-2">
             <select
-              className="border border-gray-300 dark:border-gray-700 pr-8 rounded-md text-sm px-2 py-1 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200 focus:outline-none"
+              className="select border border-base-300 pr-8 rounded-md text-sm px-2 py-1 focus:outline-none"
               value={filterKey}
               onChange={(e) => setFilterKey(e.target.value)}
             >
@@ -328,13 +327,12 @@ export function Address() {
               <option value="department">부서</option>
               <option value="rank">직급</option>
             </select>
-            <TextInput
+            <input
               type="text"
               placeholder="검색어를 입력하세요"
-              className="w-80 md:w-96 text-sm"
+              className="w-80 md:w-96 text-sm input"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
-              sizing="sm"
             />
           </div>
 
@@ -342,7 +340,7 @@ export function Address() {
           <div className="flex-1 min-h-0 overflow-y-auto border border-base-300 rounded-md">
             <table className="w-full table-fixed border-collapse text-left">
               <thead className="border-b border-base-300 bg-primary sticky top-0 z-10">
-              <tr className="text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+              <tr className="text-xs font-semibold tracking-wider text-white uppercase">
                 <th className="border px-4 py-3 text-left w-24">이름</th>
                 <th className="border px-4 py-3 text-center w-20">회사</th>
                 <th className="border px-4 py-3 text-center w-20">부서</th>
@@ -355,7 +353,7 @@ export function Address() {
               </thead>
               <tbody>
               {filteredContacts.map((contact, i) => (
-                <tr key={contact.id ?? i} className="hover:bg-gray-100 dark:hover:bg-gray-800">
+                <tr key={contact.id ?? i} className="hover:bg-base-100">
                   <td className="px-4 py-3 text-left">{contact.name}</td>
                   <td className="px-4 py-3 text-center">{contact.companyName}</td>
                   <td className="px-4 py-3 text-center">{contact.department}</td>
@@ -367,7 +365,7 @@ export function Address() {
                     <td className="px-4 py-3 text-center flex gap-2 pt-5">
                       {/* 수정 버튼 */}
                       <button
-                        className="rounded bg-primary px-2 text-white"
+                        className="rounded btn btn-primary px-2 text-white"
                         onClick={() => {
                           setEditingContact(contact);
                           setEditMode(true);
@@ -378,7 +376,7 @@ export function Address() {
                       </button>
                       {/* 삭제 버튼 */}
                       <button
-                        className="rounded bg-primary-content/90 px-2 text-white"
+                        className="rounded btn-error px-2 btn"
                         onClick={() => handleDeleteAddress(contact.id)}
                       >
                         삭제

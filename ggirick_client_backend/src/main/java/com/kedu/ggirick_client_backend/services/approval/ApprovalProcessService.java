@@ -78,7 +78,6 @@ public class ApprovalProcessService {
 
                     // 문서 승인 후, 문서 종류에 따라 다른 로직 수행
                     // 대리결재자가 필요한 경우, 대리결재자 등록 service 사용 필요
-                    // TODO: 문서 종류에 대한 처리 - config/ApprovalConfig에 정의
                     switch (approvalService.getById(approvalHistoryInfo.getApprovalId()).getDocTypeCode()) {
                         case DOC_TYPE_CONTACT -> {
 
