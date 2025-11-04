@@ -23,14 +23,18 @@ export default function VideoGrid({ localVideoTrack,localAudioTrack, remoteTrack
 // remote
     remoteTracks.forEach(({ trackPublication, participantIdentity }) => {
         const videoTrack = trackPublication.videoTrack ?? trackPublication.track;
-        const audioTrack = trackPublication.audioTrack; // 오디오 정보
+        const audioTrack = trackPublication.audioTrack;
+
+        // 트랙이 없어도 등록
         tracks.push({
-            track: videoTrack ?? null,
+            track: videoTrack ?? null, // 없으면 null
             name: participantIdentity,
             local: false,
             hasAudio: !!audioTrack,
         });
     });
+
+
 
     //  Grid Class 계산
     let gridClass = "";

@@ -53,8 +53,8 @@ export default function GanttView() {
 // 개별 Task 컴포넌트로 분리
 function GanttTask({ task, selectedProject }) {
     const progress =
-        task.status === "완료" ? 100 : task.logs === "진행 중" ? 50 : 0;
-    const isOverdue = task.daysLeft < 0;
+        task.status === "완료" ? 100 : task.status === "진행 중" ? 50 : 0;
+    const isOverdue = task.daysLeft < 0 && task.status !== "완료";
     const isUrgent = task.daysLeft >= 0 && task.daysLeft < 3;
 
     const progressColor =
@@ -84,7 +84,7 @@ function GanttTask({ task, selectedProject }) {
                 <div className="text-right ml-4">
                     <p className="text-sm text-info mb-1">{task.due}</p>
                     <p className={`text-sm font-semibold ${ddayColor}`}>
-                        {isOverdue ? `${Math.abs(task.daysLeft)}일 지연` : `D-${task.daysLeft}`}
+                        {isOverdue ? `${Math.abs(task.daysLeft)}일 지연` : task.status ==="완료" ? "완료":`D-${task.daysLeft}`}
                     </p>
                 </div>
             </div>
@@ -95,7 +95,7 @@ function GanttTask({ task, selectedProject }) {
                 ></div>
             </div>
             <div className="flex justify-between mt-2">
-                <span className="text-xs text-base-content/70">{task.logs}</span>
+                <span className="text-xs text-base-content/70">{task.status}</span>
                 <span className="text-xs font-medium text-base-content">{progress}%</span>
             </div>
         </div>
