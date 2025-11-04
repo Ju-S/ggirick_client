@@ -17,9 +17,4 @@ public class MailReceiverDAO {
         return mybatis.insert("Mail.addMailReceiver", mailReceiverDTO);
     }
 
-    public String findEmployeeIdByEmail(String email) {
-        return mybatis.selectOne("Mail.findEmployeeIdByEmail", email);
-    }
-
-
 }

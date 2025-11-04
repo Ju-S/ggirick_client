@@ -15,7 +15,6 @@ public class MailDTO {
     private String sender;
     private String title;
     private String content;
-    private int status;
     private Timestamp sentAt;
     private String mailUid;
 }

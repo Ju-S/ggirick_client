@@ -620,11 +620,30 @@ const apiRoutes = {
     },
 
     mail:{
-      sendMail: (formData)=>({
-        url:"/mail/send",
-        method:"POST",
-        data:formData, // {} 로 감싸지않고 이렇게 보내야 @RequestParam같은걸로 받을수 있음
+      sendMail: (formData) => ({
+        url: "/mail/send",
+        method: "POST",
+        data: formData,
+      }),
+      // folder, email
+      getList: (folder = "all", email) => ({
+        url: `/mail/${folder}`,
+        method: "GET",
+        params: { email },
+      }),
+      getDetail: (id) => ({
+        url: `/mail/detail/${id}`,
+        method: "GET",
+      }),
+      changeReceiverStatus: () => ({
+        url: "/mail/receiver/status",
+        method: "POST",
+      }),
+      deleteReceiver: (id) => ({
+        url: `/mail/receiver/${id}`,
+        method: "DELETE",
       })
+
     },
 
     address: {

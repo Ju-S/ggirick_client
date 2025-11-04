@@ -4,6 +4,8 @@ import { Editor } from "@tinymce/tinymce-react";
 import MailAddressModal from "@/components/mail/MailAddressModal.jsx";
 import axios from "axios";
 import { sendMailAPI } from "@/api/mail/mailAPI.jsx";
+import "flowbite";
+import {useNavigate} from "react-router-dom";
 
 const MailWrite = ({ userId }) => {
   const [to, setTo] = useState("");
@@ -15,6 +17,8 @@ const MailWrite = ({ userId }) => {
   const [sendAt, setSendAt] = useState(""); // 예약발송 시간
   const [modalOpen, setModalOpen] = useState(false);
   const [activeField, setActiveField] = useState("to");
+
+  const navigate = useNavigate();
 
   // 메일 전송
   const handleSend = () => {
@@ -28,7 +32,10 @@ const MailWrite = ({ userId }) => {
     attachments.forEach((file) => formData.append("attachment", file));
 
     sendMailAPI(formData)
-      .then(res => console.log("메일 전송 완료", res.data))
+      .then(res => {
+        console.log("메일 전송 완료", res.data);
+        window.location.href = "/mail";
+      })
       .catch(err => console.error(err));
   };
 
@@ -48,12 +55,12 @@ const MailWrite = ({ userId }) => {
   ];
 
   return (
-    <div className="p-6 w-full h-full flex flex-col gap-4 bg-white rounded-lg shadow-sm">
+    <div className="p-6 w-full h-full flex flex-col gap-4 bg-base-100 rounded-lg shadow-sm">
       {/* 주소/제목 입력 */}
       <div className="flex flex-col gap-3">
         {addressFields.map(field => (
           <div key={field.label} className="flex items-center gap-2">
-            <span className="w-28 text-gray-700 font-medium text-right">{field.label}:</span>
+            <span className="w-28 text-base-content font-medium text-right">{field.label}:</span>
             <div className="flex flex-1 gap-2">
               <TextInput
                 className="flex-1 text-sm"
@@ -79,7 +86,7 @@ const MailWrite = ({ userId }) => {
 
         {/* 예약발송 */}
         <div className="flex items-center gap-2">
-          <span className="w-28 text-gray-700 font-medium text-right">예약 발송:</span>
+          <span className="w-28 text-base-content font-medium text-right">예약 발송:</span>
           <input
             type="datetime-local"
             className="border rounded px-2 py-1"
@@ -91,7 +98,7 @@ const MailWrite = ({ userId }) => {
 
       {/* 첨부파일 */}
       <div className="flex items-center gap-3">
-        <span className="w-28 text-gray-700 font-medium text-right">첨부파일:</span>
+        <span className="w-28 text-base-content font-medium text-right">첨부파일:</span>
         <FileInput
           id="attachments"
           multiple
@@ -118,9 +125,9 @@ const MailWrite = ({ userId }) => {
       </div>
 
       {/* 버튼 */}
-      <div className="flex justify-end gap-3 mt-4 sticky bottom-0 bg-white p-3 shadow-inner">
+      <div className="flex justify-end gap-3 mt-4 sticky bottom-0 p-3 shadow-inner">
         <Button className="bg-primary" onClick={handleSend}>전송</Button>
-        <Button color="gray">임시저장</Button>
+        <Button className="bg-primary">임시저장</Button>
         <Button className="bg-primary-content text-primary" color="failure">취소</Button>
       </div>
 

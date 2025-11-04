@@ -7,6 +7,8 @@ import lombok.RequiredArgsConstructor;
 import org.apache.ibatis.session.SqlSession;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -16,61 +18,62 @@ public class MailDAO {
 
     private final SqlSession mybatis;
 
-    public boolean existsByUid(String mailUid) {
-        Integer result = mybatis.selectOne("Mail.existsByUid", mailUid);
-        return result != null && result == 1;
+    public Integer existsByUid(String mailUid) {
+        return mybatis.selectOne("Mail.existsByUid", mailUid);
     }
-    // 1) IMAP 수신용 메일 insert
+
+    public boolean existsByUidBool(String mailUid) {
+        Integer r = existsByUid(mailUid);
+        return r != null && r == 1;
+    }
+
     public int addMail(MailDTO mailDTO) {
         return mybatis.insert("Mail.addMail", mailDTO);
     }
 
-    // 1) 발신 메일 저장
     public int sendMail(MailSendDTO mailSendDTO) {
         return mybatis.insert("Mail.sendMail", mailSendDTO);
     }
 
-    // 2) 수신자 저장 (TO/CC/BCC)
     public int insertReceivers(MailSendDTO mailSendDTO) {
         int count = 0;
-
-        for (String to : mailSendDTO.getToList()) {
-            MailReceiverDTO r = MailReceiverDTO.builder()
-                    .mailId(mailSendDTO.getId())
-                    .receiver(to)  // local-part
-                    .typeId(1)
-                    .statusId(3)   // unread
-                    .build();
-            count += mybatis.insert("Mail.insertReceiver", r);
+        if (mailSendDTO.getToList() != null) {
+            for (String to : mailSendDTO.getToList()) {
+                MailReceiverDTO dto = MailReceiverDTO.builder()
+                        .mailId(mailSendDTO.getId())
+                        .receiver(to)
+                        .typeId(1)
+                        .statusId(1) // 받은메일(초기 상태 INBOX or unread? 네 선택은 상태로만 관리 - 여기 1=INBOX)
+                        .build();
+                count += mybatis.insert("Mail.insertReceiver", dto);
+            }
         }
-
-        for (String cc : mailSendDTO.getCcList()) {
-            MailReceiverDTO r = MailReceiverDTO.builder()
-                    .mailId(mailSendDTO.getId())
-                    .receiver(cc)
-                    .typeId(2)
-                    .statusId(3)
-                    .build();
-            count += mybatis.insert("Mail.insertReceiver", r);
+        if (mailSendDTO.getCcList() != null) {
+            for (String cc : mailSendDTO.getCcList()) {
+                MailReceiverDTO dto = MailReceiverDTO.builder()
+                        .mailId(mailSendDTO.getId())
+                        .receiver(cc)
+                        .typeId(2)
+                        .statusId(1)
+                        .build();
+                count += mybatis.insert("Mail.insertReceiver", dto);
+            }
         }
-
-        for (String bcc : mailSendDTO.getBccList()) {
-            MailReceiverDTO r = MailReceiverDTO.builder()
-                    .mailId(mailSendDTO.getId())
-                    .receiver(bcc)
-                    .typeId(3)
-                    .statusId(3)
-                    .build();
-            count += mybatis.insert("Mail.insertReceiver", r);
+        if (mailSendDTO.getBccList() != null) {
+            for (String bcc : mailSendDTO.getBccList()) {
+                MailReceiverDTO dto = MailReceiverDTO.builder()
+                        .mailId(mailSendDTO.getId())
+                        .receiver(bcc)
+                        .typeId(3)
+                        .statusId(1)
+                        .build();
+                count += mybatis.insert("Mail.insertReceiver", dto);
+            }
         }
-
         return count;
     }
 
-    // 3) 첨부파일 저장
     public int sendAttachments(MailSendDTO mailSendDTO) {
-        System.out.println("Mail ID = " + mailSendDTO.getId());
-        System.out.println("FileUrlMap = " + mailSendDTO.getFileUrlMap());
         int count = 0;
         if (mailSendDTO.getFileUrlMap() != null) {
             for (Map.Entry<String, String> e : mailSendDTO.getFileUrlMap().entrySet()) {
@@ -85,17 +88,67 @@ public class MailDAO {
         return count;
     }
 
-    // 예약 발송용 메일 조회
     public List<MailSendDTO> getScheduledMails() {
         return mybatis.selectList("Mail.getScheduledMails");
     }
 
-    // 발송 후 scheduled 초기화
+    public List<com.kedu.ggirick_client_backend.dto.mail.MailReceiverDTO> getMailReceivers(int mailId) {
+        return mybatis.selectList("Mail.getMailReceivers", mailId);
+    }
+
     public void markAsSent(int mailId) {
         mybatis.update("Mail.markAsSent", mailId);
     }
 
-    public List<MailReceiverDTO> getMailReceivers(int mailId) {
-        return mybatis.selectList("Mail.getMailReceivers", mailId);
+    public int updateSentAt(int mailId, LocalDateTime sentAt) {
+        Map<String, Object> param = new HashMap<>();
+        param.put("mailId", mailId);
+        param.put("sentAt", sentAt);
+        return mybatis.update("Mail.updateSentAt", param);
     }
+
+    // fetch methods used by MailFetchService
+    public List<MailDTO> getAllMailsByEmployee(String email) {
+        return mybatis.selectList("Mail.selectAllMailsByEmployee", email);
+    }
+
+    public List<MailDTO> getInboxMails(String email) {
+        return mybatis.selectList("Mail.selectInboxMails", email);
+    }
+
+    public List<MailDTO> getSentMails(String email) {
+        return mybatis.selectList("Mail.selectSentMails", email);
+    }
+
+    public List<MailDTO> getImportantMails(String email) {
+        return mybatis.selectList("Mail.selectImportantMails", email);
+    }
+
+    public List<MailDTO> getSpamMails(String email) {
+        return mybatis.selectList("Mail.selectSpamMails", email);
+    }
+
+    public List<MailDTO> getTrashMails(String email) {
+        return mybatis.selectList("Mail.selectTrashMails", email);
+    }
+
+    public MailDTO getMailById(int id) {
+        return mybatis.selectOne("Mail.selectMailById", id);
+    }
+
+    public int updateReceiverStatus(Map<String, Object> param) {
+        return mybatis.update("Mail.updateReceiverStatus", param);
+    }
+
+    public int deleteMailReceiver(int receiverId) {
+        return mybatis.delete("Mail.deleteMailReceiver", receiverId);
+    }
+
+//    public List<Map<String,Object>> getMailFiles(int mailId) {
+//        return mybatis.selectList("Mail.getMailFiles", mailId);
+//    }
+//
+//    public int deleteMailFilesByMailId(int mailId) {
+//        return mybatis.delete("Mail.deleteMailFilesByMailId", mailId);
+//    }
 }
