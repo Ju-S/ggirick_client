@@ -3,7 +3,7 @@ import {getInfos} from "@/api/dashboard/dashboardAPI.js";
 
 const useDashboardStore = create(set => ({
     // 읽지 않은 메일
-    mailCount: 0,
+    vacationCount: 0,
 
     // 오늘 일정
     calendarCount: 0,
@@ -28,7 +28,7 @@ const useDashboardStore = create(set => ({
         set({initLoading: true});
         getInfos().then(resp => {
             set({
-                //TODO: 읽지 않은 메일 count
+                vacationCount: resp.data.vacationCount || 0,
                 calendarCount: resp.data.todayScheduleSize || 0,
                 approvalCount: resp.data.pendingApprovalCount || 0,
                 newNotification: resp.data.recentNotification || {},

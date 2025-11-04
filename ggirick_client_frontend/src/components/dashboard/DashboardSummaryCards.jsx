@@ -5,7 +5,7 @@ import {useNavigate} from "react-router-dom";
 export default function DashboardSummaryCards() {
     const navigate = useNavigate();
 
-    const mailCount = useDashboardStore(state => state.mailCount);
+    const vacationCount = useDashboardStore(state => state.vacationCount);
     const calendarCount = useDashboardStore(state => state.calendarCount);
     const approvalCount = useDashboardStore(state => state.approvalCount);
     const newNotification = useDashboardStore(state => state.newNotification);
@@ -14,16 +14,16 @@ export default function DashboardSummaryCards() {
         <div className="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <div className="h-16 rounded-lg md:h-24">
                 <Card
-                    onClick={() => navigate("/mail")}
+                    onClick={() => navigate("/workmanagement")}
                     className="h-full w-full rounded-lg shadow-sm border-none !bg-base-100 hover:!bg-base-300 cursor-pointer"
                 >
                     <div className="grid grid-cols-2">
                         <div className="grid grid-cols-1">
                                 <span className="text-sm text-base-content-900">
-                                    읽지 않은 메일
+                                    잔여 휴가
                                 </span>
                             <span className="mt-2 text-2xl text-base-content-900">
-                                    {mailCount}
+                                    {vacationCount}일
                                 </span>
                         </div>
                         <div className="flex items-center justify-end">
@@ -38,8 +38,7 @@ export default function DashboardSummaryCards() {
                                     strokeLinejoin="round"
                                     className="lucide lucide-mail-icon lucide-mail h-6 w-6 text-info-content"
                                 >
-                                    <path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/>
-                                    <rect x="2" y="4" width="20" height="16" rx="2"/>
+                                    <path d="M17.8 19.2 16 11l3.5-3.5C21 6 21.5 4 21 3c-1-.5-3 0-4.5 1.5L13 8 4.8 6.2c-.5-.1-.9.1-1.1.5l-.3.5c-.2.5-.1 1 .3 1.3L9 12l-2 3H4l-1 1 3 2 2 3 1-1v-3l3-2 3.5 5.3c.3.4.8.5 1.3.3l.5-.2c.4-.3.6-.7.5-1.2z"/>
                                 </svg>
                             </div>
                         </div>
