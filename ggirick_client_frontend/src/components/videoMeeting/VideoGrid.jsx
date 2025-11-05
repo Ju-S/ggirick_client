@@ -1,42 +1,34 @@
 import { useState } from "react";
+import useEmployeeStore from "@/store/hr/employeeStore.js";
+import { useLivekitStore } from "@/store/chat/useLivekitStore.js";
 import VideoTile from "@/components/videoMeeting/VideoTile.jsx";
-import {Grid, Grid2x2, Grid3x3, Maximize2, Minimize2, PersonStanding} from "lucide-react";
-import {TbGrid4X4} from "react-icons/tb";
-import useEmployeeStore from "@/store/hr/employeeStore.js"; // 아이콘 사용 (lucide-react 설치 필요)
+import { PersonStanding, Maximize2, Minimize2, Grid2x2, Grid3x3 } from "lucide-react";
+import { TbGrid4X4 } from "react-icons/tb";
 
-export default function VideoGrid({ localVideoTrack,localAudioTrack, remoteTracks }) {
-    const [layoutCols, setLayoutCols] = useState(2); // 기본 2열
+export default function VideoGrid({ localVideoTrack, localAudioTrack }) {
+    const [layoutCols, setLayoutCols] = useState(2);
     const [presentingIndex, setPresentingIndex] = useState(null);
 
+    const { selectedEmployee } = useEmployeeStore();
+    const remoteParticipants = useLivekitStore((state) => state.remoteParticipants);
 
-    const {selectedEmployee} = useEmployeeStore();
-
-    // 🔹 전체 트랙 목록 구성
-    const tracks = [];
-    tracks.push({
-        track: localVideoTrack ?? null,
-        name: selectedEmployee.name,
-        local: true,
-        hasAudio: !!localAudioTrack, // 오디오 여부
-    });
-
-// remote
-    remoteTracks.forEach(({ trackPublication, participantIdentity }) => {
-        const videoTrack = trackPublication.videoTrack ?? trackPublication.track;
-        const audioTrack = trackPublication.audioTrack;
-
-        // 트랙이 없어도 등록
-        tracks.push({
-            track: videoTrack ?? null, // 없으면 null
-            name: participantIdentity,
+    // 참가자 구성
+    const participants = [
+        {
+            name: selectedEmployee.name,
+            local: true,
+            videoTrack: localVideoTrack,
+            audioTrack: localAudioTrack,
+        },
+        ...remoteParticipants.map((p) => ({
+            name: p.identity,
             local: false,
-            hasAudio: !!audioTrack,
-        });
-    });
+            videoTrack: p.videoTrack,
+            audioTrack: p.audioTrack,
+        })),
+    ];
 
-
-
-    //  Grid Class 계산
+    // 🔹 Grid Class 계산
     let gridClass = "";
     if (presentingIndex !== null) gridClass = "grid-cols-1";
     else if (layoutCols === 1) gridClass = "grid-cols-1";
@@ -44,42 +36,49 @@ export default function VideoGrid({ localVideoTrack,localAudioTrack, remoteTrack
     else if (layoutCols === 3) gridClass = "grid-cols-3";
     else gridClass = "grid-cols-4";
 
-    // 레이아웃 변경 함수
+    // 🔹 레이아웃 변경 함수
     const cycleLayout = () => {
         setLayoutCols((prev) => (prev >= 4 ? 1 : prev + 1));
     };
 
-    //  발표자 모드 토글
+    // 🔹 발표자 모드 토글
     const togglePresenting = (idx) => {
         setPresentingIndex(presentingIndex === idx ? null : idx);
     };
 
-    // 표시할 트랙 (발표 모드일 때는 해당 하나만)
-    const visibleTracks =
-        presentingIndex !== null ? [tracks[presentingIndex]] : tracks;
+    // 🔹 표시할 트랙 (발표 모드일 때는 해당 하나만)
+    const visibleParticipants =
+        presentingIndex !== null ? [participants[presentingIndex]] : participants;
 
     return (
         <div className="relative flex-1 p-4 overflow-y-auto">
-            {/*레이아웃 버튼 */}
+            {/* 🔸 상단 버튼 */}
             <div className="absolute top-2 right-2 flex space-x-2 z-10">
+                {/* 레이아웃 전환 */}
                 <button
                     onClick={cycleLayout}
                     className="btn btn-sm btn-outline btn-secondary"
                     title="레이아웃 변경"
                 >
-                    {layoutCols === 1 ? <PersonStanding /> :
-                        layoutCols === 2 ? <Grid2x2 /> :
-                            layoutCols === 3 ? <Grid3x3 /> :
-                                <TbGrid4X4 className="opacity-70" />}
+                    {layoutCols === 1 ? (
+                        <PersonStanding size={18} />
+                    ) : layoutCols === 2 ? (
+                        <Grid2x2 size={18} />
+                    ) : layoutCols === 3 ? (
+                        <Grid3x3 size={18} />
+                    ) : (
+                        <TbGrid4X4 size={18} className="opacity-70" />
+                    )}
                 </button>
 
+                {/* 발표자 모드 전환 */}
                 {presentingIndex === null ? (
                     <button
                         onClick={() => setPresentingIndex(0)}
                         className="btn btn-sm btn-outline btn-accent"
                         title="발표자 모드"
                     >
-                        <Maximize2 />
+                        <Maximize2 size={18} />
                     </button>
                 ) : (
                     <button
@@ -87,22 +86,26 @@ export default function VideoGrid({ localVideoTrack,localAudioTrack, remoteTrack
                         className="btn btn-sm btn-outline btn-accent"
                         title="모두 보기"
                     >
-                        <Minimize2 />
+                        <Minimize2 size={18} />
                     </button>
                 )}
             </div>
 
-            {/* 그리드 */}
-            <div className={`flex-1 grid ${gridClass} gap-4 overflow-y-auto`}>
-                {visibleTracks.map((t, idx) => (
+            {/* 🔸 비디오 그리드 */}
+            <div className={`grid ${gridClass} gap-4`}>
+                {visibleParticipants.map((p, idx) => (
                     <div
-                        key={idx}
+                        key={p.name}
                         className={`relative cursor-pointer transition-transform duration-300 ${
                             presentingIndex === idx ? "h-full" : ""
                         }`}
                         onClick={() => togglePresenting(idx)}
                     >
-                        <VideoTile track={t.track} name={t.name} local={t.local}  />
+                        <VideoTile
+                            track={p.videoTrack}
+                            name={p.name}
+                            local={p.local}
+                        />
                     </div>
                 ))}
             </div>

@@ -17,6 +17,7 @@ export const useLivekitStore = create((set, get) => ({
     cameraEnabled: true,
     screenSharing: false,
     messages: [],
+    remoteParticipants: [],
     setMessages: (msg) => {set({messages:msg})},
     chatOnly: false,  // 추가
     setChatOnly: (flag) => set({ chatOnly: flag }),
@@ -44,12 +45,60 @@ export const useLivekitStore = create((set, get) => ({
     setLocalVideoTrack: (track) => set({ localVideoTrack: track }),
     setCameraEnabled: (isCameraOn) => set({cameraEnabled: isCameraOn}),
     setMicEnabled: (micEnabled) => set({micEnabled}),
-    addRemoteTrack: (trackInfo) => set((state) => ({
-        remoteTracks: [...state.remoteTracks, trackInfo]
-    })),
-    removeRemoteTrack: (trackSid) => set((state) => ({
-        remoteTracks: state.remoteTracks.filter((t) => t.trackPublication.trackSid !== trackSid)
-    })),
+    addRemoteTrack: ({ trackPublication, participantIdentity }) =>
+        set((state) => {
+            const participant = state.remoteParticipants.find(
+                (p) => p.identity === participantIdentity
+            );
+
+            const track = trackPublication.track;
+            if (!track) return state;
+
+            // 이미 참가자가 있다면 해당 트랙만 업데이트
+            if (participant) {
+                return {
+                    remoteParticipants: state.remoteParticipants.map((p) =>
+                        p.identity === participantIdentity
+                            ? {
+                                ...p,
+                                videoTrack: track.kind === "video" ? track : p.videoTrack,
+                                audioTrack: track.kind === "audio" ? track : p.audioTrack,
+                            }
+                            : p
+                    ),
+                };
+            }
+
+            // 새 참가자 추가
+            return {
+                remoteParticipants: [
+                    ...state.remoteParticipants,
+                    {
+                        identity: participantIdentity,
+                        videoTrack: track.kind === "video" ? track : null,
+                        audioTrack: track.kind === "audio" ? track : null,
+                    },
+                ],
+            };
+        }),
+
+    removeRemoteTrack: (trackSid) =>
+        set((state) => ({
+            remoteParticipants: state.remoteParticipants.map((p) => ({
+                ...p,
+                videoTrack:
+                    p.videoTrack?.sid === trackSid ? null : p.videoTrack,
+                audioTrack:
+                    p.audioTrack?.sid === trackSid ? null : p.audioTrack,
+            })),
+        })),
+    removeParticipant: (identity) =>
+        set((state) => ({
+            remoteParticipants: state.remoteParticipants.filter(
+                (p) => p.identity !== identity
+            ),
+        })),
+
     clearRoom: () => set({ room: null, token: null, localVideoTrack: null, remoteTracks: [] }),
 
     joinRoom: async function(roomName) {
@@ -83,9 +132,18 @@ export const useLivekitStore = create((set, get) => ({
             room.on(RoomEvent.ParticipantConnected, (participant) => {
                 console.log('👤 Participant connected:', participant.identity);
             });
+            room.on(RoomEvent.ParticipantDisconnected, (participant) => {
+                console.log("🚪 Participant disconnected:", participant.identity);
+                get().removeParticipant(participant.identity);
+            });
+
             room.on(RoomEvent.TrackSubscribed, (track, publication, participant) => {
-                console.log('🎧 Track subscribed:', participant.identity, track.kind);
-                addRemoteTrack({ trackPublication: publication, participantIdentity: participant.identity });
+                const existing = get().remoteTracks.some(
+                    t => t.trackPublication.trackSid === publication.trackSid
+                );
+                if (!existing) {
+                    addRemoteTrack({ trackPublication: publication, participantIdentity: participant.identity });
+                }
             });
             room.on(RoomEvent.TrackUnsubscribed, (_track, publication) => {
                 removeRemoteTrack(publication.trackSid);
@@ -136,9 +194,6 @@ export const useLivekitStore = create((set, get) => ({
             //  기존 참가자 트랙 등록
             room.remoteParticipants.forEach(participant => {
                 participant.videoTrackPublications.forEach(pub => {
-                    if (pub.track) addRemoteTrack({trackPublication: pub, participantIdentity: participant.identity});
-                });
-                participant.audioTrackPublications.forEach(pub => {
                     if (pub.track) addRemoteTrack({trackPublication: pub, participantIdentity: participant.identity});
                 });
 

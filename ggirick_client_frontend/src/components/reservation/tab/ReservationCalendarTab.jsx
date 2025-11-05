@@ -40,11 +40,11 @@ export default function ReservationCalendarTab() {
                 start: item.start,
                 end: item.end,
                 resourceId: item.resourceId,
-                allDay: true,
+                allDay: false,
                 extendedProps: {
                     description: item.description,
                     createdBy: item.createdBy,
-                    logs: item.logs,
+                      status:item.status,
                     employeeId: item.employeeId,
                     fullReservationData: item
                 }
@@ -83,28 +83,8 @@ export default function ReservationCalendarTab() {
                     const fullData = clickInfo.event.extendedProps.fullReservationData;
                     openDetailModal(fullData);
                 }}
-                onEventDrop={async (dropInfo) => {
-                    const { event } = dropInfo;
-                    let adjustedEnd = event.end;
+                onEventDrop={async (dropInfo)=>(dropInfo.revert())}
 
-                    if (event.allDay && adjustedEnd) {
-                        const tempEnd = new Date(adjustedEnd);
-                        tempEnd.setDate(tempEnd.getDate() - 1);
-                        adjustedEnd = tempEnd;
-                    }
-
-                    const updatedData = {
-                        startedAt: event.start.toISOString(),
-                        endedAt: adjustedEnd.toISOString(),
-                        resourceId: event.extendedProps.resourceId
-                    };
-
-                    const success = await updateReservation(event.id, updatedData);
-                    if (!success) {
-                        alert("해당 예약을 변경 할 수없습니다!")
-                        dropInfo.revert();
-                    }
-                }}
                 onDatesSet={(dateInfo) => {
                     fetchCalendarReservations(dateInfo.start, dateInfo.end);
                 }}
