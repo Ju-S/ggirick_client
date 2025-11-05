@@ -68,7 +68,7 @@ public class ChatReactionService{
     }
 
     public void toggleViewer(ChatMessageDTO m) {
-
+        log.info("워크스페이스"+m.getWorkspaceId()+"채널"+m.getWorkspaceId()+"해당 메시지"+m.getParentId());
         boolean viewed = chatDao.existsViewed(m);
         try{
             if(viewed) chatDao.deleteView(m);

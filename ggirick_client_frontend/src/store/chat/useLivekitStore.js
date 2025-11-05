@@ -17,6 +17,7 @@ export const useLivekitStore = create((set, get) => ({
     cameraEnabled: true,
     screenSharing: false,
     messages: [],
+    setMessages: (msg) => {set({messages:msg})},
     chatOnly: false,  // 추가
     setChatOnly: (flag) => set({ chatOnly: flag }),
     myHandRaised: false,                  // 나만의 손 상태
@@ -55,8 +56,18 @@ export const useLivekitStore = create((set, get) => ({
         const { setRoom, setToken, setLocalVideoTrack, setLocalAudioTrack, addRemoteTrack, removeRemoteTrack } = get();
 
         try {
+
+            const prevRoom = get().room;
+            if (prevRoom) {
+                prevRoom.disconnect(); // 이전 room 연결 해제
+                get().clearRoom();     // 상태 초기화
+
+            }
+
             // 1️⃣ 서버에서 JWT 토큰 발급
             const res = await api.post('/openvidu/token', { roomName });
+
+
             const data = res.data;
             if (!data.token) throw new Error(data.errorMessage || 'Failed to get token');
 
@@ -68,7 +79,7 @@ export const useLivekitStore = create((set, get) => ({
             await room.connect(OPENVIDU_LIVEKIT_URL, token);
             console.log('✅ Connected to LiveKit room', roomName);
 
-            //  이벤트 등록 (생략 가능)
+            //  이벤트 등록
             room.on(RoomEvent.ParticipantConnected, (participant) => {
                 console.log('👤 Participant connected:', participant.identity);
             });
@@ -112,7 +123,8 @@ export const useLivekitStore = create((set, get) => ({
                 for (const track of localTracks) {
                     const publication = await room.localParticipant.publishTrack(track);
                     if (track.kind === "video") setLocalVideoTrack(publication.track);
-                    else if (track.kind === "audio") setLocalAudioTrack(publication.track);
+                    else if(track.kind === "audio") setLocalAudioTrack(publication.track);
+
                 }
 
 
@@ -121,13 +133,15 @@ export const useLivekitStore = create((set, get) => ({
                 // 트랙이 없어도 계속 진행 (chat-only)
             }
 
-            // 6 기존 참가자 트랙 등록
-            room.remoteParticipants.forEach((participant) => {
-                participant.tracks.forEach(pub => {
-                    if (pub.track) {
-                        addRemoteTrack({ trackPublication: pub, participantIdentity: participant.identity });
-                    }
+            //  기존 참가자 트랙 등록
+            room.remoteParticipants.forEach(participant => {
+                participant.videoTrackPublications.forEach(pub => {
+                    if (pub.track) addRemoteTrack({trackPublication: pub, participantIdentity: participant.identity});
                 });
+                participant.audioTrackPublications.forEach(pub => {
+                    if (pub.track) addRemoteTrack({trackPublication: pub, participantIdentity: participant.identity});
+                });
+
             });
 
             // 7️⃣ store에 room 저장
@@ -144,7 +158,7 @@ export const useLivekitStore = create((set, get) => ({
     leaveRoom: async function() {
 
 
-        const { room, localVideoTrack, clearRoom } = get();
+        const { room, localVideoTrack, clearRoom,setMessages } = get();
 
         if (room && localVideoTrack) {
             // 로컬 비디오 트랙 stop
@@ -158,7 +172,7 @@ export const useLivekitStore = create((set, get) => ({
             await room.disconnect();
         }
         clearRoom();
-
+       setMessages([]);
 
     },
     toggleMic: async function () {

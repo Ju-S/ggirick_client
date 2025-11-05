@@ -8,11 +8,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 @RequiredArgsConstructor
 public class EmploymentStatusDAO {
-    private SqlSessionTemplate mybatis;
+    private final SqlSessionTemplate mybatis;
 
     // 직원 한명 입사일 조회
-    public EmploymentStatusDTO getHireDateByEmployeeId(String EmployeeId) {
-        return mybatis.selectOne("EmploymentStatus.getHireDateByEmployeeId", EmployeeId);
+    public EmploymentStatusDTO getHireDateByEmployeeId(String employeeId) {
+        return mybatis.selectOne("EmploymentStatus.getHireDateByEmployeeId", employeeId);
     }
 }
 

@@ -224,7 +224,7 @@ public class WorkSummaryDailyService {
         Map<String, Object> data = doc.getDocData();
 
         try {
-            // 1️⃣ 프론트에서 받은 문자열 시간 파싱
+            // 프론트에서 받은 문자열 시간 파싱
             String startDateTimeStr = (String) data.get("startDateTime");
             String endDateTimeStr = (String) data.get("endDateTime");
 
@@ -237,15 +237,15 @@ public class WorkSummaryDailyService {
             LocalDateTime startLdt = LocalDateTime.parse(startDateTimeStr, formatter);
             LocalDateTime endLdt = LocalDateTime.parse(endDateTimeStr, formatter);
 
-            // 2️⃣ 근무정책에서 퇴근 기준시간 조회
+            // 근무정책에서 퇴근 기준시간 조회
             LocalTime startTime = policy.getWorkStartTime(); // 예: 09:00
             LocalTime endTime = policy.getWorkEndTime();     // 예: 18:00
 
-            // 3️⃣ 기준시간 계산
+            // 기준시간 계산
             LocalDateTime normalEnd = LocalDateTime.of(startLdt.toLocalDate(), endTime);
             LocalDateTime nightBoundary = LocalDateTime.of(startLdt.toLocalDate(), LocalTime.of(22, 0));
 
-            // 4️⃣ 퇴근 이후 근무 시간
+            // 퇴근 이후 근무 시간
             double afterWorkHours = 0;
             if (endLdt.isAfter(normalEnd)) {
                 long afterWorkMillis = Timestamp.valueOf(endLdt).getTime() -
@@ -254,7 +254,7 @@ public class WorkSummaryDailyService {
                 afterWorkHours = afterWorkMillis / (1000.0 * 60 * 60);
             }
 
-            // 5️⃣ 야간 근무 시간
+            // 야간 근무 시간
             double nightBoundaryHours = 0;
             if (endLdt.isAfter(nightBoundary)) {
                 long nightMillis = Timestamp.valueOf(endLdt).getTime() -
@@ -262,7 +262,7 @@ public class WorkSummaryDailyService {
                 nightBoundaryHours = nightMillis / (1000.0 * 60 * 60);
             }
 
-            // 6️⃣ 정책별 threshold (정책 ID로 구분)
+            // 정책별 threshold (정책 ID로 구분)
             int threshold = (policy.getPolicyId() != null && policy.getPolicyId() == 2) ? 3 : 4;
 
             double overtimeHours;
@@ -276,7 +276,7 @@ public class WorkSummaryDailyService {
                 nightHours = afterWorkHours - threshold;
             }
 
-            // 7️⃣ 야간 보정
+            // 야간 보정
             if (nightBoundaryHours > 0 && nightHours < nightBoundaryHours) {
                 nightHours = Math.max(nightHours, nightBoundaryHours);
             }
