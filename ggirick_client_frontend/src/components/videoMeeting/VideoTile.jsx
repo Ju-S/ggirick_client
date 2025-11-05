@@ -30,11 +30,12 @@ export default function VideoTile({ track, name, local,hasAudio }) {
                <>
                    <div className="absolute top-2 left-2 badge badge-secondary">{name}</div>
                    <video
-                       ref={(el) => el && (el.srcObject = new MediaStream([track.mediaStreamTrack]))}
+                       ref={videoRef}
                        autoPlay
                        muted={local}
                        className="w-full h-full object-cover"
                    />
+
                    <button
                        onClick={toggleFullScreen}
                        className="absolute bottom-2 right-2 bg-base-100 bg-opacity-50 text-base-content p-1 rounded hover:bg-opacity-70"

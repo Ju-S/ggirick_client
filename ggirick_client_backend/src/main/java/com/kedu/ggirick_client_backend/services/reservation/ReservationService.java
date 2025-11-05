@@ -65,7 +65,7 @@ public class ReservationService {
     //에약 업데이트
     public ReservationDTO updateReservation(Long reservationId, ReservationDTO reservationDto,String userId) {
         reservationDto.setId(reservationId);
-
+        reservationDto.setEmployeeId(reservationDAO.findReservationById(reservationId).getEmployeeId());
         if(reservationDto.getEmployeeId().equals(userId)) {
 
             // 수정 시간 기준 겹침 검증 (현재 예약은 제외)
