@@ -43,6 +43,7 @@
         wp.work_end_time
         FROM employee_work_policy ewp
         JOIN work_policy wp ON ewp.policy_id = wp.policy_id
+        WHERE ewp.employee_id = #{employeeId}
     </select>
 </mapper>
 

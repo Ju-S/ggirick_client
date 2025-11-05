@@ -16,5 +16,5 @@ public class EmploymentStatusDTO {
     private String empId;
     private String employmentStatus;
     private Timestamp changeDate;
-    private Timestamp regDate;
+    private Timestamp regDate; // hireDate
 }

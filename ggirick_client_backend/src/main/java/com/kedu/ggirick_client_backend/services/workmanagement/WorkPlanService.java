@@ -24,7 +24,7 @@ import java.util.Map;
 public class WorkPlanService {
 
     private final WorkPlanDAO workPlanDAO;
-    private final EmploymentStatusService employeeService;
+    private final EmploymentStatusService employmentStatusService;
     private final EmployeeWorkPolicyService employeeWorkPolicyService;
     private final HolidayCalendarService holidayCalendarService;
 
@@ -32,7 +32,7 @@ public class WorkPlanService {
     @Transactional
     public void generateInitialPlans(String employeeId) {
         // 입사일 조회
-        Timestamp hireDate = employeeService.getHireDateByEmployeeId(employeeId).getRegDate();
+        Timestamp hireDate = employmentStatusService.getHireDateByEmployeeId(employeeId).getRegDate();
 
         // Timestamp -> Date 타입 변환 (시간 제거)
         Date start = new Date(hireDate.getTime());
