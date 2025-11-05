@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import {useEffect, useMemo} from "react";
 import useReservationStore from '../../store/reservation/useReservationStore';
 import BaseModal from '../../components/common/BaseModal';
 import { format } from 'date-fns';
@@ -13,6 +13,10 @@ export default function ReservationDetailModal() {
     } = useReservationStore();
 
     if (!selectedReservation) return null;
+
+    useEffect(() => {
+      console.log(selectedReservation)
+    }, []);
 
     const onClose = () => setDetailModalOpen(false);
 

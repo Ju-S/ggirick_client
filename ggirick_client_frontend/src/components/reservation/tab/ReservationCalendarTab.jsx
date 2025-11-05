@@ -40,7 +40,7 @@ export default function ReservationCalendarTab() {
                 start: item.start,
                 end: item.end,
                 resourceId: item.resourceId,
-                allDay: false,
+                allDay: true,
                 extendedProps: {
                     description: item.description,
                     createdBy: item.createdBy,
@@ -49,6 +49,7 @@ export default function ReservationCalendarTab() {
                     fullReservationData: item
                 }
             }));
+
     }, [reservationList,selectedResourceId]);
 
     return (

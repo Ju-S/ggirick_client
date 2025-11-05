@@ -27,8 +27,8 @@ export default function EmployeeRoutes() {
     }, []);
 
     return (
-        <Suspense fallback={<div className="text-center p-4">페이지 불러오는 중...</div>}>
-            <Routes>
+        <Suspense fallback={<progress className="progress w-full bg-base-100" />}>
+        <Routes>
                 <Route path="/" element={<Dashboard/>}/>
                 <Route path="/board/*" element={<BoardRoutes/>}/>
                 <Route path="/approval/*" element={<ApprovalRoutes/>}/>

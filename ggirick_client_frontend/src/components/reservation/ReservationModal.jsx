@@ -124,59 +124,59 @@ export default function ReservationFormModal() {
 
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (overlapError || !formData.resourceId || !formData.startedAt || !formData.endedAt) {
-      alert('필수 정보를 입력하거나 시간 충돌을 해결해 주세요.');
-      return;
-    }else if(formData.startedAt > formData.endedAt){
-        alert('시작 시간이 종료 시간보다 나중일 수 없습니다.')
-    }
-
-    setIsSubmitting(true);
-
-    try {
-
-      const dataToSend = {
-        resourceId: formData.resourceId,
-        purpose: formData.purpose,
-        // 💡 KST 로컬 시간 포맷을 사용하여 서버에 전송
-        startedAt: formatLocalISO(formData.startedAt),
-        endedAt: formatLocalISO(formData.endedAt),
-
-      };
-
-      if (isEditMode) {
-        // 💡 수정 모드: PUT 요청
-
-        const success =  await updateReservation(editingReservationId, dataToSend);
-        if(success){
-            alert('예약이 성공적으로 수정되었습니다.')
-        }else{
-
-            alert('⚠️ 다른 예약과 시간이 겹치거나 하는 이유로 오류가 발생했습니다. 다시 시도해주세요');
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        if (overlapError || !formData.resourceId || !formData.startedAt || !formData.endedAt) {
+            alert('필수 정보를 입력하거나 시간 충돌을 해결해 주세요.');
+            return;
+        } else if (formData.startedAt > formData.endedAt) {
+            alert('시작 시간이 종료 시간보다 나중일 수 없습니다.');
+            return;
         }
 
+        // 1시간 이상인지 검사 추가
+        const start = new Date(formData.startedAt);
+        const end = new Date(formData.endedAt);
+        const diffInHours = (end - start) / (1000 * 60 * 60); // 밀리초 → 시간 단위로 변환
 
-      } else {
-        // 💡 생성 모드: POST 요청
-        const success = await insertReservation(dataToSend)
-        if(success){
-          alert('예약이 성공적으로 생성되었습니다.');
-        }else{
-
-          alert('⚠️ 다른 예약과 시간이 겹치거나 하는 이유로 오류가 발생했습니다. 다시 시도해주세요');
+        if (diffInHours < 1) {
+            alert('예약은 최소 1시간 이상이어야 합니다.');
+            return;
         }
 
-      }
-      setModalOpen(false);
+        setIsSubmitting(true);
+        try {
+            const dataToSend = {
+                resourceId: formData.resourceId,
+                purpose: formData.purpose,
+                startedAt: formatLocalISO(formData.startedAt),
+                endedAt: formatLocalISO(formData.endedAt),
+            };
 
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+            if (isEditMode) {
+                const success = await updateReservation(editingReservationId, dataToSend);
+                if (success) {
+                    alert('예약이 성공적으로 수정되었습니다.');
+                } else {
+                    alert('⚠️ 다른 예약과 시간이 겹치거나 하는 이유로 오류가 발생했습니다. 다시 시도해주세요');
+                }
+            } else {
+                const success = await insertReservation(dataToSend);
+                if (success) {
+                    alert('예약이 성공적으로 생성되었습니다.');
+                } else {
+                    alert('⚠️ 다른 예약과 시간이 겹치거나 하는 이유로 오류가 발생했습니다. 다시 시도해주세요');
+                }
+            }
 
-  const formatLocalISO = (dateString) => {
+            setModalOpen(false);
+        } finally {
+            setIsSubmitting(false);
+        }
+    };
+
+
+    const formatLocalISO = (dateString) => {
     const date = new Date(dateString);
     if (isNaN(date)) return dateString; // 유효하지 않으면 원본 반환
 

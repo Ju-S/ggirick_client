@@ -15,11 +15,11 @@ import java.time.LocalDateTime;
 public class CalendarEventDTO {
     private Long id;
     private String title;
-    private LocalDate start;
-    private  LocalDate end;
+    private LocalDateTime start;
+    private  LocalDateTime end;
     private Long resourceId;
 
-    private  LocalDate reservatedAt;
+    private  LocalDateTime reservatedAt;
     private String status;
     private String purpose;
     private String description;
