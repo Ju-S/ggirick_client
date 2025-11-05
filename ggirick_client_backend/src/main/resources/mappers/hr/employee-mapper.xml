@@ -204,7 +204,7 @@
     <!-- 비밀번호 변경 -->
     <update id="updatePassword" parameterType="com.kedu.ggirick_client_backend.dto.hr.EmployeeDTO">
         UPDATE employee
-        SET password = #{password}
+        SET pw = #{pw}
         WHERE ID = #{id}
     </update>
 
