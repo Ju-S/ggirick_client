@@ -1,5 +1,5 @@
 # [2차 프로젝트: 기업 관리 전산 프로젝트 (그룹웨어)](https://ggirick.site)
-# [2차 프로젝트: 기업 관리 전산 프로젝트 (그룹웨어 관리자)]([https://ggirick.site](https://ggirick-admin-frontend.web.app/)
+# [2차 프로젝트: 기업 관리 전산 프로젝트 (그룹웨어 관리자)](https://ggirick-admin-frontend.web.app/)
 
 ## 프로젝트 기간
 2025.10.13 - 2025.11.05
