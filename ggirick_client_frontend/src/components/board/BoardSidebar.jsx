@@ -7,6 +7,7 @@ import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
 import ModifyGroupModal from "@/components/board/ModifyGroupModal.jsx";
 import FilteredOrganizationMemberModal from "@/components/common/modals/FilteredOrganizationMemberModal.jsx";
+import useAuthStore from "@/store/auth/authStore.js";
 
 export default function BoardSidebar() {
     const navigate = useNavigate();
@@ -21,6 +22,7 @@ export default function BoardSidebar() {
     const [selectedGroup, setSelectedGroup] = useState(1);
 
     const {selectedEmployee, setEmployee} = useEmployeeStore();
+    const authority = useAuthStore(state => state.authority);
 
     useEffect(() => {
         getMyInfoAPI().then(resp => {
@@ -41,7 +43,7 @@ export default function BoardSidebar() {
                 <button
                     className="btn btn-primary w-full"
                     onClick={() => navigate("/board/posting")}
-                    disabled={!groupItems || groupItems.length <= 0}
+                    disabled={authority != 10 && (!groupItems || groupItems.length <= 0)}
                 >
                     글쓰기
                 </button>

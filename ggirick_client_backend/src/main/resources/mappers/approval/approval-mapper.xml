@@ -283,7 +283,7 @@
     <!-- 결재문서 수정 -->
     <!-- 결재문서 수정일을 기록하여 결재기록을 초기화시키기 위함 -->
     <update id="update">
-        UPDATE approval SET title=#{title}, content=#{content}, updated_at=sysdate WHERE id=#{id}
+        UPDATE approval SET title=#{title}, content=#{content}, updated_at=sysdate, doc_data=#{docDataJson} WHERE id=#{id}
     </update>
 
     <!-- 결재문서 상태 수정 -->

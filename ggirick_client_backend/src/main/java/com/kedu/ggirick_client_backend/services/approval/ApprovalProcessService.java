@@ -140,6 +140,9 @@ public class ApprovalProcessService {
 
         if (selectedApproval.getWriter().equals(userId)
                 && selectedApproval.getAssignedAt() == null) {
+            Gson gson = new Gson();
+            approvalInfo.setDocDataJson(gson.toJson(approvalInfo.getDocData()));
+
             approvalInfo.setId(approvalId);
             approvalService.update(approvalInfo);
             if (files != null) {

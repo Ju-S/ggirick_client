@@ -6,6 +6,7 @@ import useBoardGroupStore from "@/store/board/boardGroupStore.js";
 import useBoardStore from "@/store/board/boardStore.js";
 import {useParams} from "react-router-dom";
 import {deleteBoardFileAPI} from "@/api/board/boardFileAPI.js";
+import useAuthStore from "@/store/auth/authStore.js";
 
 export default function BoardPostingPage({editMode}) {
     const navigate = useNavigate();
@@ -15,6 +16,8 @@ export default function BoardPostingPage({editMode}) {
 
     const {id} = useParams();
     const fetchBoard = useBoardStore(state => state.fetchBoardInfo);
+
+    const authority = useAuthStore(state => state.authority);
 
     useEffect(() => {
         if (editMode && id) {
@@ -152,7 +155,7 @@ export default function BoardPostingPage({editMode}) {
                         name="groupId"
                         selectedItem={boardInfos.boardGroupId}
                         title="그룹 선택"
-                        items={groupItems}
+                        items={[...groupItems, authority == 10 && {id: 1, name:"전사공지"}]}
                         disabled={editMode}
                     />
                 </div>

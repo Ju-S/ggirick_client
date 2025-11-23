@@ -5,7 +5,7 @@ import {boardFileDownloadAPI} from "@/api/board/boardFileAPI.js";
 import {useEffect, useState} from "react";
 import useEmployeeStore from "@/store/hr/employeeStore.js";
 import {getMyInfoAPI} from "@/api/mypage/employeeAPI.js";
-import {deleteAPI} from "@/api/board/boardAPI.js";
+import {deleteAPI} from "@/api/approval/approvalAPI.js";
 import useApprovalStore from "@/store/approval/approvalStore.js";
 import ApprovalLineCheck from "@/components/approval/ApprovalLineCheck.jsx";
 import {getTypeAPI} from "@/api/approval/approvalTypeAPI.js";
