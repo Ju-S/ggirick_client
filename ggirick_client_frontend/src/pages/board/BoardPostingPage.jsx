@@ -155,7 +155,7 @@ export default function BoardPostingPage({editMode}) {
                         name="groupId"
                         selectedItem={boardInfos.boardGroupId}
                         title="그룹 선택"
-                        items={[...groupItems, authority == 10 && {id: 1, name:"전사공지"}]}
+                        items={[...groupItems, authority == 10 ? {id: 1, name:"전사공지"} : null].filter(Boolean)}
                         disabled={editMode}
                     />
                 </div>
